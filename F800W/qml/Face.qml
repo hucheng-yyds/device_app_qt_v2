@@ -4,8 +4,10 @@ Item {
     id: item1
     width: root.width
     height: root.height
-    property var focusingList: [focusing/*, focusing1, focusing2, focusing3, focusing4*/];
-
+    property var focusingList: [focusing];
+    Focusing {
+        id: focusing;
+    }
     // 显示gif动画
     Rectangle {
         visible: false
@@ -22,11 +24,21 @@ Item {
         }
     }
 
+    // 定时器自动隐藏ui弹窗
+    Timer {
+        id: hideName;
+        interval: 3200; running: false;
+        onTriggered: {
+            nameText.text = "";
+            resultText.text = "";
+        }
+    }
+
     // 检测结果显示
     Rectangle {
-        id: textNameBg
+        id: resultTextBg
         y: 853
-        visible: textName.text.length;
+        visible: resultText.text.length;
         color: "#3f3f3f"
         anchors.horizontalCenter: parent.horizontalCenter
         width: 683
@@ -34,9 +46,9 @@ Item {
     }
 
     Text {
-        id: textName
-        anchors.verticalCenter: textNameBg.verticalCenter
-        anchors.horizontalCenter: textNameBg.horizontalCenter
+        id: resultText
+        anchors.verticalCenter: resultTextBg.verticalCenter
+        anchors.horizontalCenter: resultTextBg.horizontalCenter
         text: qsTr("")
         font {
             pixelSize: 60
@@ -51,7 +63,7 @@ Item {
         id: iconFace
         x: 90
         y: 875
-        visible: textNameBg.visible
+        visible: nameTextBg.visible
         source: "image/icon_face.png"
     }
 
@@ -64,9 +76,9 @@ Item {
     }
 
     Rectangle {
-        id: tipsBg
+        id: nameTextBg
         y: 987
-        visible: tips.text.length
+        visible: nameText.text.length
         color: "#fffffe"
         anchors.horizontalCenter: parent.horizontalCenter
         width: 683
@@ -74,9 +86,9 @@ Item {
     }
 
     Text {
-        id: tips
-        anchors.verticalCenter: tipsBg.verticalCenter
-        anchors.horizontalCenter: tipsBg.horizontalCenter
+        id: nameText
+        anchors.verticalCenter: nameTextBg.verticalCenter
+        anchors.horizontalCenter: nameTextBg.horizontalCenter
         font {
             pixelSize: 48
             family: "multi-language"
@@ -86,9 +98,11 @@ Item {
     }
 
     Connections {
-        target: guiapi;
+        target: programs;
         onFaceResultShow:{
-
+            nameText.text = qsTr(name)
+            resultText.text = qsTr(result)
+            hideName.restart()
         }
         onShowFaceFocuse:{
             var flag = false;
@@ -115,6 +129,12 @@ Item {
                 focusingList[index].focusingHeight = bottom - top + 30;
                 focusingList[index].focusingVisible = true;
                 focusingList[index].trackId = trackId;
+            }
+        }
+        onHideFaceFocuse:{
+            for (var i = 0; i < focusingList.length; i ++) {
+                focusingList[i].focusingVisible = false;
+                focusingList[i].trackId = 0;
             }
         }
     }

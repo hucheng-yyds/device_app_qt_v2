@@ -85,7 +85,7 @@ public:
     // 音频播放接口 支持tts播放和aac语音文件播放 前者播放对应content内容，后者对应filename文件名
     void playSound(const char *content, const QString &filename);
     // 播放aac语音文件
-    void playSoundAac(int tupe, const QString &filename);
+    void playSoundAac(int type, const QString &filename);
     // 播放tts翻译
     void playSoundTTS(const char *content);
 

@@ -6,9 +6,11 @@
 #include <QFile>
 #include <QDebug>
 #include "qalhardware.h"
+#include "sqldatabase.h"
 
 #define hardware    QalHardWare::getInstance()
 #define switchCtl SwitchCtl::getInstance()
+#define sqlDatabase SqlDatabase::getInstance()
 
 class SwitchCtl
 {

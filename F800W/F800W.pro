@@ -41,6 +41,7 @@ LIBS += -ldnvqe -lhdmi -lhi_cipher -live -lmd -ltde -lupvqe -lVoiceEngine -lgomp
 LIBS += -laaccomm -laacdec -laacenc -laacsbrdec -laacsbrenc -ldl
 LIBS += -lopencv_core -lopencv_imgcodecs -lopencv_imgproc -lopencv_calib3d -lopencv_features2d  -lopencv_flann -lopencv_highgui -lopencv_videoio
 LIBS += -lmsc
+LIBS += -lfacesdk_dv300
 
 INCLUDEPATH     += $$PWD/hardware
 INCLUDEPATH     += $$PWD/timerCountDown

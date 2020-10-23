@@ -26,6 +26,8 @@ private:
 signals:
     // 显示人脸框
     void showFaceFocuse(int left, int top, int right, int bottom, int index, int trackId);
+    // 隐藏人脸框
+    void hideFaceFocuse();
 
 private:
     VIDEO_FRAME_INFO_S *m_bgrVideoFrame;

@@ -1,10 +1,12 @@
 #include <QGuiApplication>
 #include <QTranslator>
+#include <QQmlApplicationEngine>
+#include <QQmlContext>
 #include "prostorage.h"
 
 int main(int argc, char *argv[])
 {
-    IF_VIO_VPSS_VO_MIPI_TX(22, 4, 1);
+    IF_VIO_VPSS_VO_MIPI_TX(22, 3, 1);
     while (!IF_CheckYUVDataReady(0)) {
         QThread::msleep(1000);
     }
@@ -35,9 +37,8 @@ int main(int argc, char *argv[])
     app.installTranslator(m_translator);
 
     QQmlApplicationEngine engine;
-    ProStorage *program = new ProStorage;
-    program->start();
-    engine.rootContext()->setContextProperty("guiapi", program);
+    ProStorage programs;
+    engine.rootContext()->setContextProperty("programs", &programs);
     engine.load(QUrl(QStringLiteral("./qml/main.qml")));
     return app.exec();
 }

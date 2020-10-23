@@ -1,5 +1,7 @@
 #include "facemanager.h"
 
+QSemaphore g_usedSpace(0);
+
 FaceManager::FaceManager()
 {
     m_isIdentify = false;
@@ -8,7 +10,7 @@ FaceManager::FaceManager()
 
 void FaceManager::setFaceInter(FaceInterface *inter)
 {
-
+    m_interFace = inter;
 }
 
 void FaceManager::run()
@@ -61,7 +63,7 @@ void FaceManager::run()
                     saveRight[i] = rect.right /*- (rect.right % offset)*/;
                     saveBottom[i] = rect.bottom /*- (rect.bottom % offset)*/;
                 }
-//                emit showRect(saveLeft[i], saveTop[i], saveRight[i], saveBottom[i], i, m_sMFaceHandle[i].track_id);
+                emit showFaceFocuse(saveLeft[i], saveTop[i], saveRight[i], saveBottom[i], i, m_sMFaceHandle[i].track_id);
             }
             if (!m_interFace->m_iFaceHandle && m_isIdentify) {
                 m_interFace->m_iFaceHandle = bgrHandle;
@@ -72,11 +74,13 @@ void FaceManager::run()
                 if (1) {
                     memcpy(m_interFace->m_irImage, (const char *)m_irVideoFrame->stVFrame.u64VirAddr[0], VIDEO_WIDTH * VIDEO_HEIGHT * 3 / 2);
                 }
+                g_usedSpace.release();
             } else {
                 releaseAllFace(bgrHandle, bgrLength);
             }
         } else {
             m_interFace->m_iStop = true;
+            emit hideFaceFocuse();
 //            if(settings->isTemp)
 //            {
 //                emit stopTemp();
@@ -239,7 +243,7 @@ bool FaceManager::init()
 //    qt_debug() << "Start !";
     set_detect_config(0.3, 0.5);
     set_match_config(0.99, -35.61, 0.99, 4.26, 0.4);
-//    qt_debug();
-    createFaceGroup(&m_groupHandle);
+    qDebug() << "================================";
+    createFaceGroup(&m_interFace->m_groupHandle);
     return true;
 }

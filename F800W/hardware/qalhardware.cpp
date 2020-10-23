@@ -139,7 +139,7 @@ void QalHardWare::init()
     if(1)
     {
         IF_AUDIO_Init();
-        setVolume(10);
+        setVolume(100);
     }
     else {
         IF_PCMAUDIO_Init();
@@ -230,16 +230,16 @@ int QalHardWare::text_to_speech(const char* src_text, const char* des_path, cons
 
 void QalHardWare::playSound(const char *content, const QString &filename)
 {
-    int language = 2;
+    int language = 0;
     int playType = 1;
     if(language != 0 && language != 1)
     {
-        playSoundAac(filename);
+        playSoundAac(language, filename);
     }
     else {
         if(playType)
         {
-            playSoundAac(filename);
+            playSoundAac(language, filename);
         }
         else {
             playSoundTTS(content);
