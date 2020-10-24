@@ -8,6 +8,8 @@
 #include <QMutex>
 #include <QDebug>
 
+#define sqlDatabase SqlDatabase::getInstance()
+
 class SqlDatabase : public QObject
 {
     Q_OBJECT

@@ -50,6 +50,7 @@ INCLUDEPATH     += $$PWD/functionswitch
 INCLUDEPATH     += $$PWD/mqtt
 INCLUDEPATH     += $$PWD/facealgorithm
 INCLUDEPATH     += $$PWD/sqldatabase
+INCLUDEPATH     += $$PWD/netmanager
 
 include         ($$PWD/hardware/hardware.pri)
 include         ($$PWD/timerCountDown/timerCountDown.pri)
@@ -58,8 +59,9 @@ include         ($$PWD/functionswitch/functionswitch.pri)
 include         ($$PWD/mqtt/mqtt.pri)
 include         ($$PWD/facealgorithm/facealgorithm.pri)
 include         ($$PWD/sqldatabase/sqldatabase.pri)
+include         ($$PWD/netmanager/netmanager.pri)
 
-RESOURCES += main.qrc
+#RESOURCES += main.qrc
 
 DISTFILES += \
     qml/main.qml \

@@ -3,12 +3,14 @@
 
 ProStorage::ProStorage()
 {
-//    moveToThread(this);
     init();
 }
 
 void ProStorage::init()
 {
+    NetManager *netManager = new NetManager;
+    connect(netManager, &NetManager::showDeviceInfo, this, &ProStorage::showDeviceInfo);
+
     FaceInterface *interFace = new FaceInterface;
     FaceManager *face = new FaceManager;
     connect(face, &FaceManager::showFaceFocuse, this, &ProStorage::showFaceFocuse);
@@ -25,5 +27,6 @@ void ProStorage::init()
     }
     face->start();
     identify->start();
+    netManager->start();
 }
 

@@ -23,6 +23,7 @@ void FaceManager::run()
     int offset = 10;
     while(true)
     {
+        bool ir = switchCtl->m_ir;
         m_bgrVideoFrame = nullptr;
         IF_GetData(&m_bgrVideoFrame, VIDEO_WIDTH, VIDEO_HEIGHT);
         if(m_bgrVideoFrame == nullptr) {
@@ -30,7 +31,7 @@ void FaceManager::run()
             sleep(4);
             continue;
         }
-        if (1) {
+        if (ir) {
             m_irVideoFrame = nullptr;
             IF_GetIRData(&m_irVideoFrame, VIDEO_WIDTH, VIDEO_HEIGHT);
             if (m_irVideoFrame == nullptr) {
@@ -41,14 +42,14 @@ void FaceManager::run()
         }
         FaceHandle *bgrHandle;
         int bgrLength;
-        m_mutex.lock();
+        m_interFace->m_mutex.lock();
         detect((const char *)m_bgrVideoFrame->stVFrame.u64VirAddr[0], m_bgrVideoFrame->stVFrame.u32Stride[0],
                 m_bgrVideoFrame->stVFrame.u32Height, NV21, 0.75, &bgrHandle, &bgrLength);
-        m_mutex.unlock();
+        m_interFace->m_mutex.unlock();
         m_trackId.clear();
         m_trackId.resize(bgrLength);
         track(bgrHandle, bgrLength, m_trackId.data());
-        int ret = sort(bgrHandle, bgrLength);
+        sort(bgrHandle, bgrLength);
         if (bgrLength > 0) {
             hardware->ctlIrWhite(IR_WHITE);
             for(int i = 0; i < m_sMFaceHandle.size(); i++) {
@@ -65,27 +66,32 @@ void FaceManager::run()
                 }
                 emit showFaceFocuse(saveLeft[i], saveTop[i], saveRight[i], saveBottom[i], i, m_sMFaceHandle[i].track_id);
             }
-            if (!m_interFace->m_iFaceHandle && m_isIdentify) {
+            if (!m_interFace->m_iFaceHandle && m_isIdentify)
+            {
                 m_interFace->m_iFaceHandle = bgrHandle;
                 m_interFace->m_faceHandle = m_sMFaceHandle;
                 m_interFace->m_count = bgrLength;
                 m_interFace->m_iStop = false;
                 memcpy(m_interFace->m_bgrImage, (const char *)m_bgrVideoFrame->stVFrame.u64VirAddr[0], VIDEO_WIDTH * VIDEO_HEIGHT * 3 / 2);
-                if (1) {
+                if (ir)
+                {
                     memcpy(m_interFace->m_irImage, (const char *)m_irVideoFrame->stVFrame.u64VirAddr[0], VIDEO_WIDTH * VIDEO_HEIGHT * 3 / 2);
                 }
                 g_usedSpace.release();
-            } else {
+            }
+            else
+            {
                 releaseAllFace(bgrHandle, bgrLength);
             }
-        } else {
+        }
+        else
+        {
             m_interFace->m_iStop = true;
             emit hideFaceFocuse();
 //            if(settings->isTemp)
 //            {
 //                emit stopTemp();
 //            }
-//            emit hideRect(false);
 //            if(m_lightStatus)
 //            {
 //                m_lightCount++;
@@ -102,7 +108,8 @@ void FaceManager::run()
         }
         hardware->checkOpenDoor();
         hardware->ctlWDG();
-        if (1) {
+        if (ir)
+        {
             IF_ReleaseIRData(m_irVideoFrame);
         }
         IF_ReleaseData(m_bgrVideoFrame);
@@ -113,7 +120,7 @@ bool FaceManager::filter(const FaceRect &rect)
 {
     bool pass = true;
     int width = rect.right - rect.left;
-    if (0)
+    if (switchCtl->m_tempCtl)
     {
         if (width > 400)
         {
@@ -124,7 +131,7 @@ bool FaceManager::filter(const FaceRect &rect)
         {
             bool region = true;
             bool dis;
-            if (0)
+            if (switchCtl->m_loose)
             {
                 dis = width > 150;
             }
@@ -151,9 +158,10 @@ bool FaceManager::filter(const FaceRect &rect)
     return pass;
 }
 
-int FaceManager::sort(FaceHandle *faceHandle, int count)
+void FaceManager::sort(FaceHandle *faceHandle, int count)
 {
     int i, j;
+    int waitTime = switchCtl->m_identifyWaitTime;
     MFaceHandle buf;
     FaceRect rect0 ,rect1;
     m_sMFaceHandle.clear();
@@ -204,15 +212,14 @@ int FaceManager::sort(FaceHandle *faceHandle, int count)
             }
             else
             {
-                m_timer->countdown_ms(3*1000);
+                m_timer->countdown_ms(waitTime*1000);
             }
         }
         else
         {
-            m_timer->countdown_ms(3*1000);
+            m_timer->countdown_ms(waitTime*1000);
         }
     }
-    return 1;
 }
 
 bool FaceManager::init()

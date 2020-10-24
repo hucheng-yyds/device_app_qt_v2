@@ -14,6 +14,11 @@ void FaceIdentify::run()
     while (true)
     {
         g_usedSpace.acquire();
+        bool ir = switchCtl->m_ir;
+        bool faceDoor = switchCtl->m_faceDoorCtl;
+        bool tempCtl = switchCtl->m_tempCtl;
+        bool vi = switchCtl->m_vi;
+        QString openMode = switchCtl->m_openMode;
         FaceHandle *bgrHandle = m_interFace->m_iFaceHandle, *irHandle;
         m_iMFaceHandle = m_interFace->m_faceHandle;
         FacePoseBlur pose_blur;
@@ -29,10 +34,10 @@ void FaceIdentify::run()
         m_interFace->m_mutex.unlock();
         QVector<int> matchPair(bgrLength, irLength);
         BGR_IR_match(bgrHandle, bgrLength, irHandle, irLength, matchPair.data());
-        if (1)
+        if (faceDoor)
         {
             int i = 0;
-            if (matchPair[m_iMFaceHandle[i].index] == irLength /*&& settings->isIr*/)
+            if (matchPair[m_iMFaceHandle[i].index] == irLength && ir)
             {
                 qDebug("[FACEPASS_DV300_TEST]  This bgrIndex=%d face handle is attack, can not pass the ir filter process!!", i);
                 m_interFace->m_iStop = true;
@@ -52,7 +57,7 @@ void FaceIdentify::run()
 //                    emit pose();
                     m_interFace->m_quality = false;
                 }
-                if (/*settings->isIr &&*/ m_interFace->m_quality)
+                if (ir && m_interFace->m_quality)
                 {
                     float liveness_result = 0.0;
                     getLiveness_bgrir(bgrHandle[m_iMFaceHandle[i].index], irHandle[matchPair[m_iMFaceHandle[i].index]],&liveness_result);
@@ -72,7 +77,7 @@ void FaceIdentify::run()
                     extract(bgrHandle[m_iMFaceHandle[i].index], &feature_result, &size);
                     identifyFromFaceGroup(m_interFace->m_groupHandle, feature_result, size, &result, &face_id);
                     m_interFace->m_mutex.unlock();
-                    if ((result > 60) && (face_id > 0))
+                    if ((result > switchCtl->m_faceDoorCtl) && (face_id > 0))
                     {
 //                        qt_debug() << "result" << result << "face_id" << face_id;
                         QStringList value = dealOpencondition(face_id);
@@ -93,29 +98,26 @@ void FaceIdentify::run()
                         }
                         else
                         {
-//                            emit onlineRemark(false, "", remark);
-//                            emit wgOut(1, sqlDatabase->sqlICSelect(face_id, "mid").value(0).toByteArray());
-//                            if(settings->language == 0)
-//                            {
-//                                if(1 == settings->isNameMask)
-//                                {
-//                                    if(name.size() > 3)
-//                                    {
-//                                        name = name.replace(0, 2, "**");
-//                                    }
-//                                    else if(name.size() > 1){
-//                                        name = name.replace(0, 1, '*');
-//                                    }
-//                                }
-//                                else if(2 == settings->isNameMask)
-//                                {
-//                                    name = name.replace(0, name.size(), tr("您好"));
-//                                }
-//                            }
+                            if(0 == switchCtl->m_language)
+                            {
+                                if(1 == switchCtl->m_nameMask)
+                                {
+                                    if(name.size() > 3)
+                                    {
+                                        name = name.replace(0, 2, "**");
+                                    }
+                                    else if(name.size() > 1){
+                                        name = name.replace(0, 1, '*');
+                                    }
+                                }
+                                else if(2 == switchCtl->m_nameMask)
+                                {
+                                    name = name.replace(0, name.size(), tr("您好"));
+                                }
+                            }
                             emit faceResultShow(name, i, m_iMFaceHandle[i].track_id, tr("认证通过"));
                             egPass = true;
                         }
-//                        isStranger = "0";
                     } else {
                         QString result = tr("请联系管理员");
                         emit faceResultShow(tr("未注册"), i, m_iMFaceHandle[i].track_id, result);
@@ -138,7 +140,7 @@ void FaceIdentify::run()
                 }
             }
         }
-        if (1)
+        if (switchCtl->m_uploadImageCtl)
         {
             cv::Mat nv21(VIDEO_HEIGHT + VIDEO_HEIGHT / 2, VIDEO_WIDTH, CV_8UC1, m_bgrImage);
             cv::Mat image;
@@ -164,7 +166,7 @@ endIdentify:
             releaseFeature(feature_result);
         }
         releaseAllFace(bgrHandle, bgrLength);
-        if (1) {
+        if (ir) {
             releaseAllFace(irHandle, irLength);
         }
         m_interFace->m_iFaceHandle = nullptr;

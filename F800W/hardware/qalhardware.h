@@ -13,6 +13,7 @@
 
 #include "countdown.h"
 #include "sample_vio.h"
+#include "switch.h"
 
 #define OFF 0
 #define ON 1
@@ -49,6 +50,8 @@ struct led_pwm_set{
     int closetime;          //  呼吸灯灭的时间，为0的时候，呼吸灯一直循环，没有灭掉间隔
     int res;
 };
+
+#define hardware    QalHardWare::getInstance()
 
 // gpio驱动接口 - 单例模式
 class QalHardWare : public QThread

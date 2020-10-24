@@ -6,13 +6,13 @@
 
 int main(int argc, char *argv[])
 {
-    IF_VIO_VPSS_VO_MIPI_TX(22, 3, 1);
+    IF_VIO_VPSS_VO_MIPI_TX(switchCtl->m_camera, switchCtl->m_screen, switchCtl->m_angle);
     while (!IF_CheckYUVDataReady(0)) {
         QThread::msleep(1000);
     }
     QGuiApplication app(argc, argv);
     QTranslator *m_translator = new QTranslator();
-    switch (0) {
+    switch (switchCtl->m_language) {
     case 0:
         m_translator->load("./language/OF_CH.qm");
         break;

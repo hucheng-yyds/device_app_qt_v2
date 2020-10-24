@@ -136,15 +136,15 @@ void QalHardWare::ttsInit()
 
 void QalHardWare::init()
 {
-    if(1)
+    if(!switchCtl->m_tts)
     {
         IF_AUDIO_Init();
-        setVolume(100);
     }
     else {
         IF_PCMAUDIO_Init();
         ttsInit();
     }
+    setVolume(switchCtl->m_volume);
 }
 
 int QalHardWare::text_to_speech(const char* src_text, const char* des_path, const char* params)
@@ -230,8 +230,8 @@ int QalHardWare::text_to_speech(const char* src_text, const char* des_path, cons
 
 void QalHardWare::playSound(const char *content, const QString &filename)
 {
-    int language = 0;
-    int playType = 1;
+    int language = switchCtl->m_language;
+    int playType = !switchCtl->m_tts;
     if(language != 0 && language != 1)
     {
         playSoundAac(language, filename);
@@ -270,7 +270,7 @@ void QalHardWare::playSoundAac(int type, const QString &filename)
     } while (size);
     qDebug() << "send over !";
     file.close();
-//    msleep(400);
+    msleep(400);
     m_mutex.unlock();
 }
 

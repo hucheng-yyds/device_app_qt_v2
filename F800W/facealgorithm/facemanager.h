@@ -21,7 +21,7 @@ private:
     // 根据人脸框的大小过滤每帧图片的人脸
     bool filter(const FaceRect &rect);
     // 取出每帧图片的最大人脸，并判断下轮比对是否开始
-    int sort(FaceHandle *faceHandle, int count);
+    void sort(FaceHandle *faceHandle, int count);
 
 signals:
     // 显示人脸框
