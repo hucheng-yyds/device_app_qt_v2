@@ -68,8 +68,9 @@ public:
     }
     // 设置音量值，0-100
     void setVolume(int vol);
-    // 呼吸灯控制
-    void ctlBreatheLed(int ctl);
+    // led灯颜色控制
+    void ctlLed(int ctl);
+    // 蓝色呼吸灯控制
     void ctlBLN(int ctl);
     // 红外灯控制
     void ctlIr(int ctl);

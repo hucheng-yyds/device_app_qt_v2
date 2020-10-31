@@ -24,26 +24,43 @@ public:
     }
     // 当前所有人脸id
     QSet<int> m_localFaceSet;
-    // 查询所有userid;
-    void sqlSelectAllUserId();
+    // 查询所有userid 和 特征值;
+    QMap<int, QString> sqlSelectAllUserIdFeature();
+    // 查询所有userid 和 时间戳;
+    QMap<int, QString> sqlSelectAllUserIdTime();
     // 根据人员id查询表中对应人员的其他信息
     QVariantList sqlSelect(int id);
     // 根据人员id查询表中对应人员的采集图片名称
     QString sqlSelectPhotoName(int id);
-    // 人员信息插入表格, id:唯一的人员mids,passnum:开门权限通行次数，isBack:是否白名单， feature:人脸特征值
-    // data:从索引0依次开始 用户名、采集时间、门禁卡号、权限开始时间、权限结束时间、星期字段、一天的通行时段、手机号、图片名称、备注
-    void sqlInsert(int id, int passnum, int isBack, const QVariant &feature, const QStringList &data);
+    // 人员信息插入表格
+    void sqlInsert(int id, const QString &username, const QString &time, const QString &feature);
     // 根据人员id删除人员
     void sqlDelete(int id);
     // 删除所有人员信息
     void sqlDeleteAll();
-    // 人员信息插入表格, id:唯一的人员mids,passnum:开门权限通行次数，isBack:是否白名单， feature:人脸特征值
-    // data:从索引0依次开始 用户名、采集时间、门禁卡号、权限开始时间、权限结束时间、星期字段、一天的通行时段、手机号、图片名称、备注
-    void sqlUpdate(int id, int passnum, int isBack, const QStringList &data);
-    // 更新开门权限开门次数
-    void sqlUpdatePass(int id, int passnum);
+    // 人员信息更新
+    void sqlUpdate(int id, const QString &username, const QString &time);
     // 获取人员图片特征值
     QString sqlGetFeature(int id);
+
+    // 离线记录数据插入
+    void sqlInsertOffline(int userid, int type, int isOver, int isTemp, const QStringList &datas);
+    // 查询所有离线记录id
+    QList<int> sqlSelectAllOffLine();
+    // 离线记录查询
+    QVariantList sqlSelectOffline(int userid);
+    // 根据人员id 删除对应离线记录
+    void sqlDeleteOffline(int userid);
+    // 查询所有失败记录id
+    QSet<int> sqlInsertFailSelectAll();
+    // 根据失败id查询对应内容
+    QVariantList sqlInsertFaileSelect(const QVariant &variant);
+    // 插入失败记录
+    void sqlInsertFailInsert(const QVariant &id, const QVariant &name, const QVariant &edittime, const QVariant &feature);
+    // 根据id删除对应记录
+    void sqlInsertFailDelete(const QVariant &id);
+    // 删除所有失败记录
+    void sqlInsertFailDeleteAll();
 
 private:
     static SqlDatabase *m_Instance;

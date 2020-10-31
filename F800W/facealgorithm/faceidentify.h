@@ -14,18 +14,31 @@ public:
 protected:
     virtual void run();
 
+public slots:
+    // 接收测温模块测温结果
+    void recvTempResult(const QString &tempVal, int result);
+
 private:
     // 处理开门权限
     QStringList dealOpencondition(int faceId);
 
 signals:
-    // 人脸检测结果显示
+    // 人脸检测结果显示 ui显示
     void faceResultShow(const QString &name, int index, int trackId, const QString &result);
+    // 开始测温信号
+    void startTemp();
+    // UI显示正在测温
+    void showStartTemp();
+    // 显示测温状态和结果
+    void tempShow(const QString &tempVal, int result);
 
 private:
     FaceInterface *m_interFace;
     unsigned char *m_irImage;
     unsigned char *m_bgrImage;
     QVector<MFaceHandle> m_iMFaceHandle;
+    bool m_tempFlag;
+    QString m_tempVal;
+    int m_tempResult;
 };
 #endif // FACEIDENTIFY_H

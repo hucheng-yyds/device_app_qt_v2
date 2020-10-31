@@ -8,21 +8,67 @@ FaceManager::FaceManager()
     m_timer = new CountDown;
 }
 
+void FaceManager::updateIdentifyValue()
+{
+    size_t count = 0;
+    getFaceGroupCount(m_interFace->m_groupHandle, &count);
+    if (0 == count || count < 1000)
+    {
+        switchCtl->m_faceThreshold = 61;
+    }
+    else if (1000 <= count && count < 5000)
+    {
+        switchCtl->m_faceThreshold = 65;
+    }
+    else if (5000 <= count && count < 10000)
+    {
+        switchCtl->m_faceThreshold = 66;
+    }
+    else if (10000 <= count && count < 20000)
+    {
+        switchCtl->m_faceThreshold = 68;
+    }
+    else if (20000 <= count && count < 50000)
+    {
+        switchCtl->m_faceThreshold = 70;
+    }
+    else if (50000 <= count && count < 100000)
+    {
+        switchCtl->m_faceThreshold = 71;
+    }
+}
+
 void FaceManager::setFaceInter(FaceInterface *inter)
 {
     m_interFace = inter;
 }
 
+void FaceManager::onBreathingLight()
+{
+    hardware->ctlLed(OFF);
+    hardware->ctlBLN(ON);
+    hardware->ctlIrWhite(OFF);
+
+}
+
 void FaceManager::run()
 {
+    int backLightCount = 0;
     FaceRect rect;
     int saveLeft[5];
     int saveTop[5];
     int saveRight[5];
     int saveBottom[5];
     int offset = 10;
+    sleep(2);
+    emit syncSuccess(switchCtl->m_faceDoorCtl, switchCtl->m_tempCtl);
     while(true)
     {
+        if(m_interFace->m_localFaceSync)
+        {
+            msleep(50);
+            continue;
+        }
         bool ir = switchCtl->m_ir;
         m_bgrVideoFrame = nullptr;
         IF_GetData(&m_bgrVideoFrame, VIDEO_WIDTH, VIDEO_HEIGHT);
@@ -51,6 +97,7 @@ void FaceManager::run()
         track(bgrHandle, bgrLength, m_trackId.data());
         sort(bgrHandle, bgrLength);
         if (bgrLength > 0) {
+            backLightCount = 0;
             hardware->ctlIrWhite(IR_WHITE);
             for(int i = 0; i < m_sMFaceHandle.size(); i++) {
                 rect = m_sMFaceHandle[i].rect;
@@ -88,22 +135,16 @@ void FaceManager::run()
         {
             m_interFace->m_iStop = true;
             emit hideFaceFocuse();
-//            if(settings->isTemp)
-//            {
-//                emit stopTemp();
-//            }
-//            if(m_lightStatus)
-//            {
-//                m_lightCount++;
-//                if(m_lightCount > 100)
-//                {
-//                    m_lightCount = 0;
-//                    hardware->setBLNOn();
-//                }
-//            }
-//            else {
-//                m_lightCount = 0;
-//            }
+            if(switchCtl->m_tempCtl)
+            {
+                emit endTemp();
+            }
+            backLightCount++;
+            if(backLightCount > 100)
+            {
+                backLightCount = 0;
+                onBreathingLight();
+            }
             releaseAllFace(bgrHandle, bgrLength);
         }
         hardware->checkOpenDoor();
@@ -222,6 +263,67 @@ void FaceManager::sort(FaceHandle *faceHandle, int count)
     }
 }
 
+void FaceManager::insertFaceGroups(int id, const QString &username, const QString &time)
+{
+    int count;
+    QString file = QString::number(id) + ".jpg";
+    FaceHandle *faceHandle = nullptr;
+    auto image = cv::imread(file.toStdString());
+    if (image.empty() || (image.cols > 1920) || (image.rows > 1920))
+    {
+        int errid = 1;
+        if(image.empty())
+        {
+            errid = 4;
+        }
+        sqlDatabase->sqlInsertFailDelete(id);
+        sqlDatabase->sqlInsertFailInsert(id, username, time, errid);
+        qDebug() << "Error: id" << id << errid;
+    }
+    else
+    {
+        FacePoseBlur pose_blur;
+        m_interFace->m_mutex.lock();
+        detect((const char *)image.data, image.cols, image.rows, BGR, 0.75, &faceHandle, &count);
+        m_interFace->m_mutex.unlock();
+        if (0 == count)
+        {
+            sqlDatabase->sqlInsertFailDelete(id);
+            sqlDatabase->sqlInsertFailInsert(id, username, time, 2);
+            qDebug() << "faceHandle is null !" << id << "2";
+        }
+        else
+        {
+            getPoseBlurAttribute(faceHandle[0], &pose_blur);
+            if ((qAbs(pose_blur.pitch) < 20 || qAbs(pose_blur.roll) < 20 || qAbs(pose_blur.yaw) < 20)
+                               && (qAbs(pose_blur.blur) < 0.5))
+            {
+                char *feature_result;
+                int size;
+                m_interFace->m_mutex.lock();
+                extract(faceHandle[0], &feature_result, &size);
+                m_interFace->m_mutex.unlock();
+                QStringList feature;
+                for (int i = 0; i < size; i ++) {
+                    feature << QString::number(feature_result[i]);
+                }
+                sqlDatabase->sqlInsert(id, username, time, feature.join(","));
+                insertFaceGroup(m_interFace->m_groupHandle, feature_result, size, id);
+                qDebug() << count << id << size;
+                releaseFeature(feature_result);
+            }
+            else
+            {
+                qDebug() << "failInsert" << 3;
+                sqlDatabase->sqlInsertFailDelete(id);
+                sqlDatabase->sqlInsertFailInsert(id, username, time, 3);
+            }
+        }
+        releaseAllFace(faceHandle, count);
+    }
+    QFile::remove(file);
+}
+
 bool FaceManager::init()
 {
     FaceModels models;
@@ -243,14 +345,40 @@ bool FaceManager::init()
 
     setLogLevel(LOG_LEVEL_ERROR);
     int ret = ::init(models);
-    if (ret != RET_OK) {
+    if (ret != RET_OK)
+    {
 //        qt_debug() << "init failed !";
         return false;
     }
-//    qt_debug() << "Start !";
     set_detect_config(0.3, 0.5);
     set_match_config(0.99, -35.61, 0.99, 4.26, 0.4);
-    qDebug() << "================================";
     createFaceGroup(&m_interFace->m_groupHandle);
+    localFaceInsert();
     return true;
+}
+
+void FaceManager::localFaceInsert()
+{
+    QMap<int, QString> localFeatureList = sqlDatabase->sqlSelectAllUserIdFeature();
+    m_interFace->m_localFaceSync = true;
+    foreach (int id, sqlDatabase->m_localFaceSet) {
+
+        QString value = localFeatureList.find(id).value();
+        if ("0" != value) {
+            QStringList result = value.split(",");
+            QVector<char> ret;
+            int size = result.size();
+            ret.resize(size);
+            for (int i = 0; i < size; i ++)
+            {
+                ret[i] = result.at(i).toFloat();
+            }
+            insertFaceGroup(m_interFace->m_groupHandle, ret.data(), 512, id);
+        }
+        else {
+            qDebug() << "value 0" << value;
+        }
+    }
+    updateIdentifyValue();
+    m_interFace->m_localFaceSync = false;
 }

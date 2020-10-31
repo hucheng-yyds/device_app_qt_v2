@@ -17,17 +17,30 @@ public:
 protected:
     virtual void run();
 
+public slots:
+    void insertFaceGroups(int id, const QString &username, const QString &time);
+
 private:
     // 根据人脸框的大小过滤每帧图片的人脸
     bool filter(const FaceRect &rect);
     // 取出每帧图片的最大人脸，并判断下轮比对是否开始
     void sort(FaceHandle *faceHandle, int count);
+    // 待机状态下打开蓝色呼吸灯
+    void onBreathingLight();
+    // 本地人脸数据入库
+    void localFaceInsert();
+    // 根据人脸底库更新阈值
+    void updateIdentifyValue();
 
 signals:
-    // 显示人脸框
+    // 显示人脸框 ui界面显示
     void showFaceFocuse(int left, int top, int right, int bottom, int index, int trackId);
-    // 隐藏人脸框
+    // 隐藏人脸框 控制ui界面消失人脸框
     void hideFaceFocuse();
+    // 停止测温
+    void endTemp();
+    // 刷新ui界面 初始化完成
+    void syncSuccess(bool eg, bool temp);
 
 private:
     VIDEO_FRAME_INFO_S *m_bgrVideoFrame;

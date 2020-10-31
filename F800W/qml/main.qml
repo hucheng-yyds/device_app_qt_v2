@@ -15,19 +15,14 @@ ApplicationWindow {
         id:face
     }
 
-//    Standby {
-//        id: standby
-//        visible: false;
-//    }
+    Standby {
+        id: standby
+        visible: false;
+    }
 
-//    Connect {
-//        id: connect
-//        visible: false;
-//    }
-
-//    QRCode {
-//        id:qrcode;
-//        visible: false;
-//    }
+    QRcode {
+        id:qrcode;
+        visible: false;
+    }
 }
 

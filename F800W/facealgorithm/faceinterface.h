@@ -29,6 +29,7 @@ public:
     int m_count;
     bool m_iStop;
     bool m_quality;
+    bool m_localFaceSync;
     unsigned char *m_irImage;
     unsigned char *m_bgrImage;
     QMutex m_mutex;

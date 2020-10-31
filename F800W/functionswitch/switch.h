@@ -9,6 +9,7 @@
 #define switchCtl SwitchCtl::getInstance()
 
 #define VERSION     "1.0.0"
+#define DEVICE_TYPE "F800W"
 
 class SwitchCtl
 {
@@ -21,12 +22,22 @@ public:
         }
         return m_Instance;
     }
+
+    // 人脸比对阈值 根据入库人数自动调节
+    double m_faceThreshold;
+    // 设备sn码
+    QString m_sn;
+    // 设备ip
+    QString m_ipAddr;
+    // tcp后台登录的密码
+    QString m_passwd;
+
     // 保存屏的参数
-    void saveSreenParam(const QJsonObject &obj);
+    void saveSreenParam();
     // 读取屏的参数
     QJsonObject readScreenParam();
     // 保存开关量参数
-    void saveSwitchParam(const QJsonObject &obj);
+    void saveSwitchParam();
     // 读取开关量参数
     QJsonObject readSwitchParam();
     // 恢复开关量默认值
@@ -38,9 +49,6 @@ public:
     int m_screen;
     // 摄像头参数 一般不变
     int m_camera;
-
-    double m_faceThreshold;
-
     // 门禁开关
     bool m_faceDoorCtl;
     // 测温开关
@@ -83,6 +91,8 @@ public:
     QString m_httpAddr;
     // tcp后台请求超时时间
     int m_tcpTimeout;
+    // ntp始终服务器地址
+    QString m_ntpAddr;
 
     // 温度补偿值
     double m_tempComp;

@@ -5,6 +5,8 @@
 #include "faceidentify.h"
 #include "facemanager.h"
 #include "netmanager.h"
+#include "httpsclient.h"
+#include "tempmanager.h"
 
 // 公共接口层 ui界面接口层
 class ProStorage : public QObject
@@ -12,20 +14,32 @@ class ProStorage : public QObject
     Q_OBJECT
 public:
     explicit ProStorage();
+    // 生成二维码
+    void saveQRcodeImage(const char *content);
 
 signals:
-    // 人脸检测结果显示
+    // 人脸检测结果显示 ui界面显示
     void faceResultShow(const QString &name, int index, int trackId, const QString &result);
-    // 显示人脸框
+    // 显示人脸框 ui界面显示
     void showFaceFocuse(int left, int top, int right, int bottom, int index, int trackId);
-    // 隐藏人脸框
+    // 隐藏人脸框 控制ui界面
     void hideFaceFocuse();
     // 发送信号 ui界面显示版本号 设备名称 同步人员个数 设备ip 设备sn码
     void showDeviceInfo(const QString &ver, const QString &name, const QString &number, const QString &devIp, const QString &devSn);
+    // 发送授权状态 和显示授权页面 UI界面显示
+    void qrcodeChanged(const QString &rcode);
+    // 刷新ui界面 初始化完成
+    void syncSuccess(bool eg, bool temp);
+    // UI显示正在测温
+    void showStartTemp();
+    // 显示测温状态和结果
+    void tempShow(const QString &tempVal, int result);
 
 private:
     // 功能模块初始化
     void init();
+    // 判断sn码是否产生
+    void DeviceSnJudgment();
 
 private:
 

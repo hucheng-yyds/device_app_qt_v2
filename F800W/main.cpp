@@ -40,5 +40,9 @@ int main(int argc, char *argv[])
     ProStorage programs;
     engine.rootContext()->setContextProperty("programs", &programs);
     engine.load(QUrl(QStringLiteral("./qml/main.qml")));
+    system("himm 0x111F0028 0x0500");
+    system("himm 0x120D6400 0xB0");
+    system("himm 0x120D6200 0x80");
+    system("himm 0x120D6200 0xff");
     return app.exec();
 }

@@ -3,7 +3,6 @@
 
 NetManager::NetManager()
 {
-
 }
 
 void NetManager::run()
@@ -17,8 +16,9 @@ void NetManager::run()
             ip = getIP();
             seq = 0;
         }
+        switchCtl->m_ipAddr = ip;
         int count = sqlDatabase->m_localFaceSet.size();
-        emit showDeviceInfo(VERSION, switchCtl->m_devName, QString("%1").arg(count), ip, "");
+        emit showDeviceInfo(VERSION, switchCtl->m_devName, QString("%1").arg(count), ip, switchCtl->m_sn);
         msleep(500);
         seq++;
     }

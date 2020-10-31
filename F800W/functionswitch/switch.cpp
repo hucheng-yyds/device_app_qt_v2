@@ -41,6 +41,8 @@ SwitchCtl::SwitchCtl()
         m_tcpPort = serverObj.value("tcpPort").toInt();
         m_httpAddr = serverObj.value("httpAddr").toString();
         m_tcpTimeout = serverObj.value("tcpTimeout").toInt();
+        m_ntpAddr = serverObj.value("ntpAddr").toString();
+        m_passwd = serverObj.value("passwd").toString();
 
         m_tempComp = userObj.value("tempComp").toDouble();
         m_warnValue = userObj.value("warnValue").toDouble();
@@ -76,11 +78,12 @@ SwitchCtl::SwitchCtl()
         m_angle = obj.value("angle").toInt();
         m_camera = obj.value("camera").toInt();
         m_screen = obj.value("screen").toInt();
+        m_sn = obj.value("sn").toString();
         qDebug() << m_angle << m_camera << m_screen;
     }
 }
 
-void SwitchCtl::saveSwitchParam(const QJsonObject &obj)
+void SwitchCtl::saveSwitchParam()
 {
     QFile file("./switch.json");
     if(!file.open(QIODevice::ReadWrite)) {
@@ -88,6 +91,57 @@ void SwitchCtl::saveSwitchParam(const QJsonObject &obj)
     } else {
         qDebug() <<"File open successfully!";
     }
+    QJsonObject obj, userObj, netObj, identifyObj, switchObj, serverObj;
+    switchObj.insert("faceDoorCtl", m_faceDoorCtl);
+    switchObj.insert("tempCtl", m_tempCtl);
+    switchObj.insert("ir", m_ir);
+    switchObj.insert("loose", m_loose);
+    switchObj.insert("vi", m_vi);
+
+    identifyObj.insert("idcardValue", m_idcardValue);
+    identifyObj.insert("identifyWaitTime", m_identifyWaitTime);
+
+    serverObj.insert("protocol", m_protocol);
+    serverObj.insert("tcpAddr", m_tcpAddr);
+    serverObj.insert("tcpPort", m_tcpPort);
+    serverObj.insert("tcpTimeout", m_tcpTimeout);
+    serverObj.insert("httpAddr", m_httpAddr);
+    serverObj.insert("ntpAddr", m_ntpAddr);
+    serverObj.insert("passwd", m_passwd);
+
+    netObj.insert("ipMode", m_ipMode);
+    netObj.insert("manualIp", m_manualIp);
+    netObj.insert("manualGateway", m_manualGateway);
+    netObj.insert("manualNetmask", m_manualNetmask);
+    netObj.insert("manualDns", m_manualDns);
+
+    userObj.insert("openMode", m_openMode);
+    userObj.insert("tempComp", m_tempComp);
+    userObj.insert("warnValue", m_warnValue);
+    userObj.insert("timeZone", m_timeZone);
+    userObj.insert("identifyDistance", m_identifyDistance);
+    userObj.insert("doorDelayTime", m_doorDelayTime);
+    userObj.insert("helet", m_helet);
+    userObj.insert("mask", m_mask);
+    userObj.insert("showIc", m_showIc);
+    userObj.insert("fahrenheit", m_fahrenheit);
+    userObj.insert("irLightCtl", m_irLightCtl);
+    userObj.insert("bgrLightCtl", m_bgrLightCtl);
+    userObj.insert("uploadImageCtl", m_uploadImageCtl);
+    userObj.insert("uploadStrangerCtl", m_uploadStrangerCtl);
+    userObj.insert("language", m_language);
+    userObj.insert("devName", m_devName);
+    userObj.insert("tts", m_tts);
+    userObj.insert("tempValueBroadcast", m_tempValueBroadcast);
+    userObj.insert("rcode", m_rcode);
+    userObj.insert("volume", m_volume);
+
+
+    obj.insert("user", userObj);
+    obj.insert("net", netObj);
+    obj.insert("server", serverObj);
+    obj.insert("identify", identifyObj);
+    obj.insert("switch", switchObj);
     QJsonDocument jdoc(obj);
     file.seek(0);
     file.write(jdoc.toJson());
@@ -103,6 +157,7 @@ QJsonObject SwitchCtl::readSwitchParam()
     } else {
         qDebug() <<"File open successfully!";
     }
+
     QJsonDocument jdc(QJsonDocument::fromJson(file.readAll()));
     QJsonObject obj = jdc.object();
     file.close();
@@ -136,6 +191,9 @@ void SwitchCtl::setSwitchDefault()
     m_tcpPort = 8777;
     m_httpAddr = "http://120.79.147.36:8086/starr-web";
     m_tcpTimeout = 3;
+    m_ntpAddr = "120.25.108.11";
+    m_passwd = "";
+
     m_tempComp = 0.0;
     m_warnValue = 37.3;
     m_timeZone = "(UTC+08:00)";
@@ -172,6 +230,8 @@ void SwitchCtl::setSwitchDefault()
     serverObj.insert("tcpPort", m_tcpPort);
     serverObj.insert("tcpTimeout", m_tcpTimeout);
     serverObj.insert("httpAddr", m_httpAddr);
+    serverObj.insert("ntpAddr", m_ntpAddr);
+    serverObj.insert("passwd", m_passwd);
 
     netObj.insert("ipMode", m_ipMode);
     netObj.insert("manualIp", m_manualIp);
@@ -214,7 +274,7 @@ void SwitchCtl::setSwitchDefault()
     file.close();
 }
 
-void SwitchCtl::saveSreenParam(const QJsonObject &obj)
+void SwitchCtl::saveSreenParam()
 {
     QFile file("./screen.json");
     if(!file.open(QIODevice::ReadWrite)) {
@@ -222,6 +282,11 @@ void SwitchCtl::saveSreenParam(const QJsonObject &obj)
     } else {
         qDebug() <<"File open successfully!";
     }
+    QJsonObject obj;
+    obj.insert("sn", m_sn);
+    obj.insert("angle", m_angle);
+    obj.insert("camera", m_camera);
+    obj.insert("screen", m_screen);
     QJsonDocument jdoc(obj);
     file.seek(0);
     file.write(jdoc.toJson());
@@ -255,6 +320,7 @@ void SwitchCtl::setScreenDefault()
     m_angle = 1;
     m_camera = 22;
     m_screen = 4;
+    obj.insert("sn", "");
     obj.insert("angle", m_angle);
     obj.insert("camera", m_camera);
     obj.insert("screen", m_screen);

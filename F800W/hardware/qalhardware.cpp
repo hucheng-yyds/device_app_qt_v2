@@ -31,12 +31,12 @@ void QalHardWare::run()
     m_led.opentime=2;
     m_led.closetime=0;
     m_timer.countdown_ms(0);
-    ioctl(m_fd, WDG_SET, &m_i);
+//    ioctl(m_fd, WDG_SET, &m_i);
     init();
     exec();
 }
 
-void QalHardWare::ctlBreatheLed(int ctl)
+void QalHardWare::ctlLed(int ctl)
 {
     switch (ctl) {
     case OFF:
@@ -258,6 +258,7 @@ void QalHardWare::playSoundAac(int type, const QString &filename)
     QFile file(name);
     ioctl(m_fd, MUTE_SET, &vol);
     if (!file.open(QIODevice::ReadOnly)) {
+        m_mutex.unlock();
         return ;
     }
     qDebug() << "send start !";

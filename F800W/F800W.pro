@@ -34,6 +34,7 @@ LIBS += -L$$PWD/external/lib/hi
 LIBS += -L$$PWD/external/lib/opencv
 
 LIBS += $$PWD/external/lib/libvio.a
+LIBS += $$PWD/external/lib/libqrcodegen.a
 
 LIBS += -lisp -lmpi -l_hidehaze -l_hidrc -l_hildci -lhifisheyecalibrate -lsecurec -lhi_cipher -lsvpruntime -lnnie -l_hiae -l_hiawb
 LIBS += -lsns_imx327 -lsns_imx327_2l -lsns_imx307 -lsns_imx307_2l -lsns_imx335 -lsns_imx458 -lsns_mn34220 -lsns_os05a -lsns_c2395
@@ -51,6 +52,8 @@ INCLUDEPATH     += $$PWD/mqtt
 INCLUDEPATH     += $$PWD/facealgorithm
 INCLUDEPATH     += $$PWD/sqldatabase
 INCLUDEPATH     += $$PWD/netmanager
+INCLUDEPATH     += $$PWD/communicatemodule
+INCLUDEPATH     += $$PWD/temperature
 
 include         ($$PWD/hardware/hardware.pri)
 include         ($$PWD/timerCountDown/timerCountDown.pri)
@@ -60,13 +63,17 @@ include         ($$PWD/mqtt/mqtt.pri)
 include         ($$PWD/facealgorithm/facealgorithm.pri)
 include         ($$PWD/sqldatabase/sqldatabase.pri)
 include         ($$PWD/netmanager/netmanager.pri)
+include         ($$PWD/communicatemodule/communicatemodule.pri)
+include         ($$PWD/temperature/temperature.pri)
 
 #RESOURCES += main.qrc
 
 DISTFILES += \
     qml/main.qml \
     qml/Face.qml \
-    qml/Focusing.qml
+    qml/Focusing.qml \
+    qml/QRcode.qml \
+    qml/Standby.qml
 
 
 # Additional import path used to resolve QML modules in Qt Creator's code model

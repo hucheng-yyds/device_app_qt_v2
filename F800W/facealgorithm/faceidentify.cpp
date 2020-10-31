@@ -5,8 +5,18 @@ extern QSemaphore g_usedSpace;
 FaceIdentify::FaceIdentify()
 {
     m_interFace = nullptr;
+    m_tempFlag = false;
+    m_tempVal = "0";
+    m_tempResult = 0;
     m_irImage = new unsigned char[VIDEO_WIDTH*VIDEO_HEIGHT* 3 / 2];
     m_bgrImage = new unsigned char[VIDEO_WIDTH*VIDEO_HEIGHT* 3 / 2];
+}
+
+void FaceIdentify::recvTempResult(const QString &tempVal, int result)
+{
+    m_tempFlag = true;
+    m_tempVal = tempVal;
+    m_tempResult = result;
 }
 
 void FaceIdentify::run()
@@ -19,12 +29,18 @@ void FaceIdentify::run()
         bool tempCtl = switchCtl->m_tempCtl;
         bool vi = switchCtl->m_vi;
         QString openMode = switchCtl->m_openMode;
+        if(tempCtl)
+        {
+            m_tempFlag = false;
+            emit startTemp();
+        }
         FaceHandle *bgrHandle = m_interFace->m_iFaceHandle, *irHandle;
         m_iMFaceHandle = m_interFace->m_faceHandle;
         FacePoseBlur pose_blur;
         FaceAttr face_attr;
         bool authority = false;
         bool egPass = false;
+        bool tempPass = false;
         char *feature_result = nullptr;
         int bgrLength = m_interFace->m_count,irLength;
         memcpy(m_bgrImage, m_interFace->m_bgrImage, VIDEO_WIDTH * VIDEO_HEIGHT * 3 / 2);
@@ -63,9 +79,7 @@ void FaceIdentify::run()
                     getLiveness_bgrir(bgrHandle[m_iMFaceHandle[i].index], irHandle[matchPair[m_iMFaceHandle[i].index]],&liveness_result);
                     if (liveness_result < 0.8)
                     {
-//                        emit identifySuccess("", i, iMFaceHandle[i].track_id);
                         m_interFace->m_iStop = true;
-//                        qt_debug() << "liveness_result: " << liveness_result;
                     }
                 }
                 if (!m_interFace->m_iStop && m_interFace->m_quality)
@@ -77,24 +91,22 @@ void FaceIdentify::run()
                     extract(bgrHandle[m_iMFaceHandle[i].index], &feature_result, &size);
                     identifyFromFaceGroup(m_interFace->m_groupHandle, feature_result, size, &result, &face_id);
                     m_interFace->m_mutex.unlock();
-                    if ((result > switchCtl->m_faceDoorCtl) && (face_id > 0))
+                    if ((result > switchCtl->m_faceThreshold) && (face_id > 0))
                     {
-//                        qt_debug() << "result" << result << "face_id" << face_id;
-                        QStringList value = dealOpencondition(face_id);
-                        QString name = value.at(0);
-                        QString remark = value.at(1);
+//                        QStringList value = dealOpencondition(face_id);
+//                        QString name = value.at(0);
+//                        QString remark = value.at(1);
+                        QString name = "";
                         if(name.isEmpty())
                         {
-//                            failReason = "no authority";
-                            authority = true;
-//                            emit onlineRemark(true, tr("没有权限"), remark);
-                            if(remark.isEmpty())
-                            {
-                                hardware->playSound(tr("未授权").toUtf8(), "authority.aac");
-                            }
-                            else {
-                                hardware->playSound(remark.toUtf8(), "authority.aac");
-                            }
+//                            authority = true;
+//                            if(remark.isEmpty())
+//                            {
+//                                hardware->playSound(tr("未授权").toUtf8(), "authority.aac");
+//                            }
+//                            else {
+//                                hardware->playSound(remark.toUtf8(), "authority.aac");
+//                            }
                         }
                         else
                         {
@@ -130,13 +142,91 @@ void FaceIdentify::run()
                     goto endIdentify ;
                 }
             }
-            if(!authority)
+            if (!tempCtl && !vi)
             {
-                if (egPass) {
-                    hardware->playSound(tr("认证通过").toUtf8(), "chengong.aac");
-                    //                    hardware->playSound(name.toUtf8());
-                } else {
-                    hardware->playSound(tr("未注册").toUtf8(), "shibai.aac");
+                if(!authority)
+                {
+                    if (egPass) {
+                        hardware->playSound(tr("认证通过").toUtf8(), "chengong.aac");
+                    } else {
+                        hardware->playSound(tr("未注册").toUtf8(), "shibai.aac");
+                    }
+                }
+            }
+        }
+        if(tempCtl && (egPass || !vi))
+        {
+            emit showStartTemp();
+            if(faceDoor)
+            {
+                if(!authority)
+                {
+                    if (egPass)
+                    {
+                        hardware->playSound(tr("认证通过").toUtf8(), "chengong.aac");
+                    } else {
+                        hardware->playSound(tr("未注册").toUtf8(), "shibai.aac");
+                    }
+                }
+            }
+            while (1)
+            {
+                msleep(100);
+                if(m_tempFlag)
+                {
+                    break;
+                }
+            }
+
+            if(switchCtl->m_fahrenheit)
+            {
+                emit tempShow(QString("%1℉").arg(m_tempVal), m_tempResult);
+            }
+            else
+            {
+                emit tempShow(QString("%1℃").arg(m_tempVal), m_tempResult);
+            }
+            m_tempFlag = false;
+            qDebug() << m_tempVal << m_tempResult;
+            float warnValue = switchCtl->m_warnValue;
+            if(switchCtl->m_fahrenheit)
+            {
+                warnValue = (warnValue)*1.8 + 32.0;
+            }
+            if (m_tempVal.toFloat() >= warnValue)
+            {
+                tempPass = false;
+            }
+            else if(m_tempResult > 0)
+            {
+                tempPass = true;
+            }
+            if(-1 == m_tempResult)
+            {
+                tempPass = false;
+                hardware->playSound(tr("体温偏低").toUtf8(), "tiwenlow.aac");
+            }
+            else if(-2 == m_tempResult)
+            {
+                tempPass = false;
+                hardware->playSound(tr("测温失败").toUtf8(), "cwshibai.aac");
+            }
+            else
+            {
+                if (2 == switchCtl->m_tempValueBroadcast && !switchCtl->m_tts)
+                {
+                    hardware->playSoundTTS(m_tempVal.toUtf8() + tr("度").toUtf8());
+                }
+                else
+                {
+                    if (tempPass)
+                    {
+                        hardware->playSound(tr("体温正常").toUtf8(), "tiwenzhc.aac");
+                    }
+                    else
+                    {
+                        hardware->playSound(tr("体温异常").toUtf8(), "tiwenyc.aac");
+                    }
                 }
             }
         }
@@ -145,7 +235,8 @@ void FaceIdentify::run()
             cv::Mat nv21(VIDEO_HEIGHT + VIDEO_HEIGHT / 2, VIDEO_WIDTH, CV_8UC1, m_bgrImage);
             cv::Mat image;
             cv::cvtColor(nv21, image, CV_YUV2BGR_NV21);
-            if(image.empty()) {
+            if(image.empty())
+            {
                 printf("load image error!!\n");
                 goto endIdentify;
             }
@@ -166,7 +257,8 @@ endIdentify:
             releaseFeature(feature_result);
         }
         releaseAllFace(bgrHandle, bgrLength);
-        if (ir) {
+        if (ir)
+        {
             releaseAllFace(irHandle, irLength);
         }
         m_interFace->m_iFaceHandle = nullptr;
@@ -287,7 +379,7 @@ QStringList FaceIdentify::dealOpencondition(int faceId)
         name = value[1].toString();
         if(passnum >= 1)
         {
-            sqlDatabase->sqlUpdatePass(faceId, passnum-1);
+//            sqlDatabase->sqlUpdatePass(faceId, passnum-1);
         }
     }
     remark = value[12].toString();

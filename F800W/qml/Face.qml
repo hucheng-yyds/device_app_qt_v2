@@ -5,6 +5,9 @@ Item {
     width: root.width
     height: root.height
     property var focusingList: [focusing];
+    property bool isEg;
+    property bool isTemp;
+
     Focusing {
         id: focusing;
     }
@@ -21,6 +24,72 @@ Item {
             id: animated
             source: "./gifs/aa.gif"
             playing: true
+        }
+    }
+
+    // 初始化ui显示
+    Text {
+        id: sync
+        width: 270
+        height: 115
+        text: qsTr("正在初始化")
+        verticalAlignment: Text.AlignVCenter
+        horizontalAlignment: Text.AlignHCenter
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.verticalCenter: parent.verticalCenter
+        font {
+            pixelSize: 50
+            family: "multi-language"
+        }
+        color: "#fffffe"
+        style: Text.Raised
+    }
+
+    Image {
+        id: image_head
+        y: 60;
+        source: "image/temp_head.png"
+        visible: false
+    }
+
+    // 体温正常显示绿色框
+    Image {
+        id: tempNormal
+        y: 60
+        source: "image/temp_normal.png"
+        visible: false
+    }
+
+    // 体温异常显示红色框
+    Image {
+        id: tempUnusual
+        y: 60
+        source: "image/temp_unusual.png"
+        visible: false
+    }
+
+    // 显示体温检测结果
+    Text {
+        id: pose_blur
+        y: 89
+        font {
+            pixelSize: 48
+            family: "multi-language"
+        }
+        color: "#fffffe"
+        text: qsTr("")
+        anchors.horizontalCenter: parent.horizontalCenter
+        verticalAlignment: Text.AlignVCenter
+        horizontalAlignment: Text.AlignHCenter
+    }
+    // 定时器 清空体温检测结果
+    Timer {
+        id: pose_blur_Timer;
+        interval: 2200; running: false;
+        onTriggered: {
+            pose_blur.text = qsTr("");
+            tempNormal.visible = false;
+            tempUnusual.visible = false;
         }
     }
     Rectangle {
@@ -179,7 +248,7 @@ Item {
 
     // 检测结果显示
     Rectangle {
-        id: resultTextBg
+        id: nameTextBg
         y: 853
         visible: resultText.text.length;
         color: "#3f3f3f"
@@ -189,9 +258,9 @@ Item {
     }
 
     Text {
-        id: resultText
-        anchors.verticalCenter: resultTextBg.verticalCenter
-        anchors.horizontalCenter: resultTextBg.horizontalCenter
+        id: nameText
+        anchors.verticalCenter: nameTextBg.verticalCenter
+        anchors.horizontalCenter: nameTextBg.horizontalCenter
         text: qsTr("")
         font {
             pixelSize: 60
@@ -219,9 +288,9 @@ Item {
     }
 
     Rectangle {
-        id: nameTextBg
+        id: resultTextBg
         y: 987
-        visible: nameText.text.length
+        visible: resultText.text.length
         color: "#fffffe"
         anchors.horizontalCenter: parent.horizontalCenter
         width: 683
@@ -229,9 +298,9 @@ Item {
     }
 
     Text {
-        id: nameText
-        anchors.verticalCenter: nameTextBg.verticalCenter
-        anchors.horizontalCenter: nameTextBg.horizontalCenter
+        id: resultText
+        anchors.verticalCenter: resultTextBg.verticalCenter
+        anchors.horizontalCenter: resultTextBg.horizontalCenter
         font {
             pixelSize: 48
             family: "multi-language"
@@ -242,6 +311,19 @@ Item {
 
     Connections {
         target: programs;
+
+        onSyncSuccess: {
+            sync.visible = false;
+            isEg = eg;
+            isTemp = temp;
+            if (eg) {
+                iconFace.source = "image/icon_face.png"
+            } else {
+                iconFace.source = "image/icon_temp.png"
+            }
+            image_head.visible = isTemp
+        }
+
         onFaceResultShow:{
             nameText.text = qsTr(name)
             resultText.text = qsTr(result)
@@ -250,7 +332,7 @@ Item {
         onShowFaceFocuse:{
             var flag = false;
             for (var i = 0; i < focusingList.length; i ++) {
-                if (focusingList[i].trackId === trackId) {
+                if (focusingList[i].trackId === trackId && !isTemp) {
                     focusingList[i].focusingX = left - 20;
                     focusingList[i].focusingY = top - 30;
                     focusingList[i].focusingWidth = right - left + 50;
@@ -265,7 +347,7 @@ Item {
                     focusingList[i].trackId = 0;
                 }
             }
-            if (!flag) {
+            if (!flag && !isTemp) {
                 focusingList[index].focusingX = left - 20;
                 focusingList[index].focusingY = top - 30;
                 focusingList[index].focusingWidth = right - left + 50;
@@ -286,6 +368,30 @@ Item {
             people.text = qsTr(number);
             ip.text = qsTr(devIp);
             sn.text = qsTr(devSn);
+        }
+        onShowStartTemp: {
+            resultText.text = qsTr("正在测温")
+        }
+        onTempShow: {
+            pose_blur_Timer.restart();
+            if (result === 0) {
+                resultText.text = tempVal;
+                tempNormal.visible = false;
+                tempUnusual.visible = true;
+                pose_blur.text = qsTr("体温异常");
+            } else if (result === 1) {
+                resultText.text = tempVal;
+                tempNormal.visible = true;
+                tempUnusual.visible = false;
+                pose_blur.text = qsTr("体温正常");
+            } else if(result === -1)
+            {
+                resultText.text = qsTr("体温偏低");
+            }
+            else {
+                resultText.text = qsTr("请重新测温");
+                pose_blur.text = qsTr("请露出额头或摘下眼镜");
+            }
         }
     }
 }
