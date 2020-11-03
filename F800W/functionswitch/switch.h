@@ -22,7 +22,12 @@ public:
         }
         return m_Instance;
     }
-
+    // 同步中标志
+    bool m_sync;
+    // 升级中标志
+    bool m_upgrade;
+    // 网路在线状态标志
+    bool m_netStatus;
     // 人脸比对阈值 根据入库人数自动调节
     double m_faceThreshold;
     // 设备sn码

@@ -46,6 +46,43 @@ Item {
     }
 
     Image {
+        id: netStatus
+        x: 739
+        y: 11
+        source: "image/eth0_nosig.png";
+    }
+
+    Image {
+        id: network
+        x: 690
+        y: 11
+        source: "";
+    }
+
+    Rectangle {
+        id: tbsBg
+        x: 0
+        y: 60
+        visible: tbs.text.length
+        color: "#000000"
+        opacity: 0.5
+        width: parent.width
+        height: 1060
+    }
+
+    Text {
+        id: tbs
+        anchors.verticalCenter: tbsBg.verticalCenter
+        anchors.horizontalCenter: tbsBg.horizontalCenter
+        font {
+            pixelSize: 48
+            family: "multi-language"
+        }
+        color: "#fffffe"
+        style: Text.Raised
+    }
+
+    Image {
         id: image_head
         y: 60;
         source: "image/temp_head.png"
@@ -322,6 +359,37 @@ Item {
                 iconFace.source = "image/icon_temp.png"
             }
             image_head.visible = isTemp
+        }
+        onFaceTb: {
+            tbs.text = qsTr(text);
+        }
+
+        onNetworkChanged: {
+            if (net) {
+                network.source = "image/online.png";
+            } else {
+                network.source = "";
+            }
+            switch (type) {
+                case 0:
+                    netStatus.source = "image/wifi1.png";
+                    break;
+                case 1:
+                    netStatus.source = "image/wifi2.png";
+                    break;
+                case 2:
+                    netStatus.source = "image/wifi3.png";
+                    break;
+                case 3:
+                    netStatus.source = "image/4g1.png";
+                    break;
+                case 4:
+                    netStatus.source = "image/network.png";
+                    break;
+                case 5:
+                    netStatus.source = "image/net_nosig.png";
+                    break;
+            }
         }
 
         onFaceResultShow:{

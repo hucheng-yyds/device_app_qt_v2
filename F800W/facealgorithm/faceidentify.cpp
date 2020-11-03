@@ -41,8 +41,14 @@ void FaceIdentify::run()
         bool authority = false;
         bool egPass = false;
         bool tempPass = false;
+        QString isSuccess = "0";
+        QString isStranger = "0";
+        QString invalidReason = "";
+        uint64_t face_id = 0;
+        int isOver = 0;
+        QString snapshot = "";
         char *feature_result = nullptr;
-        int bgrLength = m_interFace->m_count,irLength;
+        int bgrLength = m_interFace->m_count, irLength;
         memcpy(m_bgrImage, m_interFace->m_bgrImage, VIDEO_WIDTH * VIDEO_HEIGHT * 3 / 2);
         memcpy(m_irImage, m_interFace->m_irImage, VIDEO_WIDTH * VIDEO_HEIGHT * 3 / 2);
         m_interFace->m_mutex.lock();
@@ -57,7 +63,7 @@ void FaceIdentify::run()
             {
                 qDebug("[FACEPASS_DV300_TEST]  This bgrIndex=%d face handle is attack, can not pass the ir filter process!!", i);
                 m_interFace->m_iStop = true;
-                goto endIdentify ;
+                goto endIdentify;
             }
             else
             {
@@ -86,27 +92,25 @@ void FaceIdentify::run()
                 {
                     float result = 0.0;
                     int size = 0;
-                    uint64_t face_id = 0;
                     m_interFace->m_mutex.lock();
                     extract(bgrHandle[m_iMFaceHandle[i].index], &feature_result, &size);
                     identifyFromFaceGroup(m_interFace->m_groupHandle, feature_result, size, &result, &face_id);
                     m_interFace->m_mutex.unlock();
                     if ((result > switchCtl->m_faceThreshold) && (face_id > 0))
                     {
-//                        QStringList value = dealOpencondition(face_id);
-//                        QString name = value.at(0);
-//                        QString remark = value.at(1);
-                        QString name = "";
+                        QStringList value = dealOpencondition(face_id);
+                        QString name = value.at(0);
+                        QString remark = value.at(1);
                         if(name.isEmpty())
                         {
-//                            authority = true;
-//                            if(remark.isEmpty())
-//                            {
-//                                hardware->playSound(tr("未授权").toUtf8(), "authority.aac");
-//                            }
-//                            else {
-//                                hardware->playSound(remark.toUtf8(), "authority.aac");
-//                            }
+                            authority = true;
+                            if(remark.isEmpty())
+                            {
+                                hardware->playSound(tr("未授权").toUtf8(), "authority.aac");
+                            }
+                            else {
+                                hardware->playSound(remark.toUtf8(), "authority.aac");
+                            }
                         }
                         else
                         {
@@ -130,7 +134,10 @@ void FaceIdentify::run()
                             emit faceResultShow(name, i, m_iMFaceHandle[i].track_id, tr("认证通过"));
                             egPass = true;
                         }
-                    } else {
+                    }
+                    else
+                    {
+                        isStranger = "1";
                         QString result = tr("请联系管理员");
                         emit faceResultShow(tr("未注册"), i, m_iMFaceHandle[i].track_id, result);
                         egPass = false;
@@ -139,7 +146,7 @@ void FaceIdentify::run()
                 }
                 else
                 {
-                    goto endIdentify ;
+                    goto endIdentify;
                 }
             }
             if (!tempCtl && !vi)
@@ -248,9 +255,25 @@ void FaceIdentify::run()
             cv::imwrite("snap.jpg", image, opts.toStdVector());
             QFile file("snap.jpg");
             file.open(QIODevice::ReadWrite);
-            QString snapshot = QString::fromUtf8(file.readAll().toBase64());
+            snapshot = QString::fromUtf8(file.readAll().toBase64());
             file.close();
         }
+        isOver = tempPass ? 1 : 0;
+        if(switchCtl->m_netStatus)
+        {
+            QStringList datas;
+            datas.clear();
+            datas << m_tempVal << isSuccess << invalidReason << isStranger << "";
+            emit uploadopenlog(face_id, snapshot, isOver, 1, tempCtl, datas);
+        }
+        else
+        {
+            QStringList datas;
+            datas.clear();
+            datas << m_tempVal << isSuccess << invalidReason << isStranger << "" << QDateTime::currentDateTime().addSecs(28800).toString("yyyy-MM-dd HH:mm:ss");
+            sqlDatabase->sqlInsertOffline(face_id, 1, isOver, tempCtl, datas);
+        }
+
 endIdentify:
         if(feature_result)
         {
@@ -272,23 +295,24 @@ QStringList FaceIdentify::dealOpencondition(int faceId)
     int status = 0;
     QStringList text;
     text.clear();
-    QVariantList value = sqlDatabase->sqlSelect(faceId);
+    QVariantList value = sqlDatabase->sqlSelectAuth(faceId);
     if(value.size() <= 0)
     {
-        text << "" << "";
+        name = sqlDatabase->sqlSelect(faceId).value(1).toString();
+        text << name << "";
         return text;
     }
-    int passnum = value[4].toInt();
-    QString startTime = value[5].toString();
-    QString expireTime = value[6].toString();
-    int isBlack = value[7].toInt();
-    QString passPeriod = value[8].toString();
-    QString passTimeSection = value[9].toString();
+    int passnum = value[1].toInt();
+    QString startTime = value[2].toString();
+    QString expireTime = value[3].toString();
+    int isBlack = value[4].toInt();
+    QString passPeriod = value[5].toString();
+    QString passTimeSection = value[6].toString();
     QString remark = "";
     qDebug() << "========" << startTime;
     if(1 == isBlack)
     {
-        remark = value[12].toString();
+        remark = value[7].toString();
         text << name << remark;
         return text;
     }
@@ -376,13 +400,13 @@ QStringList FaceIdentify::dealOpencondition(int faceId)
     qDebug() << pass;
     if(pass)
     {
-        name = value[1].toString();
+        name = sqlDatabase->sqlSelect(faceId).value(1).toString();
         if(passnum >= 1)
         {
-//            sqlDatabase->sqlUpdatePass(faceId, passnum-1);
+            sqlDatabase->sqlUpdatePassNum(faceId, passnum-1);
         }
     }
-    remark = value[12].toString();
+    remark = value[7].toString();
     text << name << remark;
     return text;
 }

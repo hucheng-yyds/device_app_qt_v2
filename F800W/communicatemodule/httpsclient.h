@@ -13,12 +13,16 @@ public:
     explicit HttpsClient();
     // 获取算法授权状态
     int AlgorithmAuthorization();
+    // 获取人脸图片
+    int httpsRequestImage(int id, const QString &url);
 
 public slots:
     // 根据人员id获取人员数据
     void HttpsGetUsers(int id);
     // 上传离线记录
     void uploadOfflineDataImage(int userId, const QString &photo, int isOver, int type, int isTemp, const QStringList &datas);
+    // 实时上传记录
+    void httpsUploadopenlog(int userId, const QString &photo, int isOver,int type, int isTemp, const QStringList &datas);
     // 解绑后台
     void httpsUnbind();
 
@@ -28,6 +32,16 @@ protected:
 private slots:
     void HttpLogin();
     void HttpHeartbeat();
+
+signals:
+    // 发送授权状态 和显示授权页面 UI界面显示
+    void qrcodeChanged(const QString &rcode);
+    // 处理所有alluserid
+    void allUserId(const QJsonArray &jsonArr);
+    // 发送单个人员数据
+    void updateUsers(const QJsonObject &jsonObj);
+    // 发送mqtt连接信号
+    void mqttReconnect();
 
 private:
     // 上传离线记录不带图片的

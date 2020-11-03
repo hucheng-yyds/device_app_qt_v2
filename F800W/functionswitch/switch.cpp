@@ -5,6 +5,9 @@ SwitchCtl* SwitchCtl::m_Instance = nullptr;
 SwitchCtl::SwitchCtl()
 {
     m_faceThreshold = 72.0;
+    m_sync = false;
+    m_upgrade = false;
+    m_netStatus = false;
     bool status = QFile::exists("./switch.json");
     qDebug() << "====================================================" << status;
     if(!status)

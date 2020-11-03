@@ -1,5 +1,53 @@
 #include <QNetworkInterface>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <linux/if.h>
+#include <linux/mii.h>
+#include <linux/sockios.h>
+#include <errno.h>
 #include "netmanager.h"
+
+int get_if_miireg(const char *if_name, int reg_num )
+{
+    int fd = -1;
+    struct ifreq ifr;
+    struct mii_ioctl_data *mii;
+    int value;
+
+    if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+    {
+        perror("socket");
+        close(fd);
+        return -1;
+    }
+
+    bzero(&ifr, sizeof(ifr));
+    strncpy(ifr.ifr_name, if_name, IFNAMSIZ-1);
+    ifr.ifr_name[IFNAMSIZ-1] = 0;
+
+    if (ioctl(fd, SIOCGMIIPHY, &ifr) < 0)
+    {
+        perror("ioctl");
+        close(fd);
+        return -1;
+    }
+
+    mii = (struct mii_ioctl_data *)&ifr.ifr_data;
+    mii->reg_num = reg_num;//0x01
+    if (ioctl(fd, SIOCGMIIREG, &ifr) < 0)
+    {
+        perror("ioctl");
+        close(fd);
+        return -1;
+    }
+    close(fd);
+    value = ((mii->val_out&0x04)>>2);
+    return value;
+}
 
 NetManager::NetManager()
 {
@@ -15,6 +63,15 @@ void NetManager::run()
         {
             ip = getIP();
             seq = 0;
+        }
+        if(get_if_miireg("eth0", 0x01) > 0)
+        {
+            emit networkChanged(4, switchCtl->m_netStatus);
+        }
+        else
+        {
+            switchCtl->m_netStatus = false;
+            emit networkChanged(5, false);
         }
         switchCtl->m_ipAddr = ip;
         int count = sqlDatabase->m_localFaceSet.size();

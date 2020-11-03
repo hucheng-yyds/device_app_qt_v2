@@ -1,4 +1,4 @@
-QT += qml quick network sql
+QT += qml quick network sql websockets
 CONFIG += c++11
 
 # The following define makes your compiler emit warnings if you use
@@ -24,7 +24,6 @@ CONFIG          += warn_off
 INCLUDEPATH     += $$PWD
 INCLUDEPATH     += $$PWD/external/include
 INCLUDEPATH     += $$PWD/external/include/hi
-INCLUDEPATH     += $$PWD/external/include/mqtt
 INCLUDEPATH     += $$PWD/external/include/tts
 INCLUDEPATH     += $$PWD/external/wpa/src
 INCLUDEPATH     += $$PWD/external/wpa/src/utils
@@ -41,7 +40,7 @@ LIBS += -lsns_imx327 -lsns_imx327_2l -lsns_imx307 -lsns_imx307_2l -lsns_imx335 -
 LIBS += -ldnvqe -lhdmi -lhi_cipher -live -lmd -ltde -lupvqe -lVoiceEngine -lgomp
 LIBS += -laaccomm -laacdec -laacenc -laacsbrdec -laacsbrenc -ldl
 LIBS += -lopencv_core -lopencv_imgcodecs -lopencv_imgproc -lopencv_calib3d -lopencv_features2d  -lopencv_flann -lopencv_highgui -lopencv_videoio
-LIBS += -lmsc
+LIBS += -lmsc -lpaho-embed-mqtt3c
 LIBS += -lfacesdk_dv300
 
 INCLUDEPATH     += $$PWD/hardware

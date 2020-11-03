@@ -53,6 +53,7 @@ void FaceManager::onBreathingLight()
 
 void FaceManager::run()
 {
+    bool status = false;
     int backLightCount = 0;
     FaceRect rect;
     int saveLeft[5];
@@ -64,10 +65,25 @@ void FaceManager::run()
     emit syncSuccess(switchCtl->m_faceDoorCtl, switchCtl->m_tempCtl);
     while(true)
     {
-        if(m_interFace->m_localFaceSync)
+        if(switchCtl->m_sync)
         {
-            msleep(50);
+            status = true;
+            hardware->ctlWDG();
+            emit faceTb(tr("正在同步中..."));
+            hardware->ctlLed(OFF);
+//            if(!networking)
+//            {
+//                switchCtl->m_sync = false;
+//            }
+            hardware->checkOpenDoor();
+            hardware->ctlWDG();
+            msleep(500);
             continue;
+        }
+        if(status)
+        {
+            status = false;
+            emit faceTb("");
         }
         bool ir = switchCtl->m_ir;
         m_bgrVideoFrame = nullptr;
@@ -263,7 +279,7 @@ void FaceManager::sort(FaceHandle *faceHandle, int count)
     }
 }
 
-void FaceManager::insertFaceGroups(int id, const QString &username, const QString &time)
+void FaceManager::insertFaceGroups(int id, const QString &username, const QString &time, const QString &photoname, const QString &iphone)
 {
     int count;
     QString file = QString::number(id) + ".jpg";
@@ -307,7 +323,7 @@ void FaceManager::insertFaceGroups(int id, const QString &username, const QStrin
                 for (int i = 0; i < size; i ++) {
                     feature << QString::number(feature_result[i]);
                 }
-                sqlDatabase->sqlInsert(id, username, time, feature.join(","));
+                sqlDatabase->sqlInsert(id, username, time, feature.join(","), photoname, iphone);
                 insertFaceGroup(m_interFace->m_groupHandle, feature_result, size, id);
                 qDebug() << count << id << size;
                 releaseFeature(feature_result);
@@ -359,12 +375,12 @@ bool FaceManager::init()
 
 void FaceManager::localFaceInsert()
 {
-    QMap<int, QString> localFeatureList = sqlDatabase->sqlSelectAllUserIdFeature();
-    m_interFace->m_localFaceSync = true;
-    foreach (int id, sqlDatabase->m_localFaceSet) {
-
-        QString value = localFeatureList.find(id).value();
-        if ("0" != value) {
+    QSet<int> ids = sqlDatabase->sqlSelectAllUserId();
+    foreach (int id, ids)
+    {
+        QString value = sqlDatabase->sqlSelectAllUserFeature(id);
+        if ("0" != value && !value.isEmpty())
+        {
             QStringList result = value.split(",");
             QVector<char> ret;
             int size = result.size();
@@ -380,5 +396,4 @@ void FaceManager::localFaceInsert()
         }
     }
     updateIdentifyValue();
-    m_interFace->m_localFaceSync = false;
 }

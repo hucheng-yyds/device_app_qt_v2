@@ -28,7 +28,9 @@ SqlDatabase::SqlDatabase()
                     "id int primary key,"
                     "username text,"
                     "edittime text,"
-                    "feature text)")) {
+                    "feature text,"
+                    "photoname text,"
+                    "iphone text)")) {
         qDebug() << query.lastError();
     }
 
@@ -68,6 +70,24 @@ SqlDatabase::SqlDatabase()
                      "snaptime text)")) {
         qDebug() << query3.lastError();
     }
+    QSqlQuery query4(m_database);
+    if (!query3.exec("create table auth ("
+                     "id int primary key,"
+                     "passNum int,"
+                     "startTime text,"
+                     "expireTime text,"
+                     "isBlack int,"
+                     "passPeriod text,"
+                     "passTimeSection text,"
+                     "remark text)")) {
+        qDebug() << query3.lastError();
+    }
+    QSqlQuery query5(m_database);
+    if (!query3.exec("create table iccard ("
+                     "id int primary key,"
+                     "cardNo text)")) {
+        qDebug() << query3.lastError();
+    }
 }
 
 
@@ -76,7 +96,7 @@ QString SqlDatabase::sqlSelectPhotoName(int id)
     m_mutex.lock();
     QString value = "";
     QSqlQuery query(m_database);
-    QString query_sql = "select photoName from userdata where id = ?";
+    QString query_sql = "select photoname from userdata where id = ?";
     query.prepare(query_sql);
     query.addBindValue(id);
     if (!query.exec()) {
@@ -102,43 +122,18 @@ QVariantList SqlDatabase::sqlSelect(int id)
         qDebug() << query.lastError();
     } else {
         while(query.next()) {
-            value << query.value(0) << query.value(1) << query.value(2) << query.value(3);
+            value << query.value(0) << query.value(1) << query.value(2) << query.value(3) << query.value(4) << query.value(5);
         }
     }
     m_mutex.unlock();
     return value;
 }
 
-QMap<int, QString> SqlDatabase::sqlSelectAllUserIdTime()
+QSet<int> SqlDatabase::sqlSelectAllUserId()
 {
     m_mutex.lock();
-    QMap<int, QString> useridTime;
-    useridTime.clear();
     QSqlQuery query(m_database);
-    QString query_sql = "select id, edittime from userdata";
-    query.prepare(query_sql);
-    if (!query.exec())
-    {
-        qDebug() << query.lastError();
-    }
-    else
-    {
-        while(query.next())
-        {
-            useridTime.insert(query.value(0).toInt(), query.value(1).toString());
-        }
-    }
-    m_mutex.unlock();
-    return useridTime;
-}
-
-QMap<int, QString> SqlDatabase::sqlSelectAllUserIdFeature()
-{
-    m_mutex.lock();
-    QMap<int, QString> useridFeature;
-    useridFeature.clear();
-    QSqlQuery query(m_database);
-    QString query_sql = "select id, feature from userdata";
+    QString query_sql = "select id from userdata";
     query.prepare(query_sql);
     if (!query.exec())
     {
@@ -149,51 +144,39 @@ QMap<int, QString> SqlDatabase::sqlSelectAllUserIdFeature()
         while(query.next())
         {
             m_localFaceSet.insert(query.value(0).toInt());
-            useridFeature.insert(query.value(0).toInt(), query.value(1).toString());
         }
     }
     m_mutex.unlock();
+    return m_localFaceSet;
 }
 
-void SqlDatabase::sqlInsert(int id, const QString &username, const QString &time, const QString &feature)
+QString SqlDatabase::sqlSelectAllUserTime(int id)
 {
     m_mutex.lock();
+    QString time = "";
     QSqlQuery query(m_database);
-    QString insert_sql = "insert into userdata values (?, ?, ?, ?)";
-    query.prepare(insert_sql);
+    QString query_sql = "select edittime from userdata where id = ?";
+    query.prepare(query_sql);
     query.addBindValue(id);
-    query.addBindValue(username);
-    query.addBindValue(time);
-    query.addBindValue(feature);
-    if (!query.exec())
-    {
-        qDebug() << query.lastError() << id;
-    }
-    m_localFaceSet.insert(id);
-    m_mutex.unlock();
-}
-
-
-void SqlDatabase::sqlUpdate(int id, const QString &username, const QString &time)
-{
-    m_mutex.lock();
-    QSqlQuery query(m_database);
-    QString update_sql = "update userdata set username = :username, edittime = :edittime where id = :id";
-    query.prepare(update_sql);
-    query.bindValue(":username", username);
-    query.bindValue(":edittime", time);
-    query.bindValue(":id", id);
     if (!query.exec())
     {
         qDebug() << query.lastError();
     }
+    else
+    {
+        while(query.next())
+        {
+            time = query.value(0).toString();
+        }
+    }
     m_mutex.unlock();
+    return time;
 }
 
-QString SqlDatabase::sqlGetFeature(int id)
+QString SqlDatabase::sqlSelectAllUserFeature(int id)
 {
     m_mutex.lock();
-    QString value;
+    QString feature = "";
     QSqlQuery query(m_database);
     QString query_sql = "select feature from userdata where id = ?";
     query.prepare(query_sql);
@@ -206,11 +189,51 @@ QString SqlDatabase::sqlGetFeature(int id)
     {
         while(query.next())
         {
-            value = query.value(0).toString();
+            feature = query.value(0).toString();
         }
     }
     m_mutex.unlock();
-    return value;
+    return feature;
+}
+
+void SqlDatabase::sqlInsert(int id, const QString &username, const QString &time, const QString &feature, const QString &photoname, const QString &iphone)
+{
+    m_mutex.lock();
+    QSqlQuery query(m_database);
+    QString insert_sql = "insert into userdata values (?, ?, ?, ?, ?, ?)";
+    query.prepare(insert_sql);
+    query.addBindValue(id);
+    query.addBindValue(username);
+    query.addBindValue(time);
+    query.addBindValue(feature);
+    query.addBindValue(photoname);
+    query.addBindValue(iphone);
+    if (!query.exec())
+    {
+        qDebug() << query.lastError() << id;
+    }
+    m_localFaceSet.insert(id);
+    m_mutex.unlock();
+}
+
+
+void SqlDatabase::sqlUpdate(int id, const QString &username, const QString &time, const QString &photoname, const QString &iphone)
+{
+    m_mutex.lock();
+    QSqlQuery query(m_database);
+    QString update_sql = "update userdata set username = :username, edittime = :edittime, photoname = :photoname, iphone = :iphone "
+                         "where id = :id";
+    query.prepare(update_sql);
+    query.bindValue(":username", username);
+    query.bindValue(":edittime", time);
+    query.bindValue(":photoname", photoname);
+    query.bindValue(":iphone", iphone);
+    query.bindValue(":id", id);
+    if (!query.exec())
+    {
+        qDebug() << query.lastError();
+    }
+    m_mutex.unlock();
 }
 
 void SqlDatabase::sqlDeleteAll()
@@ -403,4 +426,211 @@ void SqlDatabase::sqlInsertFailDeleteAll()
         qDebug() << query2.lastError();
     }
     m_mutex.unlock();
+}
+
+void SqlDatabase::sqlInsertAuth(int id, int passNum, int isBlack, const QStringList &datas)
+{
+    m_mutex.lock();
+    QSqlQuery query2(m_database);
+    QString insert_sql = "insert into auth values (?, ?, ?, ?, ?, ?, ?, ?)";
+    query2.prepare(insert_sql);
+    query2.addBindValue(id);
+    query2.addBindValue(passNum);
+    query2.addBindValue(datas.at(0));
+    query2.addBindValue(datas.at(1));
+    query2.addBindValue(isBlack);
+    query2.addBindValue(datas.at(2));
+    query2.addBindValue(datas.at(3));
+    query2.addBindValue(datas.at(4));
+    if (!query2.exec()) {
+        qDebug() << query2.lastError();
+    }
+    m_mutex.unlock();
+}
+
+void SqlDatabase::sqlUpdateAuth(int id, int passNum, int isBlack, const QStringList &datas)
+{
+    m_mutex.lock();
+    QSqlQuery query(m_database);
+    QString update_sql = "update auth set passNum = :passNum, startTime = :startTime, expireTime = :expireTime, isBlack = :isBlack, "
+                         "passPeriod = :passPeriod, passTimeSection = :passTimeSection, remark = :remark where id = :id";
+    query.prepare(update_sql);
+    query.bindValue(":passNum", passNum);
+    query.bindValue(":startTime", datas.at(0));
+    query.bindValue(":expireTime", datas.at(1));
+    query.bindValue(":isBlack", isBlack);
+    query.bindValue(":passPeriod", datas.at(2));
+    query.bindValue(":passTimeSection", datas.at(3));
+    query.bindValue(":remark", datas.at(4));
+    query.bindValue(":id", id);
+    if (!query.exec())
+    {
+        qDebug() << query.lastError();
+    }
+    m_mutex.unlock();
+}
+
+void SqlDatabase::sqlDeleteAuth(int id)
+{
+    m_mutex.lock();
+    QSqlQuery query2(m_database);
+    QString delete_sql = "delete from auth where id = ?";
+    query2.prepare(delete_sql);
+    query2.addBindValue(id);
+    if (!query2.exec()) {
+        qDebug() << query2.lastError();
+    }
+    m_mutex.unlock();
+}
+
+void SqlDatabase::sqlDeleteAllAuth()
+{
+    m_mutex.lock();
+    QSqlQuery query2(m_database);
+    QString delete_sql = "delete from auth";
+    query2.prepare(delete_sql);
+    if (!query2.exec()) {
+        qDebug() << query2.lastError();
+    }
+    m_mutex.unlock();
+}
+
+void SqlDatabase::sqlUpdatePassNum(int id, int passNum)
+{
+    m_mutex.lock();
+    QSqlQuery query(m_database);
+    QString update_sql = "update auth set passNum = :passNum where id = :id";
+    query.prepare(update_sql);
+    query.bindValue(":passNum", passNum);
+    query.bindValue(":id", id);
+    if (!query.exec())
+    {
+        qDebug() << query.lastError();
+    }
+    m_mutex.unlock();
+}
+
+QVariantList SqlDatabase::sqlSelectAuth(int id)
+{
+    m_mutex.lock();
+    QVariantList values;
+    QSqlQuery query(m_database);
+    QString query_sql = "select * from auth where id = ?";
+    query.prepare(query_sql);
+    query.addBindValue(id);
+    if (!query.exec())
+    {
+        qDebug() << query.lastError();
+    }
+    else
+    {
+        while(query.next())
+        {
+            values << query.value(0) << query.value(1) << query.value(2) << query.value(3) << query.value(4)
+                   << query.value(5) << query.value(6) << query.value(7);
+        }
+    }
+    m_mutex.unlock();
+    return values;
+}
+
+
+void SqlDatabase::sqlInsertIc(int id, const QString &cardNo)
+{
+    m_mutex.lock();
+    QSqlQuery query2(m_database);
+    QString insert_sql = "insert into iccard values (?, ?)";
+    query2.prepare(insert_sql);
+    query2.addBindValue(id);
+    query2.addBindValue(cardNo);
+    if (!query2.exec()) {
+        qDebug() << query2.lastError();
+    }
+    m_mutex.unlock();
+}
+
+void SqlDatabase::sqlUpdateIc(int id, const QString &cardNo)
+{
+    m_mutex.lock();
+    QSqlQuery query(m_database);
+    QString update_sql = "update iccard set cardNo = :cardNo where id = :id";
+    query.prepare(update_sql);
+    query.bindValue(":cardNo", cardNo);
+    query.bindValue(":id", id);
+    if (!query.exec())
+    {
+        qDebug() << query.lastError();
+    }
+    m_mutex.unlock();
+}
+
+void SqlDatabase::sqlDeleteIc(int id)
+{
+    m_mutex.lock();
+    QSqlQuery query2(m_database);
+    QString delete_sql = "delete from auth where id = ?";
+    query2.prepare(delete_sql);
+    query2.addBindValue(id);
+    if (!query2.exec()) {
+        qDebug() << query2.lastError();
+    }
+    m_mutex.unlock();
+}
+
+void SqlDatabase::sqlDeleteAllIc()
+{
+    m_mutex.lock();
+    QSqlQuery query2(m_database);
+    QString delete_sql = "delete from auth";
+    query2.prepare(delete_sql);
+    if (!query2.exec()) {
+        qDebug() << query2.lastError();
+    }
+    m_mutex.unlock();
+}
+
+QString SqlDatabase::sqlSelectIc(int id)
+{
+    m_mutex.lock();
+    QString value = "";
+    QSqlQuery query(m_database);
+    QString query_sql = "select cardNo from auth where id = ?";
+    query.prepare(query_sql);
+    query.addBindValue(id);
+    if (!query.exec())
+    {
+        qDebug() << query.lastError();
+    }
+    else
+    {
+        while(query.next())
+        {
+            value = query.value(0).toString();
+        }
+    }
+    m_mutex.unlock();
+    return value;
+}
+
+int SqlDatabase::sqlSelectIcId(const QString &cardNo)
+{
+    m_mutex.lock();
+    int value = 0;
+    QSqlQuery query(m_database);
+    QString query_sql = "select id from auth where cardNo = ?";
+    query.prepare(query_sql);
+    query.addBindValue(cardNo);
+    if (!query.exec())
+    {
+        qDebug() << query.lastError();
+    }
+    else
+    {
+        while(query.next())
+        {
+            value = query.value(0).toInt();
+        }
+    }
+    m_mutex.unlock();
+    return value;
 }

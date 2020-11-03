@@ -7,6 +7,11 @@
 #include "netmanager.h"
 #include "httpsclient.h"
 #include "tempmanager.h"
+#include "httpsclient.h"
+#include "useridrequest.h"
+#include "mqttclient.h"
+#include "facedatadeal.h"
+#include "facedatalist.h"
 
 // 公共接口层 ui界面接口层
 class ProStorage : public QObject
@@ -34,6 +39,10 @@ signals:
     void showStartTemp();
     // 显示测温状态和结果
     void tempShow(const QString &tempVal, int result);
+    // 切换网络状态
+    void networkChanged(int type, bool net);
+    // 人员同步和升级状态显示
+    void faceTb(const QString &text);
 
 private:
     // 功能模块初始化

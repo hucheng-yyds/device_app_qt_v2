@@ -79,7 +79,33 @@ void HttpsClient::uploadOfflineDataNoImage()
 
 void HttpsClient::uploadOfflineDataImage(int userId, const QString &photo, int isOver, int type, int isTemp, const QStringList &datas)
 {
-    qDebug() << "type:" << type << userId;
+    if (!m_loginStatus)
+    {
+        return;
+    }
+    QJsonObject jsonObj;
+    jsonObj.insert("userId", userId);
+    jsonObj.insert("companyId", m_companyId);
+    jsonObj.insert("sceneId", m_sceneId);
+    jsonObj.insert("deviceId", 0);
+    jsonObj.insert("unlockType", type);
+    jsonObj.insert("photo", photo);
+    jsonObj.insert("sn", switchCtl->m_sn);
+    jsonObj.insert("unlockTime", datas.at(5));
+    jsonObj.insert("temperature", datas.at(0));
+    jsonObj.insert("isOver", isOver);
+    jsonObj.insert("isTemp", isTemp);
+    jsonObj.insert("isSuccess", datas.at(1).toInt());
+    jsonObj.insert("invalidReason", datas.at(2));
+    jsonObj.insert("isStranger", datas.at(3).toInt());
+    jsonObj.insert("mjkh", datas.at(4));
+    QJsonObject obj = requestPost(m_uploadAccessCmd, jsonObj);
+
+    qDebug() << "userId: " << type << userId << userId << datas.at(5);
+}
+
+void HttpsClient::httpsUploadopenlog(int userId, const QString &photo, int isOver,int type, int isTemp, const QStringList &datas)
+{
     if (!m_loginStatus)
     {
         return;
@@ -116,7 +142,7 @@ void HttpsClient::HttpsGetUsers(int id)
     {
         if (0 == jsonObj["code"].toInt())
         {
-//            emit updateUsers(jsonObj["users"].toObject());
+            emit updateUsers(jsonObj["users"].toObject());
         }
     }
 }
@@ -128,7 +154,7 @@ void HttpsClient::HttpsGetAllUserId()
         qDebug() << "aluserId request" << jsonObj["code"].toInt();
         if (0 == jsonObj["code"].toInt())
         {
-//            emit allUserId(jsonObj["alluser"].toArray());
+            emit allUserId(jsonObj["alluser"].toArray());
         }
     }
     else
@@ -191,6 +217,7 @@ QJsonObject HttpsClient::requestGet(const QString &url)
             m_requestAllowTimer->start();
             disconnect(reply, &QNetworkReply::finished, &eventloop, &QEventLoop::quit);
             reply->abort();
+            switchCtl->m_netStatus = false;
             qDebug() << "post time out";
         }
         reply->deleteLater();
@@ -202,7 +229,8 @@ QJsonObject HttpsClient::requestPost(const QString &url, const QJsonObject &json
 {
     qDebug() << "request" << url;
     QJsonDocument document;
-    if (m_allowRequest/* && isOnline*/) {
+    if (m_allowRequest/* && isOnline*/)
+    {
         QNetworkRequest request;
         request.setUrl(url);
         request.setHeader(QNetworkRequest::ContentTypeHeader , "application/json");
@@ -226,7 +254,6 @@ QJsonObject HttpsClient::requestPost(const QString &url, const QJsonObject &json
             if (reply->error() == QNetworkReply::NoError)
             {
                 m_allowRequest = true;
-//                networking = true;
                 QJsonParseError jsonError;
                 document = QJsonDocument::fromJson(reply->readAll(), &jsonError);
                 if (jsonError.error != QJsonParseError::NoError)
@@ -253,6 +280,7 @@ QJsonObject HttpsClient::requestPost(const QString &url, const QJsonObject &json
             m_requestAllowTimer->start();
             disconnect(reply, &QNetworkReply::finished, &eventloop, &QEventLoop::quit);
             reply->abort();
+            switchCtl->m_netStatus = false;
             qDebug() << "post time out";
         }
         reply->deleteLater();
@@ -272,6 +300,8 @@ void HttpsClient::HttpLogin()
         int code = jsonObj["code"].toInt();
         if (0 == code)
         {
+            switchCtl->m_netStatus = true;
+            emit mqttReconnect();
             QJsonValue value = jsonObj["token"];
             m_strKey = value.toString();
             QJsonObject data = jsonObj["data"].toObject();
@@ -303,6 +333,54 @@ void HttpsClient::HttpHeartbeat()
     jsonObj.insert("networkName", "有线");
     jsonObj.insert("ipAddr", switchCtl->m_ipAddr);
     requestPost(m_heartbeatCmd, jsonObj);
+}
+
+int HttpsClient::httpsRequestImage(int id, const QString &url)
+{
+    int result = -1;
+    QNetworkRequest request;
+    QSslConfiguration config;
+    config.setPeerVerifyMode(QSslSocket::VerifyNone);
+    config.setProtocol(QSsl::TlsV1SslV3);
+    request.setSslConfiguration(config);
+    request.setUrl(url);
+    request.setHeader(QNetworkRequest::ContentTypeHeader , "application/json");
+
+    QTimer timer;
+    timer.setInterval(30000);
+    timer.setSingleShot(true);
+    QNetworkAccessManager manager;
+    QNetworkReply *reply = manager.get(request);
+    QEventLoop eventloop;
+    connect(reply, &QNetworkReply::finished, &eventloop, &QEventLoop::quit);
+    connect(&timer, &QTimer::timeout, &eventloop, &QEventLoop::quit);
+    timer.start();
+    eventloop.exec(QEventLoop::ExcludeUserInputEvents);
+
+    if (timer.isActive()) {
+        timer.stop();
+        if (reply->error() == QNetworkReply::NoError)
+        {
+            QString name = QString("%1.jpg").arg(id);
+            QFile file(name);
+            file.open(QIODevice::ReadWrite);
+            file.write(reply->readAll());
+            file.close();
+            result = 0;
+            qDebug() << "request image get success";
+        }
+        else {
+            QVariant statusCodeV = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
+            qDebug() << "get status code: " << statusCodeV.toInt();
+            qDebug() << "get status code: " << (int)reply->error();
+        }
+    } else {
+        disconnect(reply, &QNetworkReply::finished, &eventloop, &QEventLoop::quit);
+        reply->abort();
+        qDebug() << "get time out";
+    }
+    reply->deleteLater();
+    return result;
 }
 
 int HttpsClient::AlgorithmAuthorization()

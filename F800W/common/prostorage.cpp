@@ -28,15 +28,18 @@ void ProStorage::init()
 
     NetManager *netManager = new NetManager;
     connect(netManager, &NetManager::showDeviceInfo, this, &ProStorage::showDeviceInfo);
+    connect(netManager, &NetManager::networkChanged, this, &ProStorage::networkChanged);
 
     FaceInterface *interFace = new FaceInterface;
     FaceManager *face = new FaceManager;
     connect(face, &FaceManager::showFaceFocuse, this, &ProStorage::showFaceFocuse);
     connect(face, &FaceManager::hideFaceFocuse, this, &ProStorage::hideFaceFocuse);
     connect(face, &FaceManager::syncSuccess, this, &ProStorage::syncSuccess);
+    connect(face, &FaceManager::faceTb, this, &ProStorage::faceTb);
     face->setFaceInter(interFace);
     FaceIdentify *identify = new FaceIdentify;
     identify->setFaceInter(interFace);
+    connect(identify, &FaceIdentify::uploadopenlog, httpClient, &HttpsClient::httpsUploadopenlog);
     connect(identify, &FaceIdentify::faceResultShow, this, &ProStorage::faceResultShow);
     TempManager *tempManager = new TempManager;
     connect(face, &FaceManager::endTemp, tempManager, &TempManager::endTemp);
@@ -45,6 +48,22 @@ void ProStorage::init()
     connect(identify, &FaceIdentify::tempShow, this, &ProStorage::tempShow);
     connect(tempManager, &TempManager::sendTempResult, identify, &FaceIdentify::recvTempResult);
     tempManager->start();
+
+    UserIdRequest *userRequest = new UserIdRequest;
+    connect(httpClient, &HttpsClient::allUserId, userRequest, &UserIdRequest::onAlluserId);
+    connect(userRequest, &UserIdRequest::getUsers, httpClient, &HttpsClient::HttpsGetUsers);
+    connect(httpClient, &HttpsClient::updateUsers, userRequest, &UserIdRequest::onUpdateUsers);
+    connect(userRequest, &UserIdRequest::insertFaceGroups, face, &FaceManager::insertFaceGroups);
+
+    FaceDataList *dataList = new FaceDataList;
+    MqttClient *mqttClient = new MqttClient;
+    mqttClient->setPacket(dataList);
+    FaceDataDeal *dataDeal = new FaceDataDeal;
+    connect(dataDeal, &FaceDataDeal::insertFaceGroups, face, &FaceManager::insertFaceGroups);
+    dataDeal->setHttp(httpClient);
+    dataDeal->setPacket(dataList);
+
+
     bool status = face->init();
     qDebug() << "---------------init status:" << status;
     while(!status)
@@ -62,6 +81,10 @@ void ProStorage::init()
     face->start();
     identify->start();
     netManager->start();
+    httpClient->start();
+    userRequest->start();
+    mqttClient->start();
+    dataDeal->start();
 }
 
 void ProStorage::DeviceSnJudgment()

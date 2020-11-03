@@ -31,6 +31,8 @@ signals:
     void showStartTemp();
     // 显示测温状态和结果
     void tempShow(const QString &tempVal, int result);
+    // 实时上传记录
+    void uploadopenlog(int userId, const QString &photo, int isOver,int type, int isTemp, const QStringList &datas);
 
 private:
     FaceInterface *m_interFace;

@@ -18,7 +18,7 @@ protected:
     virtual void run();
 
 public slots:
-    void insertFaceGroups(int id, const QString &username, const QString &time);
+    void insertFaceGroups(int id, const QString &username, const QString &time, const QString &photoname, const QString &iphone);
 
 private:
     // 根据人脸框的大小过滤每帧图片的人脸
@@ -41,6 +41,8 @@ signals:
     void endTemp();
     // 刷新ui界面 初始化完成
     void syncSuccess(bool eg, bool temp);
+    // 人员同步和升级状态显示
+    void faceTb(const QString &text);
 
 private:
     VIDEO_FRAME_INFO_S *m_bgrVideoFrame;
