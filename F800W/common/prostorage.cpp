@@ -30,7 +30,8 @@ void ProStorage::init()
         emit qrcodeChanged(QString("%1 %2").arg(tr("未授权")).arg(code));
         return;
     }
-
+//    Log *log = new Log;
+//    log->enable();
     NetManager *netManager = new NetManager;
     connect(netManager, &NetManager::showDeviceInfo, this, &ProStorage::showDeviceInfo);
     connect(netManager, &NetManager::networkChanged, this, &ProStorage::networkChanged);

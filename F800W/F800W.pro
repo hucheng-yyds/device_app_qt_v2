@@ -54,6 +54,7 @@ INCLUDEPATH     += $$PWD/netManager
 INCLUDEPATH     += $$PWD/communicateModule
 INCLUDEPATH     += $$PWD/communicateExt
 INCLUDEPATH     += $$PWD/temperature
+INCLUDEPATH     += $$PWD/log
 
 include         ($$PWD/hardware/hardware.pri)
 include         ($$PWD/timerCountDown/timerCountDown.pri)
@@ -66,6 +67,7 @@ include         ($$PWD/netManager/netmanager.pri)
 include         ($$PWD/communicateModule/communicatemodule.pri)
 include         ($$PWD/communicateExt/communicateExt.pri)
 include         ($$PWD/temperature/temperature.pri)
+include         ($$PWD/log/log.pri)
 
 #RESOURCES += main.qrc
 
