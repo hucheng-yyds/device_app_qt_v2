@@ -46,23 +46,25 @@ LIBS += -lfacesdk_dv300
 INCLUDEPATH     += $$PWD/hardware
 INCLUDEPATH     += $$PWD/timerCountDown
 INCLUDEPATH     += $$PWD/common
-INCLUDEPATH     += $$PWD/functionswitch
+INCLUDEPATH     += $$PWD/functionSwitch
 INCLUDEPATH     += $$PWD/mqtt
-INCLUDEPATH     += $$PWD/facealgorithm
+INCLUDEPATH     += $$PWD/faceAlgorithm
 INCLUDEPATH     += $$PWD/sqldatabase
-INCLUDEPATH     += $$PWD/netmanager
-INCLUDEPATH     += $$PWD/communicatemodule
+INCLUDEPATH     += $$PWD/netManager
+INCLUDEPATH     += $$PWD/communicateModule
+INCLUDEPATH     += $$PWD/communicateExt
 INCLUDEPATH     += $$PWD/temperature
 
 include         ($$PWD/hardware/hardware.pri)
 include         ($$PWD/timerCountDown/timerCountDown.pri)
 include         ($$PWD/common/common.pri)
-include         ($$PWD/functionswitch/functionswitch.pri)
+include         ($$PWD/functionSwitch/functionswitch.pri)
 include         ($$PWD/mqtt/mqtt.pri)
-include         ($$PWD/facealgorithm/facealgorithm.pri)
+include         ($$PWD/faceAlgorithm/facealgorithm.pri)
 include         ($$PWD/sqldatabase/sqldatabase.pri)
-include         ($$PWD/netmanager/netmanager.pri)
-include         ($$PWD/communicatemodule/communicatemodule.pri)
+include         ($$PWD/netManager/netmanager.pri)
+include         ($$PWD/communicateModule/communicatemodule.pri)
+include         ($$PWD/communicateExt/communicateExt.pri)
 include         ($$PWD/temperature/temperature.pri)
 
 #RESOURCES += main.qrc

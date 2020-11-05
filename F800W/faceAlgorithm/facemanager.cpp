@@ -61,8 +61,7 @@ void FaceManager::run()
     int saveRight[5];
     int saveBottom[5];
     int offset = 10;
-    sleep(2);
-    emit syncSuccess(switchCtl->m_faceDoorCtl, switchCtl->m_tempCtl);
+
     while(true)
     {
         if(switchCtl->m_sync)

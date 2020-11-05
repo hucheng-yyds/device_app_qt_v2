@@ -7,6 +7,7 @@ Item {
     property var focusingList: [focusing];
     property bool isEg;
     property bool isTemp;
+    property int sleepTime : 5000;
 
     Focusing {
         id: focusing;
@@ -147,7 +148,7 @@ Item {
             pixelSize: 30;
             family: "multi-language"
         }
-        text: qsTr(Qt.formatDateTime(standby.date, "MM-dd hh:mm"))
+        text: qsTr()
         verticalAlignment: Text.AlignVCenter
         horizontalAlignment: Text.AlignHCenter
         style: Text.Raised
@@ -283,6 +284,16 @@ Item {
         }
     }
 
+    // 定时器待机界面启动
+    Timer {
+        id: sleep;
+        interval: sleepTime; running: false;
+        onTriggered: {
+            standby.visible = true;
+            face.visible = false;
+        }
+    }
+
     // 检测结果显示
     Rectangle {
         id: nameTextBg
@@ -359,6 +370,7 @@ Item {
                 iconFace.source = "image/icon_temp.png"
             }
             image_head.visible = isTemp
+            sleep.restart();
         }
         onFaceTb: {
             tbs.text = qsTr(text);
@@ -396,6 +408,7 @@ Item {
             nameText.text = qsTr(name)
             resultText.text = qsTr(result)
             hideName.restart()
+            sleep.restart()
         }
         onShowFaceFocuse:{
             var flag = false;
@@ -423,6 +436,9 @@ Item {
                 focusingList[index].focusingVisible = true;
                 focusingList[index].trackId = trackId;
             }
+            standby.visible = false;
+            face.visible = true;
+            sleep.restart();
         }
         onHideFaceFocuse:{
             for (var i = 0; i < focusingList.length; i ++) {
@@ -460,6 +476,14 @@ Item {
                 resultText.text = qsTr("请重新测温");
                 pose_blur.text = qsTr("请露出额头或摘下眼镜");
             }
+            sleep.restart();
+        }
+        onTimeSync: {
+            standby.g_dateCur = dataCur;
+            standby.g_digitalClock = digitalClock;
+            standby.g_hours = hour;
+            standby.g_minutes = min;
+            date.text = qsTr(dataTime);
         }
     }
 }

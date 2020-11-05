@@ -7,6 +7,7 @@ TcpClient::TcpClient()
 
 void TcpClient::run()
 {
+    m_seq = 3;
     m_msgLength = 0;
     m_tcpSocket = nullptr;
     m_heartbeatTimer = new QTimer();
@@ -72,7 +73,56 @@ void TcpClient::Reconnect()
 
 void TcpClient::parseData(int cmdType, QByteArray &recData)
 {
+    QJsonParseError jsonError;
+    QJsonDocument json = QJsonDocument::fromJson(recData, &jsonError);
+    qDebug() << jsonError.error << cmdType;
+    if (jsonError.error == QJsonParseError::NoError)
+    {
+        if (json.isObject())
+        {
+            QJsonObject jsonObj = json.object();
+            if(cmdType == DEV_REGISTER_RESPONSE)
+            {
+                pareRegister(jsonObj);
+            }
+            if(cmdType == DEV_LOGIN_RESPONSE)
+            {
+                pareLogin(jsonObj);
+            }
+            if(cmdType == DEV_HEARTBEAT_RESPONSE)
+            {
+                pareHeartbeat(jsonObj);
+            }
+            if(cmdType == DEV_PERSON_RESPONSE)
+            {
+                parseGetUsers(jsonObj);
+            }
+            if(cmdType == DEV_DOOR_RECORD_RESPONSE)
+            {
+//                parseUploadopenlog(jsonObj);
+            }
+            if(cmdType == DEV_ALL_PERSON_ID_RESPONSE)
+            {
+                parseAllUserId(jsonObj);
+            }
+            if(cmdType == DEV_GET_ALL_IC_RESPONE)
+            {
+                parseAllIc(jsonObj);
+            }
+            if(cmdType == DEV_ALL_PERSON_AUTH_RESPONSE)
+            {
+                parseAllUserAuth(jsonObj);
+            }
+            if(cmdType == DEV_ALL_PERSON_CHANGE_RESPONSE)
+            {
+                parseUsersChange(jsonObj);
+            }
+            if(cmdType == SERVER_REQUEST_CMD)
+            {
 
+            }
+        }
+    }
 }
 
 void TcpClient::checkReadData(QByteArray readData)
@@ -190,14 +240,129 @@ void TcpClient::OnReadData()
     }
 }
 
+void TcpClient::pareRegister(const QJsonObject &jsonObj)
+{
+    int messageId = jsonObj.value("messageId").toString().toInt();
+    int result = jsonObj.value("result").toInt();
+    if(2 == messageId && 200 == result)
+    {
+        if(!m_heartbeatTimer->isActive())
+        {
+            m_heartbeatTimer->start();
+        }
+        requestLogin();
+    }
+}
+
+void TcpClient::pareLogin(const QJsonObject &jsonObj)
+{
+    int messageId = jsonObj.value("messageId").toString().toInt();
+    int result = jsonObj.value("result").toInt();
+    if(2 == messageId && 200 == result)
+    {
+        requestGetAllUserID();
+    }
+}
+
+void TcpClient::pareHeartbeat(const QJsonObject &jsonObj)
+{
+    if(jsonObj.contains("result"))
+    {
+        int result = jsonObj.value("result").toInt();
+        if (401 == result)
+        {
+            Reconnect();
+        }
+    }
+}
+
+void TcpClient::parseGetUsers(const QJsonObject &jsonObj)
+{
+    int result = jsonObj.value("result").toInt();
+    QString messageId = jsonObj.value("messageId").toString();
+    if(200 == result && jsonObj.contains("data"))
+    {
+        QJsonValue dataValue = jsonObj.value("data");
+        if(dataValue.isObject())
+        {
+            emit updateUsers(dataValue.toObject());
+        }
+    }
+}
+
+void TcpClient::parseAllUserId(const QJsonObject &jsonObj)
+{
+    int result = jsonObj.value("result").toInt();
+    int messageId = jsonObj.value("messageId").toString().toInt();
+
+    if (200 == result && 3 == messageId)
+    {
+        emit allUserId(jsonObj["data"].toArray());
+    }
+    else
+    {
+        qDebug() << "parseAllUserId result" << result << "messageId" << messageId;
+    }
+}
+
+void TcpClient::parseUsersChange(const QJsonObject &jsonObj)
+{
+    int result = jsonObj.value("result").toInt();
+    int messageId = jsonObj.value("messageId").toString().toInt();
+    if(200 == result)
+    {
+        emit newUserId(jsonObj["updatePerson"].toArray());
+    }
+    else {
+        qDebug() << "parseUsersChange result" << result << "messageId" << messageId;
+    }
+}
+
+void TcpClient::parseAllUserAuth(const QJsonObject &jsonObj)
+{
+    int result = jsonObj.value("result").toInt();
+    int messageId = jsonObj.value("messageId").toString().toInt();
+    if(200 == result)
+    {
+        emit allUserAuth(jsonObj["data"].toArray());
+    }
+    else {
+        qDebug() << "parseAllUserAuth result" << result << "messageId" << messageId;
+    }
+}
+
+
+void TcpClient::parseAllIc(const QJsonObject &jsonObj)
+{
+    int result = jsonObj.value("result").toInt();
+    int messageId = jsonObj.value("messageId").toString().toInt();
+    if(200 == result)
+    {
+        emit allUserIc(jsonObj["data"].toArray());
+    }
+    else {
+        qDebug() << "parseAllUserAuth result" << result << "messageId" << messageId;
+    }
+}
+
 void TcpClient::requestRegister()
 {
-    QDateTime current_date_time =QDateTime::currentDateTime().addSecs(28800);
-    QString timestamp =current_date_time.toString("yyyyMMddhhmmss");
-    QJsonObject dataObj;
-    dataObj.insert("sn", switchCtl->m_sn);
-    dataObj.insert("timestamp", timestamp.toInt());
+    QString rec_passwd = switchCtl->m_passwd;
+    QString sn = switchCtl->m_sn;
+    QDateTime origin_time = QDateTime::fromString("1970-01-01 08:00:00","yyyy-MM-dd hh:mm:ss");
+    QDateTime current_date_time = QDateTime::currentDateTime().addSecs(28800);
+    QString timestamp = QString("%1").arg(origin_time.secsTo(current_date_time));
+    QString sign = sn + rec_passwd + timestamp + PACKET_HEAD;
+    QByteArray hash = QCryptographicHash::hash(sign.toLatin1(), QCryptographicHash::Md5);
+    QJsonObject dataObj, obj;
+    sign = hash.toHex();
+    dataObj.insert("sn", sn);
+    dataObj.insert("messageId", "2");
+    dataObj.insert("message", "registerReq");
+    obj.insert("timestamp", timestamp.toInt());
     dataObj.insert("type", DEVICE_TYPE);
+    obj.insert("sign", sign);
+    dataObj.insert("data", obj);
     WriteDataToServer(DEV_REGISTER_REQUEST, dataObj);
 }
 
@@ -210,12 +375,15 @@ void TcpClient::requestLogin()
     QString timestamp = QString("%1").arg(origin_time.secsTo(current_date_time));
     QString sign = sn + rec_passwd + timestamp + PACKET_HEAD;
     QByteArray hash = QCryptographicHash::hash(sign.toLatin1(), QCryptographicHash::Md5);
-    QJsonObject dataObj;
+    QJsonObject dataObj, obj;
     sign = hash.toHex();
     dataObj.insert("sn", sn);
-    dataObj.insert("timestamp", timestamp.toInt());
-    dataObj.insert("dversion", "1");
-    dataObj.insert("sign", sign);
+    dataObj.insert("messageId", 1);
+    dataObj.insert("message", "loginReq");
+    obj.insert("timestamp", timestamp.toInt());
+    obj.insert("dversion", "2");
+    obj.insert("sign", sign);
+    dataObj.insert("data", obj);
 
     WriteDataToServer(DEV_LOGIN_REQUEST, dataObj);
 }
@@ -223,14 +391,17 @@ void TcpClient::requestLogin()
 void TcpClient::requestHeartbeat()
 {
     int count = sqlDatabase->m_localFaceSet.size();
-    QJsonObject dataObj;
-    dataObj.insert("sn", switchCtl->m_sn);
-    dataObj.insert("peopleCount", count);
-    dataObj.insert("capacity", 30000);
-    dataObj.insert("appVersion", VERSION);
-    dataObj.insert("networkName", "eth0");
-    dataObj.insert("ipAddr", switchCtl->m_ipAddr);
-    dataObj.insert("languageSet", switchCtl->m_language);
+    QJsonObject dataObj, obj;
+    dataObj.insert("messageId", QString("%1").arg(m_seq++));
+    dataObj.insert("message", "heartbeatReq");
+    obj.insert("sn", switchCtl->m_sn);
+    obj.insert("peopleCount", count);
+    obj.insert("capacity", 30000);
+    obj.insert("appVersion", VERSION);
+    obj.insert("networkName", "eth0");
+    obj.insert("ipAddr", switchCtl->m_ipAddr);
+    obj.insert("languageSet", switchCtl->m_language);
+    dataObj.insert("data", obj);
 
     WriteDataToServer(DEV_HEARTBEAT_REQUEST, dataObj);
 }
@@ -238,6 +409,8 @@ void TcpClient::requestHeartbeat()
 void TcpClient::requestUsersChange()
 {
     QJsonObject dataObj;
+    dataObj.insert("messageId", QString("%1").arg(m_seq++));
+    dataObj.insert("message", "regularUserReq");
     dataObj.insert("sn", switchCtl->m_sn);
     qDebug() << "requestUsersChange" << dataObj;
     WriteDataToServer(DEV_ALL_PERSON_CHANGE_REQUEST, dataObj);
@@ -246,6 +419,8 @@ void TcpClient::requestUsersChange()
 void TcpClient::requestGetAllUserID()
 {
     QJsonObject dataObj;
+    dataObj.insert("messageId", 3);
+    dataObj.insert("message", "allUserReq");
     dataObj.insert("sn", switchCtl->m_sn);
     qDebug() << "requestGetAllUserID" << dataObj;
     WriteDataToServer(DEV_ALL_PERSON_ID_REQUEST,dataObj);
@@ -253,11 +428,14 @@ void TcpClient::requestGetAllUserID()
 
 void TcpClient::requestGetUsers(int id)
 {
-    QJsonObject dataObj;
+    QJsonObject dataObj, obj;
     QString oldPhotoName = "";
-    dataObj.insert("photoName", oldPhotoName);
+    dataObj.insert("messageId", QString("%1").arg(id));
+    dataObj.insert("message", "getUserReq");
     dataObj.insert("sn", switchCtl->m_sn);
-    dataObj.insert("mid", id);
+    obj.insert("mid", id);
+    obj.insert("photoName", oldPhotoName);
+    dataObj.insert("data", obj);
 
     WriteDataToServer(DEV_PERSON_REQUEST,dataObj);
 }
@@ -265,6 +443,8 @@ void TcpClient::requestGetUsers(int id)
 void TcpClient::requestGetAllUserAuth()
 {
     QJsonObject dataObj;
+    dataObj.insert("messageId", QString("%1").arg(m_seq++));
+    dataObj.insert("message", "allUserAuthReq");
     dataObj.insert("sn", switchCtl->m_sn);
     qDebug() << "requestGetAllUserAuth" << dataObj;
     WriteDataToServer(DEV_ALL_PERSON_AUTH_REQUEST,dataObj);
@@ -273,6 +453,8 @@ void TcpClient::requestGetAllUserAuth()
 void TcpClient::requestGetAllUserIC()
 {
     QJsonObject dataObj;
+    dataObj.insert("messageId", QString("%1").arg(m_seq++));
+    dataObj.insert("message", "icReq");
     dataObj.insert("sn", switchCtl->m_sn);
     qDebug() << "requestGetAllUserIC" << dataObj;
     WriteDataToServer(DEV_GET_ALL_IC_REQUEST,dataObj);
@@ -315,7 +497,7 @@ void TcpClient::WriteDataToServer(int msgType, QJsonObject &postObj)
     data = document.toJson(QJsonDocument::Compact);
     sendData.clear();
     sendData.append(PACKET_HEAD);
-    sendData.append(uchar(1));
+    sendData.append(uchar(2));
     sendData.append(uchar(1));
     sendData.append(uchar(msgType));
     sendData.append(intToByte(data.length()));

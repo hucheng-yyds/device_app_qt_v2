@@ -23,6 +23,12 @@ public slots:
     void onAlluserId(const QJsonArray &jsonArr);
     // 处理单个人员数据
     void onUpdateUsers(const QJsonObject &jsonObj);
+    // 处理alluser权限
+    void onAllUsersAuth(const QJsonArray &jsonArr);
+    // 处理alluserIc
+    void onAllUsersIc(const QJsonArray &jsonArr);
+    // 处理增量users
+    void onNewUsers(const QJsonArray &jsonArr);
 
 signals:
     // 发送获取单个人员数据

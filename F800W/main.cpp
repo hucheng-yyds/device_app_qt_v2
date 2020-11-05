@@ -37,8 +37,9 @@ int main(int argc, char *argv[])
     app.installTranslator(m_translator);
 
     QQmlApplicationEngine engine;
-    ProStorage programs;
-    engine.rootContext()->setContextProperty("programs", &programs);
+    ProStorage *programs = new ProStorage;
+    programs->start();
+    engine.rootContext()->setContextProperty("programs", programs);
     engine.load(QUrl(QStringLiteral("./qml/main.qml")));
     system("himm 0x111F0028 0x0500");
     system("himm 0x120D6400 0xB0");

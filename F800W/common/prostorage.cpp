@@ -11,7 +11,12 @@ using namespace qrcodegen;
 
 ProStorage::ProStorage()
 {
+}
+
+void ProStorage::run()
+{
     init();
+    exec();
 }
 
 void ProStorage::init()
@@ -29,12 +34,12 @@ void ProStorage::init()
     NetManager *netManager = new NetManager;
     connect(netManager, &NetManager::showDeviceInfo, this, &ProStorage::showDeviceInfo);
     connect(netManager, &NetManager::networkChanged, this, &ProStorage::networkChanged);
+    connect(netManager, &NetManager::timeSync, this, &ProStorage::timeSync);
 
     FaceInterface *interFace = new FaceInterface;
     FaceManager *face = new FaceManager;
     connect(face, &FaceManager::showFaceFocuse, this, &ProStorage::showFaceFocuse);
     connect(face, &FaceManager::hideFaceFocuse, this, &ProStorage::hideFaceFocuse);
-    connect(face, &FaceManager::syncSuccess, this, &ProStorage::syncSuccess);
     connect(face, &FaceManager::faceTb, this, &ProStorage::faceTb);
     face->setFaceInter(interFace);
     FaceIdentify *identify = new FaceIdentify;
@@ -49,20 +54,15 @@ void ProStorage::init()
     connect(tempManager, &TempManager::sendTempResult, identify, &FaceIdentify::recvTempResult);
     tempManager->start();
 
+    MqttClient *mqttClient = new MqttClient;
     UserIdRequest *userRequest = new UserIdRequest;
-    connect(httpClient, &HttpsClient::allUserId, userRequest, &UserIdRequest::onAlluserId);
-    connect(userRequest, &UserIdRequest::getUsers, httpClient, &HttpsClient::HttpsGetUsers);
-    connect(httpClient, &HttpsClient::updateUsers, userRequest, &UserIdRequest::onUpdateUsers);
-    connect(userRequest, &UserIdRequest::insertFaceGroups, face, &FaceManager::insertFaceGroups);
 
     FaceDataList *dataList = new FaceDataList;
-    MqttClient *mqttClient = new MqttClient;
     mqttClient->setPacket(dataList);
     FaceDataDeal *dataDeal = new FaceDataDeal;
     connect(dataDeal, &FaceDataDeal::insertFaceGroups, face, &FaceManager::insertFaceGroups);
     dataDeal->setHttp(httpClient);
     dataDeal->setPacket(dataList);
-
 
     bool status = face->init();
     qDebug() << "---------------init status:" << status;
@@ -81,10 +81,30 @@ void ProStorage::init()
     face->start();
     identify->start();
     netManager->start();
-    httpClient->start();
     userRequest->start();
+    if(switchCtl->m_protocol)
+    {
+        TcpClient *tcpClient = new TcpClient;
+        connect(tcpClient, &TcpClient::allUserId, userRequest, &UserIdRequest::onAlluserId);
+        connect(userRequest, &UserIdRequest::getUsers, tcpClient, &TcpClient::requestGetUsers);
+        connect(tcpClient, &TcpClient::updateUsers, userRequest, &UserIdRequest::onUpdateUsers);
+        connect(tcpClient, &TcpClient::allUserIc, userRequest, &UserIdRequest::onAllUsersIc);
+        connect(tcpClient, &TcpClient::allUserAuth, userRequest, &UserIdRequest::onAllUsersAuth);
+        connect(tcpClient, &TcpClient::newUserId, userRequest, &UserIdRequest::onNewUsers);
+        connect(tcpClient, &TcpClient::updateUsers, userRequest, &UserIdRequest::onUpdateUsers);
+        connect(userRequest, &UserIdRequest::insertFaceGroups, face, &FaceManager::insertFaceGroups);
+        tcpClient->start();
+    }
+    else {
+        connect(httpClient, &HttpsClient::allUserId, userRequest, &UserIdRequest::onAlluserId);
+        connect(userRequest, &UserIdRequest::getUsers, httpClient, &HttpsClient::HttpsGetUsers);
+        connect(httpClient, &HttpsClient::updateUsers, userRequest, &UserIdRequest::onUpdateUsers);
+        connect(userRequest, &UserIdRequest::insertFaceGroups, face, &FaceManager::insertFaceGroups);
+        httpClient->start();
+    }
     mqttClient->start();
     dataDeal->start();
+    emit syncSuccess(switchCtl->m_faceDoorCtl, switchCtl->m_tempCtl);
 }
 
 void ProStorage::DeviceSnJudgment()

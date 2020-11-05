@@ -228,3 +228,62 @@ void UserIdRequest::onAlluserId(const QJsonArray &jsonArr)
     qDebug() << m_updateFace.size();
     m_mutex.unlock();
 }
+
+void UserIdRequest::onAllUsersAuth(const QJsonArray &jsonArr)
+{
+    foreach(QJsonValue val, jsonArr)
+    {
+        QString startTime = "", expireTime = "", passTimeSection = "", passPeriod = "", remark = "";
+        QStringList text;
+        text.clear();
+        int passNum = -1, isBlack = -1;
+        QJsonObject jsonObj = val.toObject();
+        int id = jsonObj["mid"].toInt();
+        if(jsonObj.contains("passNum"))
+        {
+            passNum = jsonObj["passNum"].toInt();
+        }
+        if(jsonObj.contains("startTime"))
+        {
+            startTime = jsonObj["startTime"].toString();
+        }
+        if(jsonObj.contains("expireTime"))
+        {
+            expireTime = jsonObj["expireTime"].toString();
+        }
+        if(jsonObj.contains("isBlack"))
+        {
+            isBlack = jsonObj["isBlack"].toInt();
+        }
+        if(jsonObj.contains("passPeriod"))
+        {
+            passPeriod = jsonObj["passPeriod"].toString();
+        }
+        if(jsonObj.contains("passTimeSection"))
+        {
+            passTimeSection = jsonObj["passTimeSection"].toString();
+        }
+        if(jsonObj.contains("remark"))
+        {
+            remark = jsonObj["remark"].toString();
+        }
+        text << startTime << expireTime << passPeriod << passTimeSection << remark;
+        sqlDatabase->sqlInsertAuth(id, passNum, isBlack, text);
+    }
+}
+
+void UserIdRequest::onAllUsersIc(const QJsonArray &jsonArr)
+{
+    foreach(QJsonValue val, jsonArr)
+    {
+
+    }
+}
+
+void UserIdRequest::onNewUsers(const QJsonArray &jsonArr)
+{
+    foreach(QJsonValue val, jsonArr)
+    {
+
+    }
+}

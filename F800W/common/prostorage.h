@@ -6,6 +6,7 @@
 #include "facemanager.h"
 #include "netmanager.h"
 #include "httpsclient.h"
+#include "tcpclient.h"
 #include "tempmanager.h"
 #include "httpsclient.h"
 #include "useridrequest.h"
@@ -14,7 +15,7 @@
 #include "facedatalist.h"
 
 // 公共接口层 ui界面接口层
-class ProStorage : public QObject
+class ProStorage : public QThread
 {
     Q_OBJECT
 public:
@@ -22,7 +23,12 @@ public:
     // 生成二维码
     void saveQRcodeImage(const char *content);
 
+protected:
+    void run();
+
 signals:
+    // ui界面更新时间
+    void timeSync(const QString &dataCur, const QString &digitalClock, int hour, int min, const QString &dataTime);
     // 人脸检测结果显示 ui界面显示
     void faceResultShow(const QString &name, int index, int trackId, const QString &result);
     // 显示人脸框 ui界面显示

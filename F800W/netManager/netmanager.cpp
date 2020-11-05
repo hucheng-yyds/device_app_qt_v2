@@ -1,4 +1,5 @@
 #include <QNetworkInterface>
+#include <QDateTime>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -76,9 +77,71 @@ void NetManager::run()
         switchCtl->m_ipAddr = ip;
         int count = sqlDatabase->m_localFaceSet.size();
         emit showDeviceInfo(VERSION, switchCtl->m_devName, QString("%1").arg(count), ip, switchCtl->m_sn);
+        msleep(100);
+        int second = getTimeZoneMin()*60 + getTimeZone()*3600;
+        QDateTime dateTime = QDateTime::currentDateTime().addSecs(second);
+        QString curDate = getCurrentTime(dateTime);
+        int hour = dateTime.toString("HH").toInt();
+        int min = dateTime.toString("mm").toInt();
+        emit timeSync(curDate, dateTime.toString("HH:mm"), hour, min, dateTime.toString("MM-dd HH:mm"));
         msleep(500);
         seq++;
     }
+}
+
+QString NetManager::getCurrentTime(QDateTime dataTime)
+{
+    QLocale locale;
+    if(0 == switchCtl->m_language)
+    {
+        locale = QLocale::Chinese;//指定中文显示
+    }
+    else if(1 == switchCtl->m_language)
+    {
+        locale = QLocale::English;//指定英文显示
+    }
+    QString time = QString(locale.toString(dataTime, QString("MM-dd dddd")));
+    return time;
+}
+
+int NetManager::getTimeZone()
+{
+    int hourNum = 0;
+    QString timeZoneStr = switchCtl->m_timeZone;
+    if(timeZoneStr.contains("(UTC"))
+    {
+        QString hour = timeZoneStr.right(7).mid(1,5);
+        if(timeZoneStr.right(7).at(0) == "-")
+        {
+           hourNum = 0 - hour.mid(0,2).toInt();
+        }
+        else if(timeZoneStr.right(7).at(0) == "+")
+        {
+            hourNum = hour.mid(0,2).toInt();
+        }
+//        qt_debug() << hour << hourNum;
+    }
+    return hourNum;
+}
+
+int NetManager::getTimeZoneMin()
+{
+    int minuteNum = 0;
+    QString timeZoneStr = switchCtl->m_timeZone;
+    if(timeZoneStr.contains("(UTC"))
+    {
+        QString timeStr = timeZoneStr.right(7).mid(1,5);
+        if(timeZoneStr.right(7).at(0) == "-")
+        {
+           minuteNum = 0 - timeStr.mid(3,2).toInt();
+        }
+        else if(timeZoneStr.right(7).at(0) == "+")
+        {
+            minuteNum = timeStr.mid(3,2).toInt();
+        }
+//        qt_debug() << hour << hourNum;
+    }
+    return minuteNum;
 }
 
 QString NetManager::getIP()

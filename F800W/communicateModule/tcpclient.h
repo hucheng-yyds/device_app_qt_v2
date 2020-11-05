@@ -59,8 +59,24 @@ public slots:
     void requestGetUsers(int id);
 
 private:
+    // ic数据应答
+    void parseAllIc(const QJsonObject &jsonObj);
+    // 处理定时请求人员应答
+    void parseUsersChange(const QJsonObject &jsonObj);
+    // 处理全量人员权限
+    void parseAllUserAuth(const QJsonObject &jsonObj);
+    // 处理单个人员数据
+    void parseGetUsers(const QJsonObject &jsonObj);
+    // 处理alluser id
+    void parseAllUserId(const QJsonObject &jsonObj);
+    // 处理心跳应答
+    void pareHeartbeat(const QJsonObject &jsonObj);
+    // 处理注册应答
+    void pareRegister(const QJsonObject &jsonObj);
     // 后台注册
     void requestRegister();
+    // 处理登录应答
+    void pareLogin(const QJsonObject &jsonObj);
     // 后台登录
     void requestLogin();
     // 向服务器发送数据
@@ -84,6 +100,18 @@ private slots:
     // 处理粘包
     void checkReadData(QByteArray readData);
 
+signals:
+    // 处理所有alluserid
+    void allUserId(const QJsonArray &jsonArr);
+    // 增量接口人脸数据
+    void newUserId(const QJsonArray &jsonArr);
+    // 处理所有ic卡数据
+    void allUserIc(const QJsonArray &jsonArr);
+    // 处理所有人员权限卡数据
+    void allUserAuth(const QJsonArray &jsonArr);
+    // 发送单个人员数据
+    void updateUsers(const QJsonObject &jsonObj);
+
 private:
     QTcpSocket *m_tcpSocket;
     QTimer *m_heartbeatTimer;
@@ -92,5 +120,6 @@ private:
     int m_msgLength;
     QByteArray m_msgData;
     int m_cmdType;
+    int m_seq;
 };
 #endif // TCPCLIENT_H

@@ -39,8 +39,6 @@ signals:
     void hideFaceFocuse();
     // 停止测温
     void endTemp();
-    // 刷新ui界面 初始化完成
-    void syncSuccess(bool eg, bool temp);
     // 人员同步和升级状态显示
     void faceTb(const QString &text);
 

@@ -14,6 +14,7 @@ FaceIdentify::FaceIdentify()
 
 void FaceIdentify::recvTempResult(const QString &tempVal, int result)
 {
+    qDebug() << "=================================================" << tempVal << result;
     m_tempFlag = true;
     m_tempVal = tempVal;
     m_tempResult = result;
