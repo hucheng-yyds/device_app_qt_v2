@@ -99,6 +99,10 @@ private slots:
     void parseData(int cmdType, QByteArray &recData);
     // 处理粘包
     void checkReadData(QByteArray readData);
+    // 网络接连状态
+    void OnStateChanged(QAbstractSocket::SocketState state);
+    // 连接错误
+    void ConnectError(QAbstractSocket::SocketError state);
 
 signals:
     // 处理所有alluserid

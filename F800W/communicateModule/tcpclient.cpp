@@ -16,11 +16,12 @@ void TcpClient::run()
     m_requestTimer->setInterval(30000);
     m_requestTimer->setSingleShot(true);
     m_connectTimer = new QTimer();
-    m_connectTimer->setInterval(3000);
+    m_connectTimer->setInterval(5000);
     m_connectTimer->setSingleShot(true);
     connect(m_heartbeatTimer, &QTimer::timeout, this, &TcpClient::requestHeartbeat);
     connect(m_connectTimer, &QTimer::timeout, this, &TcpClient::Reconnect);
     connect(m_requestTimer, &QTimer::timeout, this, &TcpClient::Reconnect);
+    ConnectHost();
     exec();
 }
 
@@ -31,7 +32,7 @@ void TcpClient::ConnectHost()
     connect(m_tcpSocket, SIGNAL(readyRead()), this, SLOT(OnReadData()));
     connect(m_tcpSocket, SIGNAL(stateChanged(QAbstractSocket::SocketState)),this,SLOT(OnStateChanged(QAbstractSocket::SocketState)));
 
-    const QString &ip = switchCtl->m_ipAddr;
+    const QString &ip = switchCtl->m_tcpAddr;
     int port = switchCtl->m_tcpPort;
     qDebug() << ip << port;
     m_tcpSocket->setReadBufferSize(16*1024*1024);
@@ -41,6 +42,7 @@ void TcpClient::ConnectHost()
     {
         qDebug()<<"ip connnect fail";
         m_connectTimer->start();
+        switchCtl->m_netStatus = false;
     }
     else
     {
@@ -69,6 +71,23 @@ void TcpClient::Reconnect()
         m_heartbeatTimer->stop();
     }
     ConnectHost();
+}
+
+void TcpClient::ConnectError(QAbstractSocket::SocketError state)
+{
+    qDebug()<<state;
+    if(QAbstractSocket::RemoteHostClosedError == state)
+    {
+
+    }
+}
+
+void TcpClient::OnStateChanged(QAbstractSocket::SocketState state)
+{
+    qDebug()<<state;
+    if(state == QAbstractSocket::UnconnectedState)
+    {
+    }
 }
 
 void TcpClient::parseData(int cmdType, QByteArray &recData)
@@ -260,6 +279,7 @@ void TcpClient::pareLogin(const QJsonObject &jsonObj)
     int result = jsonObj.value("result").toInt();
     if(2 == messageId && 200 == result)
     {
+        switchCtl->m_netStatus = true;
         requestGetAllUserID();
     }
 }
