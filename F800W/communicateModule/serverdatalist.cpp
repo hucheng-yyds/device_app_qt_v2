@@ -1,10 +1,10 @@
-#include "facedatalist.h"
+#include "serverdatalist.h"
 
-FaceDataList::FaceDataList()
+ServerDataList::ServerDataList()
 {
     m_dataList.clear();
 }
-FaceDataList::~FaceDataList()
+ServerDataList::~ServerDataList()
 {
     m_mutex.lock();
     QList<FacePacketNode_t*>::iterator iter = m_dataList.begin();
@@ -16,7 +16,7 @@ FaceDataList::~FaceDataList()
     m_dataList.clear();
 }
 
-void FaceDataList::PushLogPacket(FacePacketNode_t* Packet)
+void ServerDataList::PushLogPacket(FacePacketNode_t* Packet)
 {
     if(!Packet)
     {
@@ -27,7 +27,7 @@ void FaceDataList::PushLogPacket(FacePacketNode_t* Packet)
     m_mutex.unlock();
 }
 
-FacePacketNode_t* FaceDataList::GetLogPacket()
+FacePacketNode_t* ServerDataList::GetLogPacket()
 {
     if(!m_dataList.empty())
     {
@@ -42,7 +42,7 @@ FacePacketNode_t* FaceDataList::GetLogPacket()
     return nullptr;
 }
 
-void FaceDataList::ClearLogPacket()
+void ServerDataList::ClearLogPacket()
 {
     m_mutex.lock();
     if(!m_dataList.empty())

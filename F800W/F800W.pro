@@ -1,4 +1,4 @@
-QT += qml quick network sql websockets
+QT += qml quick network sql websockets widgets
 CONFIG += c++11
 
 # The following define makes your compiler emit warnings if you use
@@ -6,7 +6,8 @@ CONFIG += c++11
 # depend on your compiler). Refer to the documentation for the
 # deprecated API to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS
-
+DEFINES += CONFIG_CTRL_IFACE
+DEFINES += CONFIG_CTRL_IFACE_UNIX
 # You can also make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
@@ -25,8 +26,6 @@ INCLUDEPATH     += $$PWD
 INCLUDEPATH     += $$PWD/external/include
 INCLUDEPATH     += $$PWD/external/include/hi
 INCLUDEPATH     += $$PWD/external/include/tts
-INCLUDEPATH     += $$PWD/external/wpa/src
-INCLUDEPATH     += $$PWD/external/wpa/src/utils
 
 LIBS += -L$$PWD/external/lib
 LIBS += -L$$PWD/external/lib/hi
@@ -54,7 +53,8 @@ INCLUDEPATH     += $$PWD/netManager
 INCLUDEPATH     += $$PWD/communicateModule
 INCLUDEPATH     += $$PWD/communicateExt
 INCLUDEPATH     += $$PWD/temperature
-INCLUDEPATH     += $$PWD/log
+INCLUDEPATH     += $$PWD/logs
+INCLUDEPATH     += $$PWD/wpa
 
 include         ($$PWD/hardware/hardware.pri)
 include         ($$PWD/timerCountDown/timerCountDown.pri)
@@ -67,7 +67,8 @@ include         ($$PWD/netManager/netmanager.pri)
 include         ($$PWD/communicateModule/communicatemodule.pri)
 include         ($$PWD/communicateExt/communicateExt.pri)
 include         ($$PWD/temperature/temperature.pri)
-include         ($$PWD/log/log.pri)
+include         ($$PWD/logs/log.pri)
+include         ($$PWD/wpa/wpa.pri)
 
 #RESOURCES += main.qrc
 

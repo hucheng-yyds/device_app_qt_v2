@@ -4,11 +4,11 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
-#include "face_sdk.h"
 #include "hi_comm_video.h"
 #include "switch.h"
 #include "qalhardware.h"
 #include "sqldatabase.h"
+#include "countdown.h"
 
 #define VIDEO_WIDTH     800
 #define VIDEO_HEIGHT    1280
@@ -33,7 +33,6 @@ public:
     unsigned char *m_irImage;
     unsigned char *m_bgrImage;
     QMutex m_mutex;
-    FaceGroupHandle m_groupHandle;
 };
 
 #endif // FACEINTERFACE_H

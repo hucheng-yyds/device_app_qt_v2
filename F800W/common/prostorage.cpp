@@ -45,25 +45,19 @@ void ProStorage::init()
     face->setFaceInter(interFace);
     FaceIdentify *identify = new FaceIdentify;
     identify->setFaceInter(interFace);
-    connect(identify, &FaceIdentify::uploadopenlog, httpClient, &HttpsClient::httpsUploadopenlog);
     connect(identify, &FaceIdentify::faceResultShow, this, &ProStorage::faceResultShow);
     TempManager *tempManager = new TempManager;
     connect(face, &FaceManager::endTemp, tempManager, &TempManager::endTemp);
     connect(identify, &FaceIdentify::startTemp, tempManager, &TempManager::startTemp);
     connect(identify, &FaceIdentify::showStartTemp, this, &ProStorage::showStartTemp);
     connect(identify, &FaceIdentify::tempShow, this, &ProStorage::tempShow);
-    connect(tempManager, &TempManager::sendTempResult, identify, &FaceIdentify::recvTempResult);
     tempManager->start();
 
     MqttClient *mqttClient = new MqttClient;
     UserIdRequest *userRequest = new UserIdRequest;
 
-    FaceDataList *dataList = new FaceDataList;
-    mqttClient->setPacket(dataList);
-    FaceDataDeal *dataDeal = new FaceDataDeal;
-    connect(dataDeal, &FaceDataDeal::insertFaceGroups, face, &FaceManager::insertFaceGroups);
-    dataDeal->setHttp(httpClient);
-    dataDeal->setPacket(dataList);
+    ServerDataList *serverList = new ServerDataList;
+    mqttClient->setPacket(serverList);
 
     bool status = face->init();
     qDebug() << "---------------init status:" << status;
@@ -85,18 +79,28 @@ void ProStorage::init()
     userRequest->start();
     if(switchCtl->m_protocol)
     {
+        ServerDataDeal *dataDeal = new ServerDataDeal;
+        connect(dataDeal, &ServerDataDeal::insertFaceGroups, face, &FaceManager::insertFaceGroups);
+        dataDeal->setHttp(httpClient);
+        dataDeal->setPacket(serverList);
         TcpClient *tcpClient = new TcpClient;
+        tcpClient->setPacket(serverList);
         connect(tcpClient, &TcpClient::allUserId, userRequest, &UserIdRequest::onAlluserId);
         connect(userRequest, &UserIdRequest::getUsers, tcpClient, &TcpClient::requestGetUsers);
         connect(tcpClient, &TcpClient::updateUsers, userRequest, &UserIdRequest::onUpdateUsers);
+        connect(userRequest, &UserIdRequest::allUserId, tcpClient, &TcpClient::requestGetAllUserID);
         connect(tcpClient, &TcpClient::allUserIc, userRequest, &UserIdRequest::onAllUsersIc);
-        connect(tcpClient, &TcpClient::allUserAuth, userRequest, &UserIdRequest::onAllUsersAuth);
         connect(tcpClient, &TcpClient::newUserId, userRequest, &UserIdRequest::onNewUsers);
-        connect(tcpClient, &TcpClient::updateUsers, userRequest, &UserIdRequest::onUpdateUsers);
         connect(userRequest, &UserIdRequest::insertFaceGroups, face, &FaceManager::insertFaceGroups);
+        connect(identify, &FaceIdentify::uploadopenlog, tcpClient, &TcpClient::uploadopenlog);
+        connect(dataDeal, &ServerDataDeal::newUsers, userRequest, &UserIdRequest::onNewUsers);
+        connect(userRequest, &UserIdRequest::sigInsertFail, tcpClient, &TcpClient::requestInserFail);
+        connect(dataDeal, &ServerDataDeal::responseServer, tcpClient, &TcpClient::responseServer);
         tcpClient->start();
+        dataDeal->start();
     }
     else {
+        connect(identify, &FaceIdentify::uploadopenlog, httpClient, &HttpsClient::httpsUploadopenlog);
         connect(httpClient, &HttpsClient::allUserId, userRequest, &UserIdRequest::onAlluserId);
         connect(userRequest, &UserIdRequest::getUsers, httpClient, &HttpsClient::HttpsGetUsers);
         connect(httpClient, &HttpsClient::updateUsers, userRequest, &UserIdRequest::onUpdateUsers);
@@ -104,7 +108,6 @@ void ProStorage::init()
         httpClient->start();
     }
     mqttClient->start();
-    dataDeal->start();
     emit syncSuccess(switchCtl->m_faceDoorCtl, switchCtl->m_tempCtl);
 }
 

@@ -10,8 +10,7 @@ FaceManager::FaceManager()
 
 void FaceManager::updateIdentifyValue()
 {
-    size_t count = 0;
-    getFaceGroupCount(m_interFace->m_groupHandle, &count);
+    int count = sqlDatabase->m_localFaceSet.size();
     if (0 == count || count < 1000)
     {
         switchCtl->m_faceThreshold = 61;
@@ -70,10 +69,10 @@ void FaceManager::run()
             hardware->ctlWDG();
             emit faceTb(tr("正在同步中..."));
             hardware->ctlLed(OFF);
-//            if(!networking)
-//            {
-//                switchCtl->m_sync = false;
-//            }
+            if(!switchCtl->m_netStatus)
+            {
+                switchCtl->m_sync = false;
+            }
             hardware->checkOpenDoor();
             hardware->ctlWDG();
             msleep(500);
@@ -278,6 +277,16 @@ void FaceManager::sort(FaceHandle *faceHandle, int count)
     }
 }
 
+void FaceManager::ctlOpenDoor(int id)
+{
+    hardware->ctlLed(GREEN);
+    hardware->checkOpenDoor();
+    QStringList datas;
+    datas.clear();
+    datas << QDateTime::currentDateTime().addSecs(28800).toString("yyyy-MM-dd HH:mm:ss") << "" << "1" << "" << "0" << "";
+    sqlDatabase->sqlInsertOffline(0, id, 1, 0, 0, datas);
+}
+
 void FaceManager::insertFaceGroups(int id, const QString &username, const QString &time, const QString &photoname, const QString &iphone)
 {
     int count;
@@ -291,8 +300,7 @@ void FaceManager::insertFaceGroups(int id, const QString &username, const QStrin
         {
             errid = 4;
         }
-        sqlDatabase->sqlInsertFailDelete(id);
-        sqlDatabase->sqlInsertFailInsert(id, username, time, errid);
+        sqlDatabase->sqlInsertFail(id, errid);
         qDebug() << "Error: id" << id << errid;
     }
     else
@@ -303,8 +311,7 @@ void FaceManager::insertFaceGroups(int id, const QString &username, const QStrin
         m_interFace->m_mutex.unlock();
         if (0 == count)
         {
-            sqlDatabase->sqlInsertFailDelete(id);
-            sqlDatabase->sqlInsertFailInsert(id, username, time, 2);
+            sqlDatabase->sqlInsertFail(id,  2);
             qDebug() << "faceHandle is null !" << id << "2";
         }
         else
@@ -319,19 +326,20 @@ void FaceManager::insertFaceGroups(int id, const QString &username, const QStrin
                 extract(faceHandle[0], &feature_result, &size);
                 m_interFace->m_mutex.unlock();
                 QStringList feature;
-                for (int i = 0; i < size; i ++) {
+                for (int i = 0; i < size; i ++)
+                {
                     feature << QString::number(feature_result[i]);
                 }
+                qDebug() << id << username << time << photoname << iphone;
                 sqlDatabase->sqlInsert(id, username, time, feature.join(","), photoname, iphone);
-                insertFaceGroup(m_interFace->m_groupHandle, feature_result, size, id);
-                qDebug() << count << id << size;
+                insertFaceGroup(sqlDatabase->m_groupHandle, feature_result, size, id);
+                sqlDatabase->sqlDeleteFail(id);
                 releaseFeature(feature_result);
             }
             else
             {
                 qDebug() << "failInsert" << 3;
-                sqlDatabase->sqlInsertFailDelete(id);
-                sqlDatabase->sqlInsertFailInsert(id, username, time, 3);
+                sqlDatabase->sqlInsertFail(id, 3);
             }
         }
         releaseAllFace(faceHandle, count);
@@ -367,7 +375,7 @@ bool FaceManager::init()
     }
     set_detect_config(0.3, 0.5);
     set_match_config(0.99, -35.61, 0.99, 4.26, 0.4);
-    createFaceGroup(&m_interFace->m_groupHandle);
+    createFaceGroup(&sqlDatabase->m_groupHandle);
     localFaceInsert();
     return true;
 }
@@ -377,6 +385,7 @@ void FaceManager::localFaceInsert()
     QSet<int> ids = sqlDatabase->sqlSelectAllUserId();
     foreach (int id, ids)
     {
+        emit faceTb(tr("加载人员中..."));
         QString value = sqlDatabase->sqlSelectAllUserFeature(id);
         if ("0" != value && !value.isEmpty())
         {
@@ -388,11 +397,12 @@ void FaceManager::localFaceInsert()
             {
                 ret[i] = result.at(i).toFloat();
             }
-            insertFaceGroup(m_interFace->m_groupHandle, ret.data(), 512, id);
+            insertFaceGroup(sqlDatabase->m_groupHandle, ret.data(), 512, id);
         }
         else {
             qDebug() << "value 0" << value;
         }
     }
+    emit faceTb(tr(""));
     updateIdentifyValue();
 }

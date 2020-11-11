@@ -5,10 +5,11 @@
 #include <QJsonObject>
 #include <QFile>
 #include <QDebug>
+#include "log.h"
 
 #define switchCtl SwitchCtl::getInstance()
 
-#define VERSION     "1.0.0"
+#define VERSION     "2.0.0"
 #define DEVICE_TYPE "F800W"
 
 class SwitchCtl
@@ -22,6 +23,14 @@ public:
         }
         return m_Instance;
     }
+
+    // 测温结束标志
+    bool m_tempFlag;
+    // 测温数值
+    QString m_tempVal;
+    // 测温比对结果
+    int m_tempResult;
+
     // 同步中标志
     bool m_sync;
     // 升级中标志
@@ -142,6 +151,10 @@ public:
     bool m_rcode;
     // 音量控制 0 - 100 0是静音
     int m_volume;
+    // wifi用户名
+    QString m_wifiName;
+    // wifi密码
+    QString m_wifiPwd;
 
 private:
     // 屏参和摄像头参数 参数不要随意修改

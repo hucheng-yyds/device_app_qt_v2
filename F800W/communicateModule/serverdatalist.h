@@ -10,10 +10,10 @@ typedef struct {
 } FacePacketNode_t;
 
 // 星河后台mqtt数据缓存 V833考虑性能的问题 需使用二代协议
-class FaceDataList {
+class ServerDataList {
 public:
-    FaceDataList();
-    ~FaceDataList();
+    ServerDataList();
+    ~ServerDataList();
     // mqtt数据入缓存
     void PushLogPacket(FacePacketNode_t* Packet);
     // 从缓存取mqtt数据

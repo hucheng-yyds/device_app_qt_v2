@@ -148,7 +148,7 @@ Item {
             pixelSize: 30;
             family: "multi-language"
         }
-        text: qsTr()
+        text: qsTr("")
         verticalAlignment: Text.AlignVCenter
         horizontalAlignment: Text.AlignHCenter
         style: Text.Raised
@@ -374,6 +374,9 @@ Item {
         }
         onFaceTb: {
             tbs.text = qsTr(text);
+            standby.visible = false;
+            face.visible = true;
+            sleep.restart();
         }
 
         onNetworkChanged: {
@@ -447,7 +450,7 @@ Item {
             }
         }
         onShowDeviceInfo:{
-            version.text = qsTr("V" + ver);
+            version.text = qsTr("T" + ver);
             corporateName.text = qsTr(name);
             people.text = qsTr(number);
             ip.text = qsTr(devIp);

@@ -11,8 +11,8 @@
 #include "httpsclient.h"
 #include "useridrequest.h"
 #include "mqttclient.h"
-#include "facedatadeal.h"
-#include "facedatalist.h"
+#include "serverdatadeal.h"
+#include "serverdatalist.h"
 #include "log.h"
 
 // 公共接口层 ui界面接口层

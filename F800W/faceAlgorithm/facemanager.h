@@ -18,6 +18,9 @@ protected:
     virtual void run();
 
 public slots:
+    // 开门
+    void ctlOpenDoor(int id);
+    // 人员图片入库
     void insertFaceGroups(int id, const QString &username, const QString &time, const QString &photoname, const QString &iphone);
 
 private:

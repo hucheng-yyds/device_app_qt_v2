@@ -11,7 +11,6 @@
 #include <termios.h>
 #include <linux/input.h>
 
-#include "countdown.h"
 #include "sample_vio.h"
 #include "switch.h"
 
@@ -66,6 +65,10 @@ public:
         }
         return m_Instance;
     }
+    // 是否已到定时的时长，是返回true，否返回false
+    bool expired();
+    // 设置定时时长。 从当前时间开始的定时时长，单位ms
+    void countdown_ms(int ms);
     // 设置音量值，0-100
     void setVolume(int vol);
     // led灯颜色控制
@@ -104,9 +107,10 @@ private:
 private:
     static QalHardWare *m_Instance;
     led_pwm_set m_led;
-    CountDown m_timer;
     int m_fd = 0;
     int m_i = 3;
+    // 定时到达的结束时间 单位ms
+    qint64 m_endTimerMs;
     QMutex m_mutex;
 };
 

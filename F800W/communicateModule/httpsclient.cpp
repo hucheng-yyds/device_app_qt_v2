@@ -104,7 +104,7 @@ void HttpsClient::uploadOfflineDataImage(int userId, const QString &photo, int i
     qDebug() << "userId: " << type << userId << userId << datas.at(5);
 }
 
-void HttpsClient::httpsUploadopenlog(int userId, const QString &photo, int isOver,int type, int isTemp, const QStringList &datas)
+void HttpsClient::httpsUploadopenlog(int id, int userId, const QString &photo, int isOver,int type, int isTemp, const QStringList &datas)
 {
     if (!m_loginStatus)
     {

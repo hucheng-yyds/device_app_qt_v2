@@ -269,7 +269,10 @@ void TempManager::timeckeck()
             m_tempCount = 0;
             QString tempVal = getTemperature();
             int result = compareTemp(tempVal);
-            emit sendTempResult(tempVal, result);
+            switchCtl->m_tempFlag = true;
+            switchCtl->m_tempVal = tempVal;
+            switchCtl->m_tempResult = result;
+//            emit sendTempResult(tempVal, result);
         }
     }
 }

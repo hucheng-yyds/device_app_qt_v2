@@ -3,13 +3,13 @@
 
 UserIdRequest::UserIdRequest()
 {
+    m_faceSyncStatus = false;
     m_startFaceDownload = false;
-    m_updateFaceStatus = false;
 }
 
 void UserIdRequest::updateIdentifyValue()
 {
-    size_t count = sqlDatabase->m_localFaceSet.size();
+    int count = sqlDatabase->m_localFaceSet.size();
     if (0 == count || count < 1000)
     {
         switchCtl->m_faceThreshold = 61;
@@ -43,14 +43,17 @@ void UserIdRequest::run()
     {
         if(m_startFaceDownload)
         {
-            if(m_updateFace.size() > 0)
+            int size = m_updateFace.size();
+            if(size > 0)
             {
-                if(m_updateFaceStatus)
+                if(m_faceSyncStatus)
                 {
                     switchCtl->m_sync = true;
                     count = 0;
-                    m_updateFaceStatus = false;
+                    m_faceSyncStatus = false;
                     m_curFaceId = *m_updateFace.begin();
+                    m_updateFace.remove(m_curFaceId);
+                    qDebug() << "getUser" << "id" << m_curFaceId << "counts" << size;
                     emit getUsers(m_curFaceId);
                 }
             }
@@ -62,19 +65,17 @@ void UserIdRequest::run()
                 switchCtl->m_sync = false;
                 m_startFaceDownload = false;
             }
-            if(!m_updateFaceStatus)
+            if(!m_faceSyncStatus)
             {
                 count++;
                 if(count > 20 * switchCtl->m_tcpTimeout)
                 {
                     if(m_updateFace.size() > 0)
                     {
-                        m_updateFace.remove(m_curFaceId);
-                        sqlDatabase->sqlInsertFailDelete(m_curFaceId);
-                        sqlDatabase->sqlInsertFailInsert(m_curFaceId, "", "", 9);
+                        sqlDatabase->sqlInsertFail(m_curFaceId, 9);
                     }
                     count = 0;
-                    m_updateFaceStatus = true;
+                    m_faceSyncStatus = true;
                 }
             }
             msleep(50);
@@ -148,32 +149,159 @@ void UserIdRequest::httpsUpdateUsers(const QJsonObject &jsonObj)
     }
     text << startTime << expireTime << passPeriod << passTimeSection << remark;
     sqlDatabase->sqlInsertAuth(id, passNum, isBlack, text);
-    m_updateFaceStatus = true;
     emit insertFaceGroups(id, name, edittime, photoName, mobile);
 }
 
 void UserIdRequest::tcpUpdateUsers(const QJsonObject &jsonObj)
 {
-    QString mobile = "", photoName = "";
+    QString edittime = "", remark = "", startTime = "", expireTime = "", passTimeSection = "", passPeriod = "", mobile = "", photoName = "";
+    int passNum = -1, isBlack = -1;
     int id = jsonObj["mid"].toInt();
-    m_updateFace.remove(id);
-    QString name = jsonObj["username"].toString();
+    QString name = "";
     QString photo = jsonObj["photo"].toString();
-    QString edittime = jsonObj["updateDate"].toString();
+    bool status = false;
+    QVariantList value;
+    value.clear();
+    value = sqlDatabase->sqlSelect(id);
+    if(value.size() > 0)
+    {
+        status = true;
+    }
+    if(jsonObj.contains("updateDate"))
+    {
+        edittime = jsonObj["updateDate"].toString();
+    }
+    else {
+        if(status)
+        {
+            edittime = value.at(2).toString();
+        }
+    }
+    if(jsonObj.contains("username"))
+    {
+        name = jsonObj["username"].toString();
+    }
+    else {
+        if(status)
+        {
+            name = value.at(1).toString();
+        }
+    }
     if(jsonObj.contains("mobile"))
     {
         mobile = jsonObj["mobile"].toString();
+    }
+    else {
+        if(status)
+        {
+            mobile = value.at(5).toString();
+        }
     }
     if(jsonObj.contains("photoName"))
     {
         photoName = jsonObj["photoName"].toString();
     }
+    else {
+        if(status)
+        {
+            photoName = value.at(4).toString();
+        }
+    }
     QFile file(QString::number(id) + ".jpg");
     file.open(QIODevice::ReadWrite);
     file.write(QByteArray::fromBase64(photo.toUtf8()));
     file.close();
-    m_updateFaceStatus = true;
-    emit insertFaceGroups(id, name, edittime, photoName, mobile);
+    if(value.size() > 0)
+    {
+        sqlDatabase->sqlUpdate(id, name, edittime, photoName, mobile);
+    }
+    else {
+        emit insertFaceGroups(id, name, edittime, photoName, mobile);
+    }
+    status = false;
+    value.clear();
+    value = sqlDatabase->sqlSelectAuth(id);
+    if(jsonObj.contains("passNum"))
+    {
+        passNum = jsonObj["passNum"].toInt();
+    }
+    else {
+        if(status)
+        {
+            passNum = value.at(1).toInt();
+        }
+    }
+    if(jsonObj.contains("startTime"))
+    {
+        startTime = jsonObj["startTime"].toString();
+    }
+    else {
+        if(status)
+        {
+            startTime = value.at(2).toString();
+        }
+    }
+    if(jsonObj.contains("expireTime"))
+    {
+        expireTime = jsonObj["expireTime"].toString();
+    }
+    else {
+        if(status)
+        {
+            expireTime = value.at(3).toString();
+        }
+    }
+    if(jsonObj.contains("isBlack"))
+    {
+        isBlack = jsonObj["isBlack"].toInt();
+    }
+    else {
+        if(status)
+        {
+            isBlack = value.at(4).toInt();
+        }
+    }
+    if(jsonObj.contains("passPeriod"))
+    {
+        passPeriod = jsonObj["passPeriod"].toString();
+    }
+    else {
+        if(status)
+        {
+            passPeriod = value.at(5).toString();
+        }
+    }
+    if(jsonObj.contains("passTimeSection"))
+    {
+        passTimeSection = jsonObj["passTimeSection"].toString();
+    }
+    else {
+        if(status)
+        {
+            passTimeSection = value.at(6).toString();
+        }
+    }
+    if(jsonObj.contains("remark"))
+    {
+        remark = jsonObj["remark"].toString();
+    }
+    else {
+        if(status)
+        {
+            remark = value.at(7).toString();
+        }
+    }
+    QStringList datas;
+    datas.clear();
+    datas << startTime << expireTime << passPeriod << passTimeSection << remark;
+    if(value.size() > 0)
+    {
+        sqlDatabase->sqlUpdateAuth(id, passNum, isBlack, datas);
+    }
+    else {
+        sqlDatabase->sqlInsertAuth(id, passNum, isBlack, datas);
+    }
+    m_faceSyncStatus = true;
 }
 
 void UserIdRequest::onUpdateUsers(const QJsonObject &jsonObj)
@@ -181,8 +309,7 @@ void UserIdRequest::onUpdateUsers(const QJsonObject &jsonObj)
     if (jsonObj.isEmpty())
     {
         qDebug() << "user is nonexistent !";
-        sqlDatabase->sqlInsertFailDelete(m_curFaceId);
-        sqlDatabase->sqlInsertFailInsert(m_curFaceId, "", "", 9);
+        sqlDatabase->sqlInsertFail(m_curFaceId, 9);
     }
     else
     {
@@ -202,74 +329,49 @@ void UserIdRequest::onAlluserId(const QJsonArray &jsonArr)
     m_mutex.lock();
     QJsonArray faceJson = jsonArr;
     QSet<int> localFaceSet = sqlDatabase->m_localFaceSet;
-    qDebug() << "OnAllUserId count:" << faceJson.count() << localFaceSet.size();
+    int size = faceJson.count();
+    qDebug() << "OnAllUserId count:" << size << localFaceSet.size();
     m_updateFace.clear();
-    if(faceJson.count() > 0)
+    if(size > 0)
     {
         foreach (QJsonValue val, faceJson)
         {
             QJsonObject jsonObj = val.toObject();
             int id = jsonObj["mid"].toInt();
-            QString newTime = jsonObj["updateDate"].toString();
-            QString updateTime = sqlDatabase->sqlSelectAllUserTime(id);
-            if(updateTime.compare(newTime) != 0)
+            if(localFaceSet.contains(id))
             {
-                sqlDatabase->sqlDelete(id);
+                QString newTime = jsonObj["updateDate"].toString();
+                QString updateTime = sqlDatabase->sqlSelectAllUserTime(id);
+                if(updateTime.compare(newTime) != 0)
+                {
+                    sqlDatabase->sqlDelete(id);
+                    m_updateFace.insert(id);
+                }
+                localFaceSet.remove(id);
+            }
+            else
+            {
                 m_updateFace.insert(id);
             }
-            localFaceSet.remove(id);
         }
         foreach(int i, localFaceSet)
         {
             sqlDatabase->sqlDelete(i);
         }
+    }
+    else {
+        sqlDatabase->sqlDeleteAll();
+        sqlDatabase->sqlDeleteAllIc();
+        sqlDatabase->sqlDeleteAllAuth();
+    }
+    int count = m_updateFace.size();
+    if(count > 0)
+    {
         m_startFaceDownload = true;
+        m_faceSyncStatus = true;
     }
     qDebug() << m_updateFace.size();
     m_mutex.unlock();
-}
-
-void UserIdRequest::onAllUsersAuth(const QJsonArray &jsonArr)
-{
-    foreach(QJsonValue val, jsonArr)
-    {
-        QString startTime = "", expireTime = "", passTimeSection = "", passPeriod = "", remark = "";
-        QStringList text;
-        text.clear();
-        int passNum = -1, isBlack = -1;
-        QJsonObject jsonObj = val.toObject();
-        int id = jsonObj["mid"].toInt();
-        if(jsonObj.contains("passNum"))
-        {
-            passNum = jsonObj["passNum"].toInt();
-        }
-        if(jsonObj.contains("startTime"))
-        {
-            startTime = jsonObj["startTime"].toString();
-        }
-        if(jsonObj.contains("expireTime"))
-        {
-            expireTime = jsonObj["expireTime"].toString();
-        }
-        if(jsonObj.contains("isBlack"))
-        {
-            isBlack = jsonObj["isBlack"].toInt();
-        }
-        if(jsonObj.contains("passPeriod"))
-        {
-            passPeriod = jsonObj["passPeriod"].toString();
-        }
-        if(jsonObj.contains("passTimeSection"))
-        {
-            passTimeSection = jsonObj["passTimeSection"].toString();
-        }
-        if(jsonObj.contains("remark"))
-        {
-            remark = jsonObj["remark"].toString();
-        }
-        text << startTime << expireTime << passPeriod << passTimeSection << remark;
-        sqlDatabase->sqlInsertAuth(id, passNum, isBlack, text);
-    }
 }
 
 void UserIdRequest::onAllUsersIc(const QJsonArray &jsonArr)
@@ -284,6 +386,10 @@ void UserIdRequest::onNewUsers(const QJsonArray &jsonArr)
 {
     foreach(QJsonValue val, jsonArr)
     {
-
+        m_updateFace.insert(val.toInt());
+    }
+    if(m_updateFace.size() > 0)
+    {
+        m_startFaceDownload = true;
     }
 }

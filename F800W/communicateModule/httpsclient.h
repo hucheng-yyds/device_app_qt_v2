@@ -22,7 +22,7 @@ public slots:
     // 上传离线记录
     void uploadOfflineDataImage(int userId, const QString &photo, int isOver, int type, int isTemp, const QStringList &datas);
     // 实时上传记录
-    void httpsUploadopenlog(int userId, const QString &photo, int isOver,int type, int isTemp, const QStringList &datas);
+    void httpsUploadopenlog(int id, int userId, const QString &photo, int isOver,int type, int isTemp, const QStringList &datas);
     // 解绑后台
     void httpsUnbind();
 

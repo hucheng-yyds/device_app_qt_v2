@@ -3,6 +3,7 @@
 #include <QThread>
 #include "switch.h"
 #include "sqldatabase.h"
+#include "wpagui.h"
 
 class NetManager : public QThread
 {
@@ -21,7 +22,9 @@ signals:
     void networkChanged(int type, bool net);
 
 private slots:
-
+    void onConnected();
+    void onDisconnected();
+    void onPskError();
 
 private:
     QString getIP();
@@ -30,5 +33,6 @@ private:
     QString getCurrentTime(QDateTime dataTime);
 
 private:
+    WpaGui *m_wpa;
 };
 #endif // NETMANAGER_H

@@ -30,10 +30,32 @@ void QalHardWare::run()
     m_fd = open("/dev/mypwm", O_RDWR);
     m_led.opentime=2;
     m_led.closetime=0;
-    m_timer.countdown_ms(0);
+    countdown_ms(0);
 //    ioctl(m_fd, WDG_SET, &m_i);
     init();
     exec();
+}
+
+bool QalHardWare::expired()
+{
+    QDateTime origin_time = QDateTime::fromString("1970-01-01 08:00:00","yyyy-MM-dd hh:mm:ss");
+    QDateTime current_date_time =QDateTime::currentDateTime();
+    qint64 now = origin_time.msecsTo(current_date_time);
+    if(now >= m_endTimerMs)
+    {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+void QalHardWare::countdown_ms(int ms)
+{
+    QDateTime origin_time = QDateTime::fromString("1970-01-01 08:00:00","yyyy-MM-dd hh:mm:ss");
+    QDateTime current_date_time =QDateTime::currentDateTime();
+    qint64 now = origin_time.msecsTo(current_date_time);
+    m_endTimerMs = now + ms;
 }
 
 void QalHardWare::ctlLed(int ctl)
@@ -108,7 +130,7 @@ void QalHardWare::ctlBacklight(int value)
 
 void QalHardWare::checkCloseDoor()
 {
-    if (m_timer.expired()) {
+    if (expired()) {
         m_i = 0;
         ioctl(m_fd, RELAY_SET, &m_i);
     }
@@ -116,10 +138,10 @@ void QalHardWare::checkCloseDoor()
 
 void QalHardWare::checkOpenDoor()
 {
-    if (m_timer.expired()) {
+    if (expired()) {
         m_i = 1;
         ioctl(m_fd, RELAY_SET, &m_i);
-        m_timer.countdown_ms(0);
+        countdown_ms(switchCtl->m_doorDelayTime);
     }
 }
 

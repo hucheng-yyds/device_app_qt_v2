@@ -7,6 +7,8 @@
 #include <QThread>
 #include <QMutex>
 #include <QDebug>
+#include "face_sdk.h"
+#include "log.h"
 
 #define sqlDatabase SqlDatabase::getInstance()
 
@@ -22,6 +24,10 @@ public:
         }
         return m_Instance;
     }
+    // 人脸入库接口
+    FaceGroupHandle m_groupHandle;
+    // 失败入库id
+    QSet<int> m_localFaceFail;
     // 当前所有人脸id
     QSet<int> m_localFaceSet;
     // 查询所有userid;
@@ -44,7 +50,7 @@ public:
     void sqlUpdate(int id, const QString &username, const QString &time, const QString &photoname, const QString &iphone);
 
     // 离线记录数据插入
-    void sqlInsertOffline(int userid, int type, int isOver, int isTemp, const QStringList &datas);
+    void sqlInsertOffline(int id, int userid, int type, int isOver, int isTemp, const QStringList &datas);
     // 查询所有离线记录id
     QList<int> sqlSelectAllOffLine();
     // 离线记录查询
@@ -52,16 +58,14 @@ public:
     // 根据人员id 删除对应离线记录
     void sqlDeleteOffline(int userid);
 
-    // 查询所有失败记录id
-    QSet<int> sqlInsertFailSelectAll();
     // 根据失败id查询对应内容
-    QVariantList sqlInsertFaileSelect(const QVariant &variant);
+    int sqlSelectFaile(int id);
     // 插入失败记录
-    void sqlInsertFailInsert(const QVariant &id, const QVariant &name, const QVariant &edittime, const QVariant &feature);
+    void sqlInsertFail(int id, int type);
     // 根据id删除对应记录
-    void sqlInsertFailDelete(const QVariant &id);
+    void sqlDeleteFail(int id);
     // 删除所有失败记录
-    void sqlInsertFailDeleteAll();
+    void sqlDeleteAllFail();
 
     // 人员权限插入
     void sqlInsertAuth(int id, int passNum, int isBlack, const QStringList &datas);

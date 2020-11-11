@@ -12,14 +12,6 @@ FaceIdentify::FaceIdentify()
     m_bgrImage = new unsigned char[VIDEO_WIDTH*VIDEO_HEIGHT* 3 / 2];
 }
 
-void FaceIdentify::recvTempResult(const QString &tempVal, int result)
-{
-    qDebug() << "=================================================" << tempVal << result;
-    m_tempFlag = true;
-    m_tempVal = tempVal;
-    m_tempResult = result;
-}
-
 void FaceIdentify::run()
 {
     while (true)
@@ -39,6 +31,7 @@ void FaceIdentify::run()
         m_iMFaceHandle = m_interFace->m_faceHandle;
         FacePoseBlur pose_blur;
         FaceAttr face_attr;
+        QStringList datas;
         bool authority = false;
         bool egPass = false;
         bool tempPass = false;
@@ -46,6 +39,8 @@ void FaceIdentify::run()
         QString isStranger = "0";
         QString invalidReason = "";
         uint64_t face_id = 0;
+        QString uploadTime = "";
+        int offlineNmae = 0;
         int isOver = 0;
         QString snapshot = "";
         char *feature_result = nullptr;
@@ -95,7 +90,7 @@ void FaceIdentify::run()
                     int size = 0;
                     m_interFace->m_mutex.lock();
                     extract(bgrHandle[m_iMFaceHandle[i].index], &feature_result, &size);
-                    identifyFromFaceGroup(m_interFace->m_groupHandle, feature_result, size, &result, &face_id);
+                    identifyFromFaceGroup(sqlDatabase->m_groupHandle, feature_result, size, &result, &face_id);
                     m_interFace->m_mutex.unlock();
                     if ((result > switchCtl->m_faceThreshold) && (face_id > 0))
                     {
@@ -177,15 +172,17 @@ void FaceIdentify::run()
                     }
                 }
             }
+            qDebug() << "holding temp" << m_tempFlag;
             while (1)
             {
-                msleep(100);
-                if(m_tempFlag)
+                msleep(10);
+                if(switchCtl->m_tempFlag)
                 {
                     break;
                 }
             }
-
+            m_tempVal = switchCtl->m_tempVal;
+            m_tempResult = switchCtl->m_tempResult;
             if(switchCtl->m_fahrenheit)
             {
                 emit tempShow(QString("%1℉").arg(m_tempVal), m_tempResult);
@@ -194,7 +191,8 @@ void FaceIdentify::run()
             {
                 emit tempShow(QString("%1℃").arg(m_tempVal), m_tempResult);
             }
-            m_tempFlag = false;
+            switchCtl->m_tempFlag = false;
+            msleep(150);
             qDebug() << m_tempVal << m_tempResult;
             float warnValue = switchCtl->m_warnValue;
             if(switchCtl->m_fahrenheit)
@@ -258,22 +256,19 @@ void FaceIdentify::run()
             file.open(QIODevice::ReadWrite);
             snapshot = QString::fromUtf8(file.readAll().toBase64());
             file.close();
+            offlineNmae = QDateTime::currentDateTime().toTime_t();
+            QString offline_path = "cp snap.jpg offline/" + QString::number(offlineNmae) + ".jpg";
+            system(offline_path.toStdString().c_str());
         }
         isOver = tempPass ? 1 : 0;
+        datas.clear();
+        uploadTime = QDateTime::currentDateTime().addSecs(28800).toString("yyyy-MM-dd HH:mm:ss");
+        datas << uploadTime << m_tempVal << isSuccess << invalidReason << isStranger << "";
         if(switchCtl->m_netStatus)
         {
-            QStringList datas;
-            datas.clear();
-            datas << m_tempVal << isSuccess << invalidReason << isStranger << "";
-            emit uploadopenlog(face_id, snapshot, isOver, 1, tempCtl, datas);
+            emit uploadopenlog(offlineNmae, face_id, snapshot, isOver, 1, tempCtl, datas);
         }
-        else
-        {
-            QStringList datas;
-            datas.clear();
-            datas << m_tempVal << isSuccess << invalidReason << isStranger << "" << QDateTime::currentDateTime().addSecs(28800).toString("yyyy-MM-dd HH:mm:ss");
-            sqlDatabase->sqlInsertOffline(face_id, 1, isOver, tempCtl, datas);
-        }
+        sqlDatabase->sqlInsertOffline(offlineNmae, face_id, 1, isOver, tempCtl, datas);
 
 endIdentify:
         if(feature_result)

@@ -123,7 +123,7 @@ MqttClient::MqttClient()
     moveToThread(this);
 }
 
-void MqttClient::setPacket(FaceDataList *packet)
+void MqttClient::setPacket(ServerDataList *packet)
 {
     m_packet = packet;
 }

@@ -12,7 +12,7 @@ SqlDatabase::SqlDatabase()
     else
     {
         m_database = QSqlDatabase::addDatabase("QSQLITE");
-        m_database.setDatabaseName("faceDatas.db");
+        m_database.setDatabaseName("facedatas.db");
         if (!m_database.open())
         {
             qDebug() << "Error: Failed to connect database." << m_database.lastError();
@@ -36,7 +36,9 @@ SqlDatabase::SqlDatabase()
 
     QSqlQuery query1(m_database);
     if (!query1.exec("create table offline ("
-                    "userId int primary key,"
+                    "id INTEGER primary key AUTOINCREMENT,"
+                    "oId int,"
+                    "userId int,"
                     "unlockType int,"
                     "unlockTime text,"
                     "temperature text,"
@@ -51,8 +53,6 @@ SqlDatabase::SqlDatabase()
     QSqlQuery query2(m_database);
     if (!query2.exec("create table insertFail ("
                     "id int primary key,"
-                    "username text,"
-                    "edittime text,"
                     "type int)")) {
         qDebug() << query2.lastError();
     }
@@ -248,6 +248,7 @@ void SqlDatabase::sqlDeleteAll()
     }
     qDebug() << "clear all face";
     m_localFaceSet.clear();
+    resetFaceGroup(m_groupHandle);
     m_mutex.unlock();
 }
 
@@ -262,27 +263,18 @@ void SqlDatabase::sqlDelete(int id)
     {
         qDebug() << query.lastError();
     }
+    removeFaceGroup(m_groupHandle, id);
     m_localFaceSet.remove(id);
     m_mutex.unlock();
 }
 
-void SqlDatabase::sqlInsertOffline(int userid, int type, int isOver, int isTemp, const QStringList &datas)
+void SqlDatabase::sqlInsertOffline(int id, int userid, int type, int isOver, int isTemp, const QStringList &datas)
 {
     m_mutex.lock();
     QSqlQuery query(m_database);
-    QString insert_sql = "insert into offline values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    query.prepare(insert_sql);
-    query.addBindValue(userid);
-    query.addBindValue(type);
-    query.addBindValue(datas.at(0));
-    query.addBindValue(datas.at(1));
-    query.addBindValue(isOver);
-    query.addBindValue(isTemp);
-    query.addBindValue(datas.at(2));
-    query.addBindValue(datas.at(3));
-    query.addBindValue(datas.at(4));
-    query.addBindValue(datas.at(5));
-    if (!query.exec())
+    QString cmd = QString("insert into offline values(NULL,%1,%2,%3,'%4','%5',%6,%7,'%8','%9','%10','%11')").arg(id).arg(userid).arg(type)
+            .arg(datas.at(0)).arg(datas.at(1)).arg(isOver).arg(isTemp).arg(datas.at(2)).arg(datas.at(3)).arg(datas.at(4)).arg(datas.at(5));
+    if (!query.exec(cmd))
     {
         qDebug() << query.lastError() << datas;
     }
@@ -328,7 +320,8 @@ QVariantList SqlDatabase::sqlSelectOffline(int userid)
         while(query.next())
         {
             values << query.value(0) << query.value(1) << query.value(2) << query.value(3) << query.value(4)
-                  << query.value(5) << query.value(6) << query.value(7) << query.value(8) << query.value(9) << query.value(10);
+                  << query.value(5) << query.value(6) << query.value(7) << query.value(8) << query.value(9)
+                  << query.value(10) << query.value(11) << query.value(12);
         }
     }
     m_mutex.unlock();
@@ -339,7 +332,7 @@ void SqlDatabase::sqlDeleteOffline(int userid)
 {
     m_mutex.lock();
     QSqlQuery query(m_database);
-    QString delete_sql = "delete from offline where userId = ?";
+    QString delete_sql = "delete from offline where oId = ?";
     query.prepare(delete_sql);
     query.addBindValue(userid);
     if (!query.exec())
@@ -349,61 +342,41 @@ void SqlDatabase::sqlDeleteOffline(int userid)
     m_mutex.unlock();
 }
 
-QSet<int> SqlDatabase::sqlInsertFailSelectAll()
+int SqlDatabase::sqlSelectFaile(int id)
 {
     m_mutex.lock();
-    QSet<int> value;
+    int value = 0;
     QSqlQuery query2(m_database);
-    QString query_sql = "select id from insertFail";
+    QString query_sql = "select type from insertFail where id = ?";
     query2.prepare(query_sql);
+    query2.addBindValue(id);
     if (!query2.exec()) {
         qDebug() << query2.lastError();
     } else {
         while(query2.next()) {
-            value << query2.value(0).toInt();
+            value = query2.value(0).toInt();
         }
     }
     m_mutex.unlock();
     return value;
 }
 
-QVariantList SqlDatabase::sqlInsertFaileSelect(const QVariant &variant)
-{
-    m_mutex.lock();
-    QVariantList value;
-    value.clear();
-    QSqlQuery query2(m_database);
-    QString query_sql = "select id,edittime,username,type from insertFail where id = ?";
-    query2.prepare(query_sql);
-    query2.addBindValue(variant);
-    if (!query2.exec()) {
-        qDebug() << query2.lastError();
-    } else {
-        while(query2.next()) {
-            value << query2.value(0) << query2.value(1) << query2.value(2) << query2.value(3);
-        }
-    }
-    m_mutex.unlock();
-    return value;
-}
-
-void SqlDatabase::sqlInsertFailInsert(const QVariant &id, const QVariant &name, const QVariant &edittime, const QVariant &feature)
+void SqlDatabase::sqlInsertFail(int id, int type)
 {
     m_mutex.lock();
     QSqlQuery query2(m_database);
-    QString insert_sql = "insert into insertFail values (?, ?, ?, ?)";
+    QString insert_sql = "insert into insertFail values (?, ?)";
     query2.prepare(insert_sql);
     query2.addBindValue(id);
-    query2.addBindValue(name);
-    query2.addBindValue(edittime);
-    query2.addBindValue(feature);
+    query2.addBindValue(type);
     if (!query2.exec()) {
         qDebug() << query2.lastError();
     }
+    m_localFaceFail.insert(id);
     m_mutex.unlock();
 }
 
-void SqlDatabase::sqlInsertFailDelete(const QVariant &id)
+void SqlDatabase::sqlDeleteFail(int id)
 {
     m_mutex.lock();
     QSqlQuery query2(m_database);
@@ -413,10 +386,11 @@ void SqlDatabase::sqlInsertFailDelete(const QVariant &id)
     if (!query2.exec()) {
         qDebug() << query2.lastError();
     }
+    m_localFaceFail.remove(id);
     m_mutex.unlock();
 }
 
-void SqlDatabase::sqlInsertFailDeleteAll()
+void SqlDatabase::sqlDeleteAllFail()
 {
     m_mutex.lock();
     QSqlQuery query2(m_database);
@@ -425,6 +399,7 @@ void SqlDatabase::sqlInsertFailDeleteAll()
     if (!query2.exec()) {
         qDebug() << query2.lastError();
     }
+    m_localFaceFail.clear();
     m_mutex.unlock();
 }
 

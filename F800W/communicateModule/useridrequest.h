@@ -19,18 +19,21 @@ protected:
     virtual void run();
 
 public slots:
+    // 处理增量useid
     // 处理所有人员id
     void onAlluserId(const QJsonArray &jsonArr);
     // 处理单个人员数据
     void onUpdateUsers(const QJsonObject &jsonObj);
-    // 处理alluser权限
-    void onAllUsersAuth(const QJsonArray &jsonArr);
     // 处理alluserIc
     void onAllUsersIc(const QJsonArray &jsonArr);
     // 处理增量users
     void onNewUsers(const QJsonArray &jsonArr);
 
 signals:
+    // 定时拉取全量
+    void allUserId();
+    // 向后台拉取全量人员权限
+    void allUserAuth();
     // 发送获取单个人员数据
     void getUsers(int id);
     // 发送上传失败记录
@@ -50,7 +53,7 @@ private:
     QMutex m_mutex;
     QSet<int> m_updateFace;
     bool m_startFaceDownload;
-    bool m_updateFaceStatus;
+    bool m_faceSyncStatus;
     int m_curFaceId;
 };
 

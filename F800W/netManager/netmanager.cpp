@@ -52,6 +52,10 @@ int get_if_miireg(const char *if_name, int reg_num )
 
 NetManager::NetManager()
 {
+    m_wpa = new WpaGui;
+    connect(m_wpa, &WpaGui::connected, this, &NetManager::onConnected);
+    connect(m_wpa, &WpaGui::disconnected, this, &NetManager::onDisconnected);
+    connect(m_wpa, &WpaGui::pskError, this, &NetManager::onPskError);
 }
 
 void NetManager::run()
@@ -60,12 +64,34 @@ void NetManager::run()
     int seq = 0;
     while(true)
     {
+        int eth0 = get_if_miireg("eth0", 0x01);
         if(seq > 2)
         {
             ip = getIP();
             seq = 0;
+            if(eth0 <= 0)
+            {
+                QString userName = switchCtl->m_wifiName;
+                QString userPwd = switchCtl->m_wifiPwd;
+                m_wpa->updateStatus();
+                if (!userName.isEmpty() && !userPwd.isEmpty() && WpaGui::TrayIconOffline == m_wpa->state())
+                {
+                    m_wpa->enableNetwork(userName.toUtf8().data(), userPwd.toUtf8().data(), AUTH_WPA2_PSK);
+                }
+            }
+            else {
+                if (WpaGui::TrayIconConnected == m_wpa->state())
+                {
+                    m_wpa->removeNetwork();
+                }
+                if(WpaGui::TrayIconOffline != m_wpa->state())
+                {
+                    m_wpa->setState(WpaGui::TrayIconOffline);
+                    m_wpa->removeNetwork();
+                }
+            }
         }
-        if(get_if_miireg("eth0", 0x01) > 0)
+        if(eth0 > 0)
         {
             emit networkChanged(4, switchCtl->m_netStatus);
         }
@@ -87,6 +113,21 @@ void NetManager::run()
         msleep(500);
         seq++;
     }
+}
+
+void NetManager::onConnected()
+{
+
+}
+
+void NetManager::onDisconnected()
+{
+
+}
+
+void NetManager::onPskError()
+{
+
 }
 
 QString NetManager::getCurrentTime(QDateTime dataTime)

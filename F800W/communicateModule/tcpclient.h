@@ -5,6 +5,7 @@
 #include <QtNetwork>
 #include "switch.h"
 #include "sqldatabase.h"
+#include "serverdatadeal.h"
 
 #define PACKET_HEAD "OFZL"
 
@@ -25,8 +26,8 @@ public:
         DEV_ALL_PERSON_ID_RESPONSE = 12,
         DEV_DOOR_RECORD_REQUEST = 13,
         DEV_DOOR_RECORD_RESPONSE = 14,
-        DEV_ALL_PERSON_CHANGE_REQUEST = 15,
-        DEV_ALL_PERSON_CHANGE_RESPONSE = 16,
+        DEV_RECORD_REQUEST = 15,
+        DEV_RECORD_RESPONSE = 16,
         DEV_RECORD_NO_PHOTO_REQUEST = 17,
         DEV_RECORD_NO_PHOTO_RESPONE = 18,
         DEV_RECORD_PHOTO_REQUEST = 19,
@@ -35,36 +36,48 @@ public:
         DEV_FACE_INSERT_FAIL_RESPONE = 22,
         DEV_GET_ALL_IC_REQUEST = 0x19,
         DEV_GET_ALL_IC_RESPONE = 0x1A,
-        DEV_ALL_PERSON_AUTH_REQUEST = 0x1B,
-        DEV_ALL_PERSON_AUTH_RESPONSE = 0x1C,
 
         SERVER_REQUEST_CMD = 48,
         SERVER_RESPONSE_CMD = 49
     };
     explicit TcpClient();
+    // 处理后台服务器数据入口
+    void setPacket(ServerDataList *packet);
 
 protected:
     virtual void run();
 
 public slots:
-    // 定时向后台请求人员变动数据
-    void requestUsersChange();
+    // 服务器应答
+    void responseServer(const QJsonObject &jsonData);
+    // 上传失败入库人员
+    void requestInserFail();
     // 向后台拉取全量人员id
     void requestGetAllUserID();
-    // 向后台拉取全量人员权限
-    void requestGetAllUserAuth();
     // 向后台拉去全量人员IC卡
     void requestGetAllUserIC();
     // 向后台请求单个人员数据
     void requestGetUsers(int id);
+    // 上传记录
+    void uploadopenlog(int id, int userId, const QString &photo, int isOver,int type, int isTemp, const QStringList &datas);
 
 private:
+    // 获取时区分钟
+    int getTimeZoneMin();
+    // 获取时区小时
+    int getTimeZone();
+    // 应答服务器设备端设置
+    void responseServerSetup();
+    // 处理后台服务器设置
+    void parseServerSeting(const QJsonObject &jsonObj);
+    // 处理增量ic控制
+    void parseNewIc(QByteArray msgBody);
     // ic数据应答
     void parseAllIc(const QJsonObject &jsonObj);
+    // 处理记录上传应答
+    void parseUploadData(const QJsonObject &jsonObj);
     // 处理定时请求人员应答
     void parseUsersChange(const QJsonObject &jsonObj);
-    // 处理全量人员权限
-    void parseAllUserAuth(const QJsonObject &jsonObj);
     // 处理单个人员数据
     void parseGetUsers(const QJsonObject &jsonObj);
     // 处理alluser id
@@ -111,8 +124,6 @@ signals:
     void newUserId(const QJsonArray &jsonArr);
     // 处理所有ic卡数据
     void allUserIc(const QJsonArray &jsonArr);
-    // 处理所有人员权限卡数据
-    void allUserAuth(const QJsonArray &jsonArr);
     // 发送单个人员数据
     void updateUsers(const QJsonObject &jsonObj);
 
@@ -125,5 +136,6 @@ private:
     QByteArray m_msgData;
     int m_cmdType;
     int m_seq;
+    ServerDataList *m_serverData;
 };
 #endif // TCPCLIENT_H

@@ -6,7 +6,7 @@
 #include "Countdown.h"
 #include "MQTTClient.h"
 #include "switch.h"
-#include "facedatalist.h"
+#include "serverdatalist.h"
 
 class MqttClient : public QThread
 {
@@ -35,7 +35,7 @@ public:
     Q_ENUM(MqttCmd)
 
     explicit MqttClient();
-    void setPacket(FaceDataList *packet);
+    void setPacket(ServerDataList *packet);
 
 private:
     void init();
@@ -51,7 +51,7 @@ protected:
     virtual void run();
 
 private:
-    FaceDataList *m_packet;
+    ServerDataList *m_packet;
 };
 
 #endif // MQTTCLIENT_H

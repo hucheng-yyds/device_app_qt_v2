@@ -5,6 +5,7 @@ SwitchCtl* SwitchCtl::m_Instance = nullptr;
 SwitchCtl::SwitchCtl()
 {
     m_faceThreshold = 72.0;
+    m_tempFlag = false;
     m_sync = false;
     m_upgrade = false;
     m_netStatus = false;
@@ -15,7 +16,7 @@ SwitchCtl::SwitchCtl()
         setSwitchDefault();
     }
     else {
-        QJsonObject userObj, netObj, identifyObj, switchObj, serverObj;
+        QJsonObject userObj, netObj, identifyObj, switchObj, serverObj, wifiObj;
         QJsonObject obj = readSwitchParam();
         qDebug() << obj;
         userObj = obj.value("user").toObject();
@@ -23,6 +24,7 @@ SwitchCtl::SwitchCtl()
         identifyObj = obj.value("identify").toObject();
         switchObj = obj.value("switch").toObject();
         serverObj = obj.value("server").toObject();
+        wifiObj = obj.value("wifi").toObject();
 
         m_faceDoorCtl = switchObj.value("faceDoorCtl").toBool();
         m_tempCtl = switchObj.value("tempCtl").toBool();
@@ -68,6 +70,8 @@ SwitchCtl::SwitchCtl()
         m_tempValueBroadcast = userObj.value("tempValueBroadcast").toBool();
         m_rcode = userObj.value("rcode").toBool();
         m_volume = userObj.value("volume").toInt();
+        m_wifiName = wifiObj.value("wifiName").toString();
+        m_wifiPwd = wifiObj.value("wifiPwd").toString();
     }
     status = QFile::exists("./screen.json");
     qDebug() << "---------------------------------------------------------" << status;
@@ -89,12 +93,12 @@ SwitchCtl::SwitchCtl()
 void SwitchCtl::saveSwitchParam()
 {
     QFile file("./switch.json");
-    if(!file.open(QIODevice::ReadWrite)) {
+    if(!file.open(QIODevice::ReadWrite | QIODevice::Truncate)) {
         qDebug() << "File open failed!";
     } else {
         qDebug() <<"File open successfully!";
     }
-    QJsonObject obj, userObj, netObj, identifyObj, switchObj, serverObj;
+    QJsonObject obj, userObj, netObj, identifyObj, switchObj, serverObj, wifiObj;
     switchObj.insert("faceDoorCtl", m_faceDoorCtl);
     switchObj.insert("tempCtl", m_tempCtl);
     switchObj.insert("ir", m_ir);
@@ -139,12 +143,15 @@ void SwitchCtl::saveSwitchParam()
     userObj.insert("rcode", m_rcode);
     userObj.insert("volume", m_volume);
 
+    wifiObj.insert("wifiName", m_wifiName);
+    wifiObj.insert("wifiPwd", m_wifiPwd);
 
     obj.insert("user", userObj);
     obj.insert("net", netObj);
     obj.insert("server", serverObj);
     obj.insert("identify", identifyObj);
     obj.insert("switch", switchObj);
+    obj.insert("wifi", wifiObj);
     QJsonDocument jdoc(obj);
     file.seek(0);
     file.write(jdoc.toJson());
@@ -170,12 +177,12 @@ QJsonObject SwitchCtl::readSwitchParam()
 void SwitchCtl::setSwitchDefault()
 {
     QFile file("./switch.json");
-    if(!file.open(QIODevice::WriteOnly)) {
+    if(!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
         qDebug() << "File open failed!";
     } else {
         qDebug() <<"File open successfully!";
     }
-    QJsonObject obj, userObj, netObj, identifyObj, switchObj, serverObj;
+    QJsonObject obj, userObj, netObj, identifyObj, switchObj, serverObj, wifiObj;
     m_faceDoorCtl = true;
     m_tempCtl = true;
     m_loose = false;
@@ -218,6 +225,8 @@ void SwitchCtl::setSwitchDefault()
     m_tempValueBroadcast = false;
     m_rcode = false;
     m_volume = 100;
+    m_wifiName = "";
+    m_wifiPwd = "";
 
     switchObj.insert("faceDoorCtl", m_faceDoorCtl);
     switchObj.insert("tempCtl", m_tempCtl);
@@ -263,12 +272,15 @@ void SwitchCtl::setSwitchDefault()
     userObj.insert("rcode", m_rcode);
     userObj.insert("volume", m_volume);
 
+    wifiObj.insert("wifiName", m_wifiName);
+    wifiObj.insert("wifiPwd", m_wifiPwd);
 
     obj.insert("user", userObj);
     obj.insert("net", netObj);
     obj.insert("server", serverObj);
     obj.insert("identify", identifyObj);
     obj.insert("switch", switchObj);
+    obj.insert("wifi", wifiObj);
 
     QJsonDocument jdoc(obj);
     file.seek(0);
