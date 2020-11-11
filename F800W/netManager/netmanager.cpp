@@ -69,27 +69,27 @@ void NetManager::run()
         {
             ip = getIP();
             seq = 0;
-            if(eth0 <= 0)
-            {
-                QString userName = switchCtl->m_wifiName;
-                QString userPwd = switchCtl->m_wifiPwd;
-                m_wpa->updateStatus();
-                if (!userName.isEmpty() && !userPwd.isEmpty() && WpaGui::TrayIconOffline == m_wpa->state())
-                {
-                    m_wpa->enableNetwork(userName.toUtf8().data(), userPwd.toUtf8().data(), AUTH_WPA2_PSK);
-                }
-            }
-            else {
-                if (WpaGui::TrayIconConnected == m_wpa->state())
-                {
-                    m_wpa->removeNetwork();
-                }
-                if(WpaGui::TrayIconOffline != m_wpa->state())
-                {
-                    m_wpa->setState(WpaGui::TrayIconOffline);
-                    m_wpa->removeNetwork();
-                }
-            }
+//            if(eth0 <= 0)
+//            {
+//                QString userName = switchCtl->m_wifiName;
+//                QString userPwd = switchCtl->m_wifiPwd;
+//                m_wpa->updateStatus();
+//                if (!userName.isEmpty() && !userPwd.isEmpty() && WpaGui::TrayIconOffline == m_wpa->state())
+//                {
+//                    m_wpa->enableNetwork(userName.toUtf8().data(), userPwd.toUtf8().data(), AUTH_WPA2_PSK);
+//                }
+//            }
+//            else {
+//                if (WpaGui::TrayIconConnected == m_wpa->state())
+//                {
+//                    m_wpa->removeNetwork();
+//                }
+//                if(WpaGui::TrayIconOffline != m_wpa->state())
+//                {
+//                    m_wpa->setState(WpaGui::TrayIconOffline);
+//                    m_wpa->removeNetwork();
+//                }
+//            }
         }
         if(eth0 > 0)
         {
@@ -102,7 +102,7 @@ void NetManager::run()
         }
         switchCtl->m_ipAddr = ip;
         int count = sqlDatabase->m_localFaceSet.size();
-        emit showDeviceInfo(VERSION, switchCtl->m_devName, QString("%1").arg(count), ip, switchCtl->m_sn);
+        emit showDeviceInfo(switchCtl->m_tempCtl, VERSION, switchCtl->m_devName, QString("%1").arg(count), ip, switchCtl->m_sn);
         msleep(100);
         int second = getTimeZoneMin()*60 + getTimeZone()*3600;
         QDateTime dateTime = QDateTime::currentDateTime().addSecs(second);

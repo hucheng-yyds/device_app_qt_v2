@@ -39,15 +39,15 @@ void UdpServer::sendData()
         json.insert("type",DEVICE_TYPE);
         json.insert("version",VERSION);
         json.insert("ip", switchCtl->m_ipAddr);
-        //json.insert("ip", "192.168.2.21");
         json.insert("uuid", strId);
+        json.insert("v2",true);
         json.insert("mac", "");
         json.insert("ss_sn",switchCtl->m_sn);
         document.setObject(json);
         data = document.toJson(QJsonDocument::Compact);
         sendDatas.append(data);
         int ret = m_udpServer->writeDatagram(sendDatas, QHostAddress::Broadcast, 13208);
-        qDebug() << "=================================" << ret << m_udpServer->error() << switchCtl->m_ipAddr<< "test22";
+        qt_debug() << ret << m_udpServer->error() << switchCtl->m_ipAddr;
 }
 
 void UdpServer::processPendingDatagram()

@@ -450,6 +450,8 @@ Item {
             }
         }
         onShowDeviceInfo:{
+            isTemp = tempCtl;
+            image_head.visible = isTemp
             version.text = qsTr("T" + ver);
             corporateName.text = qsTr(name);
             people.text = qsTr(number);

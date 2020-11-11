@@ -24,6 +24,8 @@ protected:
     void run();
 
 signals:
+    // 实时上传记录
+    void uploadopenlog(int id, int userId, const QString &photo, int isOver,int type, int isTemp, const QStringList &datas);
     // 服务器应答
     void responseServer(const QJsonObject &jsonData);
     // 处理增量users

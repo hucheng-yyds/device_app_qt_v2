@@ -141,7 +141,7 @@ void QalHardWare::checkOpenDoor()
     if (expired()) {
         m_i = 1;
         ioctl(m_fd, RELAY_SET, &m_i);
-        countdown_ms(switchCtl->m_doorDelayTime);
+        countdown_ms(switchCtl->m_doorDelayTime * 1000);
     }
 }
 

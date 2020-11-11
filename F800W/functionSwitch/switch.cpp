@@ -10,7 +10,7 @@ SwitchCtl::SwitchCtl()
     m_upgrade = false;
     m_netStatus = false;
     bool status = QFile::exists("./switch.json");
-    qDebug() << "====================================================" << status;
+    qt_debug() << "====================================================" << status;
     if(!status)
     {
         setSwitchDefault();
@@ -18,7 +18,7 @@ SwitchCtl::SwitchCtl()
     else {
         QJsonObject userObj, netObj, identifyObj, switchObj, serverObj, wifiObj;
         QJsonObject obj = readSwitchParam();
-        qDebug() << obj;
+        qt_debug() << obj;
         userObj = obj.value("user").toObject();
         netObj = obj.value("net").toObject();
         identifyObj = obj.value("identify").toObject();
@@ -74,19 +74,18 @@ SwitchCtl::SwitchCtl()
         m_wifiPwd = wifiObj.value("wifiPwd").toString();
     }
     status = QFile::exists("./screen.json");
-    qDebug() << "---------------------------------------------------------" << status;
+    qt_debug() << "---------------------------------------------------------" << status;
     if(!status)
     {
         setScreenDefault();
     }
     else {
         QJsonObject obj = readScreenParam();
-        qDebug() << obj;
         m_angle = obj.value("angle").toInt();
         m_camera = obj.value("camera").toInt();
         m_screen = obj.value("screen").toInt();
         m_sn = obj.value("sn").toString();
-        qDebug() << m_angle << m_camera << m_screen;
+        qt_debug() << m_angle << m_camera << m_screen << m_sn;
     }
 }
 

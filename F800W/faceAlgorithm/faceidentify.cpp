@@ -236,6 +236,46 @@ void FaceIdentify::run()
                 }
             }
         }
+        if(openMode.compare("FaceTemp") == 0)
+        {
+            if(egPass && tempPass)
+            {
+                hardware->ctlLed(GREEN);
+                hardware->checkOpenDoor();
+                isSuccess = "1";
+            }
+            else
+            {
+                hardware->ctlLed(RED);
+                isSuccess = "0";
+            }
+        }
+        else if(openMode.compare("Temp") == 0)
+        {
+            if(tempPass)
+            {
+                isSuccess = "1";
+                hardware->ctlLed(GREEN);
+                hardware->checkOpenDoor();
+            }
+            else {
+                isSuccess = "0";
+                hardware->ctlLed(RED);
+            }
+        }
+        else if(openMode.compare("Face") == 0)
+        {
+            if(egPass)
+            {
+                isSuccess = "1";
+                hardware->ctlLed(GREEN);
+                hardware->checkOpenDoor();
+            }
+            else {
+                isSuccess = "0";
+                hardware->ctlLed(RED);
+            }
+        }
         if (switchCtl->m_uploadImageCtl)
         {
             cv::Mat nv21(VIDEO_HEIGHT + VIDEO_HEIGHT / 2, VIDEO_WIDTH, CV_8UC1, m_bgrImage);

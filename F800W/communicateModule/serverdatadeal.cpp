@@ -248,9 +248,11 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
                 hardware->checkOpenDoor();
                 QStringList datas;
                 datas.clear();
+                int offlineNmae = QDateTime::currentDateTime().toTime_t();
                 int id = jsonData.value("id").toInt();
-                datas << "m_tempVal" << "1" << "" << "0" << "" << QDateTime::currentDateTime().addSecs(28800).toString("yyyy-MM-dd HH:mm:ss");
-                sqlDatabase->sqlInsertOffline(0, id, 1, 0, 0, datas);
+                datas << QDateTime::currentDateTime().addSecs(28800).toString("yyyy-MM-dd HH:mm:ss") << "" << "1" << "" << "0" << "" ;
+                emit uploadopenlog(offlineNmae, id, "", 0, 2, 1, datas);
+                sqlDatabase->sqlInsertOffline(offlineNmae, id, 2, 0, 0, datas);
             }
         }
         break;

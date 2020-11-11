@@ -31,7 +31,7 @@ void ProStorage::init()
         return;
     }
     Log *log = new Log;
-    log->enable();
+//    log->enable();
     NetManager *netManager = new NetManager;
     connect(netManager, &NetManager::showDeviceInfo, this, &ProStorage::showDeviceInfo);
     connect(netManager, &NetManager::networkChanged, this, &ProStorage::networkChanged);
@@ -70,7 +70,7 @@ void ProStorage::init()
     }
     float tempFlag = tempManager->onIsTemp();
     qt_debug() << "temp modle result:" << tempFlag;
-    if(0.0 == tempFlag)
+    if(0 == tempFlag)
     {
         switchCtl->m_tempCtl = false;
         switchCtl->m_openMode = "Face";
@@ -99,6 +99,7 @@ void ProStorage::init()
         connect(dataDeal, &ServerDataDeal::newUsers, userRequest, &UserIdRequest::onNewUsers);
         connect(userRequest, &UserIdRequest::sigInsertFail, tcpClient, &TcpClient::requestInserFail);
         connect(dataDeal, &ServerDataDeal::responseServer, tcpClient, &TcpClient::responseServer);
+        connect(dataDeal, &ServerDataDeal::uploadopenlog, tcpClient, &TcpClient::uploadopenlog);
         tcpClient->start();
         dataDeal->start();
     }
@@ -118,17 +119,25 @@ void ProStorage::DeviceSnJudgment()
 {
     if(switchCtl->m_sn.isEmpty())
     {
-        QString outputStr;
-        QByteArray mac;
-        QProcess* process = new QProcess;
-        process->start("cat /sys/kernel/swsensor/id");
-        process->waitForFinished();
-        outputStr = QString::fromLocal8Bit(process->readAllStandardOutput());
-        qt_debug() << outputStr;
-        mac = ("OFF1MJ" + outputStr.mid(0,12)).toLocal8Bit();
-        switchCtl->m_sn = mac;
-        system("echo " + mac + " > /dev/mmcblk0p6");
-        switchCtl->saveSreenParam();
+        QString mac = "";
+        QList<QNetworkInterface> list = QNetworkInterface::allInterfaces();
+        foreach(QNetworkInterface i, list)
+        {
+            if(i.name().compare("eth0") == 0)
+            {
+                mac = "OFF1MJ" + i.hardwareAddress().replace(":", "");
+                break;
+            }
+        }
+        if(mac.isEmpty())
+        {
+            system("reboot");
+        }
+        else {
+            switchCtl->m_sn = mac;
+            system("echo " + mac.toUtf8() + " > /dev/mmcblk0p6");
+            switchCtl->saveSreenParam();
+        }
     }
     qt_debug() << "DeviceSnJudgment:" << switchCtl->m_sn;
     saveQRcodeImage(switchCtl->m_sn.toUtf8());
