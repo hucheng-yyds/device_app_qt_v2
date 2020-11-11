@@ -39,19 +39,19 @@ void TcpClient::ConnectHost()
 
     const QString &ip = switchCtl->m_tcpAddr;
     int port = switchCtl->m_tcpPort;
-    qDebug() << ip << port;
+    qt_debug() << ip << port;
     m_tcpSocket->setReadBufferSize(16*1024*1024);
     m_tcpSocket->connectToHost(ip, port);
     m_tcpSocket->waitForConnected(10000);
     if (m_tcpSocket->state() != QAbstractSocket::ConnectedState)
     {
-        qDebug()<<"ip connnect fail";
+        qt_debug()<<"ip connnect fail";
         m_connectTimer->start();
         switchCtl->m_netStatus = false;
     }
     else
     {
-        qDebug()<<"ip connnect suc";
+        qt_debug()<<"ip connnect suc";
         system("ntpclient -s -d -c 1 -i 5 -h "+ switchCtl->m_ntpAddr.toUtf8() +" > /dev/null");
         system("hwclock -w");
         m_connectTimer->stop();
@@ -65,7 +65,7 @@ void TcpClient::ConnectHost()
 
 void TcpClient::Reconnect()
 {
-    qDebug() << "timer reconnect !";
+    qt_debug() << "timer reconnect !";
     if (m_tcpSocket) {
         m_tcpSocket->abort();
         disconnect(m_tcpSocket,SIGNAL(error(QAbstractSocket::SocketError)),this,SLOT(ConnectError(QAbstractSocket::SocketError)));
@@ -80,7 +80,7 @@ void TcpClient::Reconnect()
 
 void TcpClient::ConnectError(QAbstractSocket::SocketError state)
 {
-    qDebug()<<state;
+    qt_debug()<<state;
     if(QAbstractSocket::RemoteHostClosedError == state)
     {
 
@@ -89,7 +89,7 @@ void TcpClient::ConnectError(QAbstractSocket::SocketError state)
 
 void TcpClient::OnStateChanged(QAbstractSocket::SocketState state)
 {
-    qDebug()<<state;
+    qt_debug()<<state;
     if(state == QAbstractSocket::UnconnectedState)
     {
     }
@@ -99,7 +99,7 @@ void TcpClient::parseData(int cmdType, QByteArray &recData)
 {
     QJsonParseError jsonError;
     QJsonDocument json = QJsonDocument::fromJson(recData, &jsonError);
-    qDebug() << jsonError.error << cmdType;
+    qt_debug() << jsonError.error << cmdType;
     if (jsonError.error == QJsonParseError::NoError)
     {
         if (json.isObject())
@@ -210,7 +210,7 @@ void TcpClient::OnReadData()
         }
         if(m_msgData.size() > m_msgLength)
         { // 解决粘包的问题
-            qDebug() << "deal checkReadData";
+            qt_debug() << "deal checkReadData";
             checkReadData(datas);
         }
     }
@@ -221,11 +221,11 @@ void TcpClient::OnReadData()
             QByteArray msg;
             msg.clear();
             int size = recData.indexOf("}OFZL");
-            qDebug() << size << (m_msgLength - (m_msgData.length()));
+            qt_debug() << size << (m_msgLength - (m_msgData.length()));
             if((size+1) == (m_msgLength - (m_msgData.length())))
             {
                 m_msgData.append(recData.left(size+1));
-                qDebug() << "=================OnReadData======================" << m_msgData.size() << m_msgLength;
+                qt_debug() << "=================OnReadData======================" << m_msgData.size() << m_msgLength;
                 if(m_msgData.size() == m_msgLength)
                 {
                     m_msgLength = 0;
@@ -253,7 +253,7 @@ void TcpClient::OnReadData()
             }
             else
             {
-                qDebug() << "data Error";
+                qt_debug() << "data Error";
             }
         }
         else
@@ -333,7 +333,7 @@ void TcpClient::parseAllUserId(const QJsonObject &jsonObj)
     }
     else
     {
-        qDebug() << "parseAllUserId result" << result << "messageId" << messageId;
+        qt_debug() << "parseAllUserId result" << result << "messageId" << messageId;
     }
 }
 
@@ -346,7 +346,7 @@ void TcpClient::parseUsersChange(const QJsonObject &jsonObj)
         emit newUserId(jsonObj["updatePerson"].toArray());
     }
     else {
-        qDebug() << "parseUsersChange result" << result << "messageId" << messageId;
+        qt_debug() << "parseUsersChange result" << result << "messageId" << messageId;
     }
 }
 
@@ -359,7 +359,7 @@ void TcpClient::parseUploadData(const QJsonObject &jsonObj)
 {
     int result = jsonObj.value("result").toInt();
     int messageId = jsonObj.value("messageId").toString().toInt();
-    qDebug() << "parseUploadData" << result << messageId;
+    qt_debug() << "parseUploadData" << result << messageId;
     if(200 == result)
     {
         QString fileImg1 = "rm offline/" + QString::number(messageId) + ".jpg";
@@ -377,7 +377,7 @@ void TcpClient::parseAllIc(const QJsonObject &jsonObj)
         emit allUserIc(jsonObj["data"].toArray());
     }
     else {
-        qDebug() << "parseAllUserAuth result" << result << "messageId" << messageId;
+        qt_debug() << "parseAllUserAuth result" << result << "messageId" << messageId;
     }
 }
 
@@ -451,7 +451,7 @@ void TcpClient::requestRegister()
     obj.insert("sign", sign);
     obj.insert("protocolVersion", "2");
     dataObj.insert("data", obj);
-    qDebug() << dataObj;
+    qt_debug() << dataObj;
     WriteDataToServer(DEV_REGISTER_REQUEST, dataObj);
 }
 
@@ -473,7 +473,7 @@ void TcpClient::requestLogin()
     obj.insert("dversion", "2");
     obj.insert("sign", sign);
     dataObj.insert("data", obj);
-    qDebug() << dataObj;
+    qt_debug() << dataObj;
     WriteDataToServer(DEV_LOGIN_REQUEST, dataObj);
 }
 
@@ -491,7 +491,6 @@ void TcpClient::requestHeartbeat()
     obj.insert("ipAddr", switchCtl->m_ipAddr);
     obj.insert("languageSet", switchCtl->m_language);
     dataObj.insert("data", obj);
-    qDebug() << dataObj;
     WriteDataToServer(DEV_HEARTBEAT_REQUEST, dataObj);
 }
 
@@ -501,7 +500,7 @@ void TcpClient::requestGetAllUserID()
     dataObj.insert("messageId", "3");
     dataObj.insert("message", "allUserReq");
     dataObj.insert("sn", switchCtl->m_sn);
-    qDebug() << "requestGetAllUserID" << dataObj;
+    qt_debug() << "requestGetAllUserID" << dataObj;
     WriteDataToServer(DEV_ALL_PERSON_ID_REQUEST,dataObj);
 }
 
@@ -560,7 +559,7 @@ int TcpClient::getTimeZoneMin()
 
 void TcpClient::uploadopenlog(int id, int userId, const QString &photo, int isOver,int type, int isTemp, const QStringList &datas)
 {
-    qDebug() << "uploadopenlog" << datas;
+    qt_debug() << "uploadopenlog" << datas;
     QJsonObject jsonObj, obj;
     obj.insert("sn", switchCtl->m_sn);
     obj.insert("messageId", QString("%1").arg(id));
@@ -657,7 +656,7 @@ void TcpClient::requestGetAllUserIC()
     dataObj.insert("messageId", QString("%1").arg(m_seq++));
     dataObj.insert("message", "icReq");
     dataObj.insert("sn", switchCtl->m_sn);
-    qDebug() << "requestGetAllUserIC" << dataObj;
+    qt_debug() << "requestGetAllUserIC" << dataObj;
     WriteDataToServer(DEV_GET_ALL_IC_REQUEST,dataObj);
 }
 
@@ -705,7 +704,7 @@ void TcpClient::WriteDataToServer(int msgType, QJsonObject &postObj)
     sendData.append(data);
 
     int backT = m_tcpSocket->write(sendData);  //发送数据到服务端
-    qDebug() << "cmdType:" << msgType << "size:" << backT;
+    qt_debug() << "cmdType:" << msgType << "size:" << backT;
     //以下是为了防止发送数据的同时读取数据出现问题
     m_tcpSocket->flush();
     if (!m_requestTimer->isActive())

@@ -301,7 +301,7 @@ void FaceManager::insertFaceGroups(int id, const QString &username, const QStrin
             errid = 4;
         }
         sqlDatabase->sqlInsertFail(id, errid);
-        qDebug() << "Error: id" << id << errid;
+        qt_debug() << "Error: id" << id << errid;
     }
     else
     {
@@ -312,7 +312,7 @@ void FaceManager::insertFaceGroups(int id, const QString &username, const QStrin
         if (0 == count)
         {
             sqlDatabase->sqlInsertFail(id,  2);
-            qDebug() << "faceHandle is null !" << id << "2";
+            qt_debug() << "faceHandle is null !" << id << "2";
         }
         else
         {
@@ -330,7 +330,7 @@ void FaceManager::insertFaceGroups(int id, const QString &username, const QStrin
                 {
                     feature << QString::number(feature_result[i]);
                 }
-                qDebug() << id << username << time << photoname << iphone;
+                qt_debug() << id << username << time << photoname << iphone;
                 sqlDatabase->sqlInsert(id, username, time, feature.join(","), photoname, iphone);
                 insertFaceGroup(sqlDatabase->m_groupHandle, feature_result, size, id);
                 sqlDatabase->sqlDeleteFail(id);
@@ -338,7 +338,7 @@ void FaceManager::insertFaceGroups(int id, const QString &username, const QStrin
             }
             else
             {
-                qDebug() << "failInsert" << 3;
+                qt_debug() << "failInsert" << 3;
                 sqlDatabase->sqlInsertFail(id, 3);
             }
         }
@@ -400,7 +400,7 @@ void FaceManager::localFaceInsert()
             insertFaceGroup(sqlDatabase->m_groupHandle, ret.data(), 512, id);
         }
         else {
-            qDebug() << "value 0" << value;
+            qt_debug() << "value 0" << value;
         }
     }
     emit faceTb(tr(""));

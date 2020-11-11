@@ -4,12 +4,6 @@
 #include "switch.h"
 #include "sqldatabase.h"
 
-#define qt_debug() qDebug() << __FILE__ \
-                            << __LINE__ \
-                            << __FUNCTION__ \
-                            << QThread::currentThreadId() \
-                            << QTime::currentTime().addSecs(28800).toString("hh:mm:ss.zzz")
-
 
 ToolTcpServer::ToolTcpServer()
 {

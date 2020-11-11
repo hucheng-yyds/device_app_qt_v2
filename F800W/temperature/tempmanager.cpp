@@ -151,7 +151,7 @@ bool TempManager::checkCRC(QVector<uchar> buff)
 void TempManager::checkUART()
 {
     m_fd = open("/dev/ttyAMA1", O_RDWR);
-    qDebug() << "fd1: " << m_fd;
+    qt_debug() << "fd1: " << m_fd;
     if(setOpt(m_fd, 115200, 8, 'N', 1) < 0)
     {
         perror("set_opt error");
@@ -184,7 +184,7 @@ void TempManager::openAllScreenTemp(bool status)
     }
     int len = write(m_fd, buf, 2);
     if (len > 0) {
-        qDebug() << "serial write" << buf[0] <<  buf[1] << len;
+        qt_debug() << "serial write" << buf[0] <<  buf[1] << len;
     }
     msleep(200);
     join_buf.clear();
@@ -285,7 +285,7 @@ QString TempManager::getTemperature()
     QString tempVal = "0";
     QVector<uchar> join_buf;
     join_buf.clear();
-    qDebug() << "start get temp";
+    qt_debug() << "start get temp";
     while (true) {
         uchar buf[4095];
         int len = read(m_fd, buf, 4095);
@@ -296,7 +296,7 @@ QString TempManager::getTemperature()
                 close(m_fd);
                 checkUART();
             }
-            qDebug() << "get temp data end" << len << m_fd;
+            qt_debug() << "get temp data end" << len << m_fd;
             break;
         }
         join_len += len;
@@ -305,7 +305,7 @@ QString TempManager::getTemperature()
         }
         if(join_len > 10000)
         {
-            qDebug() << "get temp data size > 10000";
+            qt_debug() << "get temp data size > 10000";
             break;
         }
     }
@@ -364,7 +364,7 @@ QString TempManager::getTemperature()
     {
         tempVal = "0";
     }
-    qDebug() << "end get temp" << tempVal;
+    qt_debug() << "end get temp" << tempVal;
     return tempVal;
 }
 
@@ -406,7 +406,7 @@ int TempManager::compareTemp(const QString &tempVal)
     {
         result = -2;
     }
-    qDebug() << "temp check end" << result << tempVal;
+    qt_debug() << "temp check end" << result << tempVal;
     return result;
 
 }
@@ -418,7 +418,7 @@ void TempManager::onRecvStopTemp()
 
 void TempManager::onSendCmdToTemp(QByteArray tempInfo)
 {
-    qDebug() << tempInfo;
+    qt_debug() << tempInfo;
     m_recTempDataOK = false;
     if(tempInfo.count() > 0)
     {
@@ -524,7 +524,7 @@ void TempManager::getTempInfo()
                 sum += join_buf[i+j];
             }
             sum = 256 - sum;
-            qDebug() << sum << join_buf[i+8];
+            qt_debug() << sum << join_buf[i+8];
             if(join_buf[i+8] == sum)
             {
 //                g_offset = join_buf[i+2];
@@ -615,14 +615,14 @@ void TempManager::openTempFile(const QString &name)
         m_upgradeFileSize = 0;
         QDataStream BinFileData(file);
         m_fileSize = file->size();
-        qDebug() << "filesize:" << m_fileSize;
+        qt_debug() << "filesize:" << m_fileSize;
         m_fileBuf = new char[m_fileSize];
         BinFileData.readRawData(m_fileBuf,static_cast<int>(m_fileSize));
         file->close();
     }
     else
     {
-        qDebug() << "file read fail!";
+        qt_debug() << "file read fail!";
         return;
     }
 }

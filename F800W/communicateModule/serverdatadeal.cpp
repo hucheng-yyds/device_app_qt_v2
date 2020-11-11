@@ -22,7 +22,7 @@ void ServerDataDeal::upgradeFile(const QJsonObject &obj)
 
 void ServerDataDeal::saveSetting(const QJsonObject &jsonData)
 {
-    qDebug() << "32234232:" << jsonData;
+    qt_debug() << jsonData;
     if (jsonData.contains("isTemp")) {
         if(jsonData["isTemp"].toInt())
         {
@@ -229,7 +229,7 @@ void ServerDataDeal::saveSetting(const QJsonObject &jsonData)
 void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
 {
     QJsonObject jsonData;
-    qDebug() << (MqttClient::MqttCmd)jsonObj["cmd"].toInt() << jsonObj;
+    qt_debug() << (MqttClient::MqttCmd)jsonObj["cmd"].toInt() << jsonObj.size();
     switch (jsonObj["cmd"].toInt())
     {
     case MqttClient::UserData: {
@@ -346,7 +346,7 @@ void ServerDataDeal::dealFaceNewData(QJsonObject jsonObj)
         emit newUsers(datas);
     }
     else {
-        qDebug() << "dealFaceNewData:" << jsonObj;
+        qt_debug() << "dealFaceNewData:" << jsonObj;
     }
 }
 
@@ -360,7 +360,7 @@ void ServerDataDeal::run()
             QJsonParseError jsonError;
             QJsonDocument document = QJsonDocument::fromJson(data->datas, &jsonError);
             if (jsonError.error != QJsonParseError::NoError) {
-                qDebug() << "jsonError.error" << jsonError.error;
+                qt_debug() << "jsonError.error" << jsonError.error;
                 return;
             }
             QJsonObject jsonObj = document.object();

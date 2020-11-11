@@ -13,7 +13,7 @@
 #include "mqttclient.h"
 #include "serverdatadeal.h"
 #include "serverdatalist.h"
-#include "log.h"
+#include "ToolTcpServer.h"
 
 // 公共接口层 ui界面接口层
 class ProStorage : public QThread

@@ -24,14 +24,14 @@ void ProStorage::init()
     DeviceSnJudgment();
     HttpsClient *httpClient = new HttpsClient;
     int code = httpClient->AlgorithmAuthorization();
-    qDebug() << "AlgorithmAuthorization:" << code;
+    qt_debug() << "AlgorithmAuthorization:" << code;
     if(code != 0)
     {
         emit qrcodeChanged(QString("%1 %2").arg(tr("未授权")).arg(code));
         return;
     }
-//    Log *log = new Log;
-//    log->enable();
+    Log *log = new Log;
+    log->enable();
     NetManager *netManager = new NetManager;
     connect(netManager, &NetManager::showDeviceInfo, this, &ProStorage::showDeviceInfo);
     connect(netManager, &NetManager::networkChanged, this, &ProStorage::networkChanged);
@@ -53,6 +53,9 @@ void ProStorage::init()
     connect(identify, &FaceIdentify::tempShow, this, &ProStorage::tempShow);
     tempManager->start();
 
+    ToolTcpServer * toolTcpServer = new ToolTcpServer();
+    toolTcpServer->start();
+
     MqttClient *mqttClient = new MqttClient;
     UserIdRequest *userRequest = new UserIdRequest;
 
@@ -60,13 +63,13 @@ void ProStorage::init()
     mqttClient->setPacket(serverList);
 
     bool status = face->init();
-    qDebug() << "---------------init status:" << status;
+    qt_debug() << "---------------init status:" << status;
     while(!status)
     {
         sleep(1);
     }
     float tempFlag = tempManager->onIsTemp();
-    qDebug() << "temp modle result:" << tempFlag;
+    qt_debug() << "temp modle result:" << tempFlag;
     if(0.0 == tempFlag)
     {
         switchCtl->m_tempCtl = false;
@@ -121,13 +124,13 @@ void ProStorage::DeviceSnJudgment()
         process->start("cat /sys/kernel/swsensor/id");
         process->waitForFinished();
         outputStr = QString::fromLocal8Bit(process->readAllStandardOutput());
-        qDebug() << outputStr;
+        qt_debug() << outputStr;
         mac = ("OFF1MJ" + outputStr.mid(0,12)).toLocal8Bit();
         switchCtl->m_sn = mac;
         system("echo " + mac + " > /dev/mmcblk0p6");
         switchCtl->saveSreenParam();
     }
-    qDebug() << "DeviceSnJudgment:" << switchCtl->m_sn;
+    qt_debug() << "DeviceSnJudgment:" << switchCtl->m_sn;
     saveQRcodeImage(switchCtl->m_sn.toUtf8());
 }
 

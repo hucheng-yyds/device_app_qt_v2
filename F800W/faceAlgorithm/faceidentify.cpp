@@ -172,7 +172,7 @@ void FaceIdentify::run()
                     }
                 }
             }
-            qDebug() << "holding temp" << m_tempFlag;
+            qt_debug() << "holding temp" << m_tempFlag;
             while (1)
             {
                 msleep(10);
@@ -193,7 +193,7 @@ void FaceIdentify::run()
             }
             switchCtl->m_tempFlag = false;
             msleep(150);
-            qDebug() << m_tempVal << m_tempResult;
+            qt_debug() << m_tempVal << m_tempResult;
             float warnValue = switchCtl->m_warnValue;
             if(switchCtl->m_fahrenheit)
             {
@@ -298,6 +298,7 @@ QStringList FaceIdentify::dealOpencondition(int faceId)
         text << name << "";
         return text;
     }
+    qt_debug() << value;
     int passnum = value[1].toInt();
     QString startTime = value[2].toString();
     QString expireTime = value[3].toString();
@@ -305,7 +306,6 @@ QStringList FaceIdentify::dealOpencondition(int faceId)
     QString passPeriod = value[5].toString();
     QString passTimeSection = value[6].toString();
     QString remark = "";
-    qDebug() << "========" << startTime;
     if(1 == isBlack)
     {
         remark = value[7].toString();
@@ -372,11 +372,9 @@ QStringList FaceIdentify::dealOpencondition(int faceId)
             }
         }
     }
-    qDebug() << pass;
     if(pass)
     {
         pass = false;
-        qDebug() << "----" << passTimeSection;
         if(passTimeSection.isEmpty() || passTimeSection.compare("always") == 0)
         {
             pass = true;
@@ -393,7 +391,6 @@ QStringList FaceIdentify::dealOpencondition(int faceId)
             }
         }
     }
-    qDebug() << pass;
     if(pass)
     {
         name = sqlDatabase->sqlSelect(faceId).value(1).toString();

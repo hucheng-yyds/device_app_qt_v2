@@ -12,21 +12,21 @@ Item {
     Focusing {
         id: focusing;
     }
-    // 显示gif动画
-    Rectangle {
-        visible: false
-        x: 300
-        y: 500
-        width: 422
-        height: 235
-        //color: "blue"
+//    // 显示gif动画
+//    Rectangle {
+//        visible: false
+//        x: 300
+//        y: 500
+//        width: 422
+//        height: 235
+//        //color: "blue"
 
-        AnimatedImage {
-            id: animated
-            source: "./gifs/aa.gif"
-            playing: true
-        }
-    }
+//        AnimatedImage {
+//            id: animated
+//            source: "./gifs/aa.gif"
+//            playing: true
+//        }
+//    }
 
     // 初始化ui显示
     Text {
