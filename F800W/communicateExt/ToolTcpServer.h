@@ -8,12 +8,6 @@
 
 #define ZK_SFZ_OFFLINE
 
-
-//typedef   enum {
-//    CameraGetPicture,     //摄像头校准
-//    DevLogMsg,              //设备实时的日志
-//}ToolCmds;
-
 typedef enum {
 
     Dev_Information_request = 1,//0x01
@@ -54,6 +48,7 @@ public slots:
     void onCaptureCamPicture(QByteArray dat);//抓取到图片的数据
     void onCamCalibration();//摄像头校准的结果
     void onGetRealTimeLog(QByteArray );//日志模块输入信息
+
 signals:
     void sigCaptureCamPicture();//摄像头抓拍图片
     void sigCamCalibration();//摄像头校准
@@ -62,6 +57,8 @@ signals:
     void sigGetTempHardwareInfo();
 
     void sigRealTimeLog(bool);//控制日志模块
+
+
 private:
     QTcpServer   *m_tcpServer = nullptr;
     QTcpSocket   *m_tcpSocket = nullptr;
@@ -69,6 +66,7 @@ private:
     int dataSize;
     QByteArray dataArray;
     void parseData(QByteArray &recData);
+    void setParameters(QJsonObject & data,QString msgType,QString cmdStr);
     //response
     void ResponseDataToTool(ToolCmdHead headCmd,QJsonObject & sendObj);
     void sendSNtoClient(void);
@@ -78,6 +76,7 @@ private:
     void sendSaveEnd();
     void DevUpdate(QJsonObject rootDat);
     void responseHardUpdate(QString state);
+
 private slots:
       void onNewConnect(void);
       void onTcpRead(void);

@@ -4,15 +4,6 @@
 #include <QUuid>
 #include <QDataStream>
 
-typedef struct {
-    QString version = VERSION;
-    QString ip = "192.168.2.21";
-    QString DevType;
-    QString deviceSn;
-}UdpInitDat;
-
-static UdpInitDat initDat;
-
 UdpServer::UdpServer()
 {
     m_udpServer = new QUdpSocket;
@@ -23,6 +14,9 @@ UdpServer::UdpServer()
 //    sendData();
 //    exec();
 }
+
+
+
 
 void UdpServer::run()
 {
@@ -35,25 +29,25 @@ void UdpServer::run()
 
 void UdpServer::sendData()
 {
-    QByteArray data;
-    QByteArray sendDatas;
-    QJsonDocument document;
-    QJsonObject json;
-    QDataStream out(&sendDatas, QIODevice::WriteOnly);
-    QUuid uuid = QUuid::createUuid();
-    QString strId = uuid.toString();
-    json.insert("type",initDat.DevType);
-    json.insert("version",initDat.version);
-    json.insert("ip", initDat.ip);
-    //json.insert("ip", "192.168.2.21");
-    json.insert("uuid", strId);
-    json.insert("mac", "");
-    json.insert("ss_sn",initDat.deviceSn);
-    document.setObject(json);
-    data = document.toJson(QJsonDocument::Compact);
-    sendDatas.append(data);
-    int ret = m_udpServer->writeDatagram(sendDatas, QHostAddress::Broadcast, 13208);
-//    qDebug() << "=================================" << ret << m_udpServer->error();
+        QByteArray data;
+        QByteArray sendDatas;
+        QJsonDocument document;
+        QJsonObject json;
+        QDataStream out(&sendDatas, QIODevice::WriteOnly);
+        QUuid uuid = QUuid::createUuid();
+        QString strId = uuid.toString();
+        json.insert("type",DEVICE_TYPE);
+        json.insert("version",VERSION);
+        json.insert("ip", switchCtl->m_ipAddr);
+        //json.insert("ip", "192.168.2.21");
+        json.insert("uuid", strId);
+        json.insert("mac", "");
+        json.insert("ss_sn",switchCtl->m_sn);
+        document.setObject(json);
+        data = document.toJson(QJsonDocument::Compact);
+        sendDatas.append(data);
+        int ret = m_udpServer->writeDatagram(sendDatas, QHostAddress::Broadcast, 13208);
+        qDebug() << "=================================" << ret << m_udpServer->error() << switchCtl->m_ipAddr<< "test22";
 }
 
 void UdpServer::processPendingDatagram()

@@ -4,7 +4,6 @@
 #include "switch.h"
 #include "sqldatabase.h"
 
-
 ToolTcpServer::ToolTcpServer()
 {
     m_tcpServer = new QTcpServer(this);
@@ -16,7 +15,9 @@ ToolTcpServer::ToolTcpServer()
 
     dataSize = 0;
     dataArray.clear();
-    m_udpServer.start();
+    void onGetDevIp(const QString &ver, const QString &name, const QString &number, const QString &devIp, const QString &devSn);
+
+   m_udpServer.start();
 }
 
 //void ToolTcpServer::onToolCmdResponse(ToolCmds cmd ,QByteArray dat)
@@ -75,14 +76,14 @@ static int bytesToInt(QByteArray bytes)
 
 static QByteArray intToByte(int num)
 {
-    qt_debug()<<num;
+    //qt_debug()<<num;
     QByteArray abyte0;
     abyte0.resize(4);
     abyte0[3] = (uchar) ((0xff000000 & num) >> 24);
     abyte0[2] = (uchar) ((0x00ff0000 & num) >> 16);
     abyte0[1] = (uchar) ((0x0000ff00 & num) >> 8);
     abyte0[0] = (uchar) (0x000000ff & num);
-    qt_debug()<<abyte0<<(0x000000ff & num)<<((0x0000ff00 & num) >> 8)<<((0x00ff0000 & num) >> 16)<<((0xff000000 & num) >> 24);
+   // qt_debug()<<abyte0<<(0x000000ff & num)<<((0x0000ff00 & num) >> 8)<<((0x00ff0000 & num) >> 16)<<((0xff000000 & num) >> 24);
     return abyte0;
 }
 
@@ -151,6 +152,212 @@ void ToolTcpServer::onTempInfo(QByteArray tempInfo)
     }
 }
 
+void ToolTcpServer::setParameters(QJsonObject & data,QString msgType,QString cmdStr)
+{
+    // 手动配置模式ip
+    if(data.contains(key_manual_config))
+    {
+        bool on = data.value(key_manual_config).toBool();
+        if(!on){
+            switchCtl->m_ipMode = false;
+            if(data.contains(key_manual_ip)&&
+                    data.contains(key_manual_netmask)&&
+                      data.contains(key_manual_route)&&
+                    data.contains(key_manual_dns)){
+
+                    if(data.value(key_manual_config).toString()!=""&&
+                            data.value(key_manual_netmask).toString()!=""&&
+                                data.value(key_manual_route).toString()!=""&&
+                            data.value(key_manual_dns).toString()!=""){
+
+                        switchCtl->m_manualIp = data.value(key_manual_config).toString();
+                        switchCtl->m_manualGateway =data.value(key_manual_netmask).toString();
+                        switchCtl->m_manualNetmask =data.value(key_manual_route).toString();
+                        switchCtl->m_manualDns =data.value(key_manual_dns).toString();
+
+                    }else
+                          switchCtl->m_ipMode = true;
+            }else   switchCtl->m_ipMode = true;
+        }
+        else {
+             switchCtl->m_ipMode = true;
+        }
+    }
+
+    // 定时息屏时间 单位秒最小3秒钟
+    if(data.contains(key_closeScreenTime))
+    {
+        switchCtl->m_closeScreenTime = data.value(key_closeScreenTime).toInt();
+        if(switchCtl->m_closeScreenTime<3)
+            switchCtl->m_closeScreenTime = 3;//s
+    }
+    // 后台通信协议开关 true:tcp协议，false:http协议
+    if(data.contains(key_protocol))
+    {
+        switchCtl->m_protocol = data.value(key_protocol).toBool();
+        if(switchCtl->m_protocol )//tcp
+        {
+            //Tcp ip
+            if(data.contains(key_server_ip))
+            {
+                QString newIP = data.value(key_server_ip).toString();
+                if(newIP != switchCtl->m_tcpAddr)
+                {
+                   switchCtl->m_tcpAddr = newIP;
+                   system("rm *.db");
+                }
+            }
+
+            //Tcp Port
+            if(data.contains(key_server_port))
+            {
+                int newPort = data.value(key_server_port).toInt();
+                if(newPort != switchCtl->m_tcpPort)
+                {
+                   switchCtl->m_tcpPort = newPort;
+                   system("rm *.db");
+                }
+            }
+        }
+        else{ //http
+            if(data.contains(key_httpAddr))
+            {
+                switchCtl->m_httpAddr = data.value(key_httpAddr).toString();
+            }
+        }
+    }
+
+    // ntp服务器地址
+    if(data.contains(key_ntpAddr))
+    {
+        switchCtl->m_ntpAddr = data.value(key_ntpAddr).toString();
+    }
+    // 测温告警值
+    if(data.contains(key_temp_warnValue))
+    {
+        switchCtl->m_warnValue = data.value(key_temp_warnValue).toDouble();
+    }
+
+    // 温度补偿值
+    if(data.contains(key_temp_comp))
+    {
+        switchCtl->m_tempComp = data.value(key_temp_comp).toDouble();
+    }
+
+    // 开门条件
+    if(data.contains(key_openMode))
+    {
+        switchCtl->m_openMode = data.value(key_openMode).toString();
+    }
+    // 识别距离
+    if(data.contains(key_identifyDistance))
+    {
+        switchCtl->m_identifyDistance = data.value(key_identifyDistance).toInt();
+    }
+    // 开门等待时间 单位秒
+    if(data.contains(key_doorDelayTime))
+    {
+        switchCtl->m_identifyDistance = data.value(key_doorDelayTime).toInt();
+    }
+    // 安全帽开关
+    if(data.contains(key_helet))
+    {
+        switchCtl->m_helet = data.value(key_helet).toBool();
+    }
+    // 口罩开关 0:表示关闭 1:提醒 2:检测
+    if(data.contains(key_mask))
+    {
+        switchCtl->m_mask = data.value(key_mask).toInt();
+    }
+    // 显示ic卡号 开关
+    if(data.contains(key_showIc))
+    {
+        switchCtl->m_showIc = data.value(key_showIc).toBool();
+    }
+    if(data.contains(key_fahrenheit))
+    {
+        switchCtl->m_fahrenheit = data.value(key_fahrenheit).toBool();
+    }
+    if(data.contains(key_irLightCtl))
+    {
+        switchCtl->m_irLightCtl = data.value(key_irLightCtl).toString();
+    }
+    if(data.contains(key_bgrLightCtl))
+    {
+        switchCtl->m_bgrLightCtl = data.value(key_bgrLightCtl).toString();
+    }
+    if(data.contains(key_uploadImageCtl))
+    {
+        switchCtl->m_uploadImageCtl = data.value(key_uploadImageCtl).toBool();
+    }
+    if(data.contains(key_uploadStrangerCtl))
+    {
+        switchCtl->m_uploadStrangerCtl = data.value(key_uploadStrangerCtl).toBool();
+    }
+    if(data.contains(key_language))
+    {
+        switchCtl->m_language = data.value(key_language).toInt();
+    }
+    if(data.contains(key_devName))
+    {
+        switchCtl->m_devName = data.value(key_devName).toString();
+    }
+    if(data.contains(key_nameMask))
+    {
+        switchCtl->m_nameMask= data.value(key_nameMask).toInt();
+    }
+    if(data.contains(key_tts))
+    {
+        switchCtl->m_tts = data.value(key_tts).toBool();
+    }
+    if(data.contains(key_tempValueBroadcast))
+    {
+        switchCtl->m_tempValueBroadcast = data.value(key_tempValueBroadcast).toBool();
+    }
+    if(data.contains(key_rcode))
+    {
+        switchCtl->m_rcode = data.value(key_rcode).toBool();
+    }
+    if(data.contains(key_volume))
+    {
+        switchCtl->m_showIc = data.value(key_volume).toBool();
+    }
+    if(data.contains(key_faceDoorCtl))
+    {
+        switchCtl->m_faceDoorCtl = data.value(key_faceDoorCtl).toBool();
+    }
+    if(data.contains(key_tempCtl))
+    {
+        switchCtl->m_tempCtl = data.value(key_tempCtl).toBool();
+    }
+    if(data.contains(key_loose))
+    {
+        switchCtl->m_loose = data.value(key_loose).toBool();
+    }
+    if(data.contains(key_ir))
+    {
+        switchCtl->m_ir = data.value(key_ir).toBool();
+    }
+    if(data.contains(key_vi))
+    {
+        switchCtl->m_vi = data.value(key_vi).toBool();
+    }
+    if(data.contains(key_identifyWaitTime))
+    {
+        switchCtl->m_identifyWaitTime = data.value(key_identifyWaitTime).toInt();
+    }
+    if(data.contains(key_idcardValue))
+    {
+        switchCtl->m_idcardValue = data.value(key_idcardValue).toDouble();
+    }
+    if(data.contains(key_screenCtl))
+    {
+        switchCtl->m_screenCtl = data.value(key_screenCtl).toBool();
+    }
+    switchCtl->saveSwitchParam();
+    sendSNtoClient();
+}
+
 void ToolTcpServer::parseData(QByteArray &recData)
 {
     if (!(recData.left(4)=="OFLN")) {
@@ -160,7 +367,7 @@ void ToolTcpServer::parseData(QByteArray &recData)
     cmd = recData.mid(6,1);
     int m_cmd = 0;
     m_cmd = cmd[0] & 0xFF;
-    qt_debug() << m_cmd;
+  //  qt_debug() << m_cmd<<recData;
 
     if(m_cmd == Dev_TemCalibration_request)
     {
@@ -178,6 +385,7 @@ void ToolTcpServer::parseData(QByteArray &recData)
         QJsonObject rootObj;
         QString msgType("");
         QString cmdStr("");
+
         QJsonDocument json = QJsonDocument::fromJson(msgBody, &jsonError);
         if (jsonError.error == QJsonParseError::NoError)
         {
@@ -188,7 +396,7 @@ void ToolTcpServer::parseData(QByteArray &recData)
                 {
                      msgType = rootObj["msgType"].toString();
                      cmdStr = rootObj["cmd"].toString();
-
+                      qt_debug()<< msgType << cmdStr;
                     if(m_cmd == Dev_Information_request)
                     {
                        if(msgType == "0") //设备配置信息
@@ -204,71 +412,14 @@ void ToolTcpServer::parseData(QByteArray &recData)
 
                             }else if(cmdStr == "1") //修改设备配置信息
                             {
+
                               if(rootObj.contains("data"))
                               {
-
-        //                              QJsonObject switchDat = switchCtl->readSwitchParam();
-        //                              if(rootObj.contains("data"))
-        //                              {
-        //                                  QJsonObject data = rootObj["data"].toObject();
-        //                                  QJsonObject originData = switchCtl->readSwitchParam();
-        //                                  //ip
-        //                                  if(data.contains(key_server_ip))
-        //                                  {
-        //                                     if(switchDat.contains(key_server_ip))
-        //                                     {
-        //                                          if(data.value(key_server_ip).toString()!=switchCtl->m_tcpAddr)
-        //                                          {
-        //                                              system("rm *.db");
-        //                                          }
-        //                                     }
-        //                                  }
-        //                              }
-
-        //                               QJsonObject setObj = rootObj.value("data").toObject();
-        //                               QJsonObject::Iterator iteratorJson;
-        //                               iteratorJson = setObj.begin();
-        //                               while(iteratorJson != setObj.end())
-        //                               {
-        //                                   QString key = iteratorJson.key();
-        //                                   if(switchDat.contains(key))
-        //                                   {
-        //                                        if(iteratorJson.value().toVariant() != switchDat.value(key).toVariant())
-        //                                        {
-        //                                                if(iteratorJson.value().toString() == key_switch_isTemp )
-        //                                                {
-        //                                                    if (!switchDat[key_switch_isTemp].toInt()) {
-        //                                                         switchDat.insert(key_openMode_openDoorMode, "Face");
-        //                                                         iteratorJson++;
-        //                                                         continue;
-        //                                                    }
-        //                                                }
-
-        //                                                if(iteratorJson.value().toString() == key_switch_isEg)
-        //                                                {
-        //                                                    if (!switchDat[key_switch_isEg].toInt()) {
-        //                                                        switchDat.insert(key_openMode_openDoorMode,"Temp");
-        //                                                        iteratorJson++;
-        //                                                        continue;
-        //                                                    }
-        //                                                }
-
-        //                                               switchDat.insert(key,iteratorJson.value().toString());
-        //                                            }
-        //                                        }
-
-        //                                        iteratorJson++;
-        //                                   }
-                                           QJsonObject data = rootObj["data"].toObject();
-                                          // switchCtl->saveSwitchParam(data);
-
-                                           QJsonObject jaSonObject;
-                                           jaSonObject.insert("msgType",msgType);
-                                           jaSonObject.insert("cmd",cmdStr);
-                                           ResponseDataToTool(Dev_Information_response,jaSonObject);
-                                       }
+                                  QJsonObject data = rootObj.value("data").toObject();
+                                  qt_debug() << data;
+                                  setParameters(data,msgType,cmdStr);
+                               }
                             }
-
                        }
                        else if(msgType == "1")//设备硬件信息
                        {
@@ -283,7 +434,7 @@ void ToolTcpServer::parseData(QByteArray &recData)
                     {
                             if(msgType == "0")
                             {
-                                if(cmd == "0")//获取身份证登记信息
+                                if(cmdStr == "0")//获取身份证登记信息
                                 {
 
                                     QList<QStringList> fileList;
@@ -321,20 +472,26 @@ void ToolTcpServer::parseData(QByteArray &recData)
                                 }
                             }
                     }else if(m_cmd == Dev_FirmwareUpgrade_request)
-                    {
-                        if(msgType == "0")
+                    {    qt_debug() << "Dev_FirmwareUpgrade_request";
+                        if(msgType == "0")//恢復默认设置
                         {
-                            if(cmd == "0")//恢復默认设置
+                            if(cmdStr == "0")
                             {
                                 switchCtl->setSwitchDefault();
-                              //  ResponseDataToTool(Dev_FirmwareUpgrade_request,msgType,cmd,"","200","");
-                                sleep(1000);
-
+                                QJsonObject jaSonObject;
+                                jaSonObject.insert("msgType",msgType);
+                                jaSonObject.insert("cmd",cmdStr);
+                                ResponseDataToTool(Dev_FirmwareUpgrade_response,jaSonObject);
+                                msleep(1000);
+                                qt_debug()<<"";
                                 system("rm *.db");
                                 system("rm offline/*");
                                 system("reboot");
 
-                            }else if(cmd == "1")//升级固件
+                            }
+                        }else if(msgType == "1")//升级固件
+                        {
+                             if(cmdStr == "0")
                             {
                                 if(rootObj.contains("versionUpdate"))
                                 {
@@ -350,15 +507,39 @@ void ToolTcpServer::parseData(QByteArray &recData)
                                     file.close();
                                     system("mv F01N F01");
                                     system("chmod 777 F01");
-                                //    ResponseDataToTool(Dev_FirmwareUpgrade_request,msgType,cmd,"","200","");
-                                    sleep(1000);
+                                    QJsonObject response;
+                                    response.insert("msgType",msgType);
+                                    response.insert("cmd",cmdStr);
+                                    ResponseDataToTool(Dev_FirmwareUpgrade_request,response);
+                                    msleep(1000);
                                     system("reboot");
-
-                                }else if(rootObj.contains("hardUpdate"))
-                                {
-                                    DevUpdate(rootObj);
-                                 //   ResponseDataToTool(Dev_FirmwareUpgrade_request,msgType,cmd,"","200","");
                                 }
+                            }
+                            else if(cmdStr == "1")//
+                            {   qt_debug() << "Dev_FirmwareUpgrade_request2";
+                                DevUpdate(rootObj);
+                            }
+                            else if(cmdStr == "2")//测温固件升级
+                            {
+                                 if(rootObj.contains("versionTempUpdate"))
+                                 {
+                                     system("rm temp.bin");
+                                     QString verStr;
+                                     verStr = rootObj.value("versionTempUpdate").toString();
+                                     QByteArray verdata = QByteArray::fromBase64(verStr.toUtf8());
+                                     QFile file("temp.bin");
+                                     if (!file.open(QFile::ReadWrite)) {
+                                         qt_debug() << "open failed!";
+                                         return ;
+                                     }
+                                     file.write(verdata);
+                                     file.close();
+                                     QJsonObject response;
+                                     response.insert("msgType",msgType);
+                                     response.insert("cmd",cmdStr);
+                                     ResponseDataToTool(Dev_FirmwareUpgrade_request,response);
+                                    // emit sigSendUpdateTemp();
+                                 }
                             }
                         }
                     }else if(m_cmd == Dev_Debugging_request)
@@ -405,10 +586,12 @@ void ToolTcpServer::parseData(QByteArray &recData)
                           //  ResponseDataToTool(Dev_FirmwareUpgrade_request,msgType,cmd,"","200","");
                         } else if(msgType == "3")//重启设备
                         {
-                           QJsonObject response;
-                           response.insert("msgType","3");
-                           ResponseDataToTool(Dev_Debugging_response,response);
-                           system("reboot");
+                            QJsonObject response;
+                            response.insert("msgType",msgType);
+                            response.insert("cmd",cmdStr);
+                            ResponseDataToTool(Dev_Debugging_response,response);
+                            msleep(1000);
+                            system("reboot");
                         }
                     }
                     else if(m_cmd == Dev_CameraCalibration_request)
@@ -582,6 +765,7 @@ void ToolTcpServer::sendSNtoClient()
     QJsonObject dat = switchCtl->readSwitchParam();
     dat.insert("msgType","0");
     dat.insert("cmd","0");
+    dat.insert("data",dat);
 //    QJsonObject sendObj;
 //    sendObj.insert("sn_Num", switchCtl->m_tcpPort);
 //    sendObj.insert("serverIp",switchCtl->m_tcpAddr);
@@ -595,7 +779,7 @@ void ToolTcpServer::sendSNtoClient()
     sendData.append(uchar(Dev_Information_response));
     sendData.append(intToByte(stateData.length()));
     sendData.append(stateData);
-    qt_debug() << sendData <<endl;
+    qt_debug() << sendData ;
     m_tcpSocket->write(sendData);
     m_tcpSocket->flush();
 }
@@ -687,20 +871,13 @@ void ToolTcpServer::DevUpdate(QJsonObject rootObj)
                     qt_debug() << md5 << dataObj.value("md5").toString();
                     if(md5 == dataObj.value("md5").toString())
                     {
-                        responseClient("tarxz");
+                        responseHardUpdate("tarxz");
                         system("tar -xvf update.tar.xz && rm update.tar.xz");
                         system("rm base64SaveFile.txt");
                         if (QFile::exists("hi3516dv300_smp_image")) {
-                            QJsonObject jsonObj = switchCtl->readSwitchParam();
-                            qt_debug() << jsonObj;
                             char* mac ;
-                            if(jsonObj.contains("device"))
-                            {
-                               mac = jsonObj.value("device").toString().toUtf8().data();
-                            }
-                            //char* mac = settings->getValue("device").toByteArray().data();
-                            //char* mac = settings->getValue("device").toByteArray().data();
-                            if (mac[7] >= 'A') {
+                            mac = switchCtl->m_sn.toUtf8().data();
+                             if (mac[7] >= 'A') {
                                 mac[7] -= '7';
                                 mac[7] &= 0xE;
                                 mac[7] += '7';
@@ -715,12 +892,16 @@ void ToolTcpServer::DevUpdate(QJsonObject rootObj)
                                    "rm hi3516dv300_smp_image -rf &&"
                                    "sync");
                         }
+
+                        responseHardUpdate("reboot");
+                        msleep(1000);
+                        qt_debug() << "system reboot";
                         system("reboot");
                     }
                     else {
                         system("rm base64SaveFile.txt");
                         system("rm update.tar.xz");
-                        responseClient("error");
+                        responseHardUpdate("error");
                     }
                 }
             }
@@ -737,8 +918,8 @@ void ToolTcpServer::responseHardUpdate(QString state)
     QJsonObject sendObj;
     sendObj.insert("result","200");
     sendObj.insert("desc","");
-    sendObj.insert("data","");
-    sendObj.insert("msgType","0");
+    sendObj.insert("data",state);
+    sendObj.insert("msgType","1");
     sendObj.insert("cmd","1");
     QJsonDocument document;
     document.setObject(sendObj);
@@ -746,7 +927,7 @@ void ToolTcpServer::responseHardUpdate(QString state)
     sendData.append("OFLN");
     sendData.append(uchar(1));
     sendData.append(uchar(1));
-    sendData.append(uchar(Dev_OfflineDatExport_response));
+    sendData.append(uchar(Dev_FirmwareUpgrade_response));
     sendData.append(intToByte(stateData.length()));
     sendData.append(stateData);
     m_tcpSocket->write(sendData);

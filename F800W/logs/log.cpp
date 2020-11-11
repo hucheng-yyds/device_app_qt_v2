@@ -20,7 +20,6 @@ static void outputMessage(QtMsgType type, const QMessageLogContext &context, con
         qt_debug() << file.rename(path + dateTime.toString("yyyy-MM-dd-HHmm") + "log.txt");
         file.setFileName(filename);
     }
-//    qt_debug() << dateTime.addDays(-17).toString("dd");QCoreApplication::applicationDirPath()
     file.open(QIODevice::WriteOnly | QIODevice::Append);
     QTextStream text_stream(&file);
     text_stream << msg << "\n";

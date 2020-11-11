@@ -14,6 +14,8 @@ class UdpServer:public QThread
 public:
     explicit UdpServer();
 
+public slots:
+
 protected:
     void run();
 
