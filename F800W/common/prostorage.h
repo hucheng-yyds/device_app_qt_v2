@@ -14,6 +14,7 @@
 #include "serverdatadeal.h"
 #include "serverdatalist.h"
 #include "ToolTcpServer.h"
+#include "idmodule.h"
 
 // 公共接口层 ui界面接口层
 class ProStorage : public QThread

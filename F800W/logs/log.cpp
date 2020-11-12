@@ -11,7 +11,7 @@ static void outputMessage(QtMsgType type, const QMessageLogContext &context, con
     }
     QString name = dateTime.toString("yyyy-MM-dd") + "log.txt";
     QString filename = path + name;
-    QStringList filesList = dir.entryList(QDir::Files|QDir::Readable, QDir::Time|QDir::Reversed);
+    QStringList filesList = dir.entryList(QDir::Files|QDir::Readable|QDir::NoDotAndDotDot, QDir::Time|QDir::Reversed);
     if (filesList.size() > 50) {
         qt_debug() << QFile::remove(path + filesList[0]) << filesList.size();
     }

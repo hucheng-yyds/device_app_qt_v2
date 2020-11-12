@@ -36,7 +36,7 @@ void ProStorage::init()
     connect(netManager, &NetManager::showDeviceInfo, this, &ProStorage::showDeviceInfo);
     connect(netManager, &NetManager::networkChanged, this, &ProStorage::networkChanged);
     connect(netManager, &NetManager::timeSync, this, &ProStorage::timeSync);
-
+    netManager->start();
     FaceInterface *interFace = new FaceInterface;
     FaceManager *face = new FaceManager;
     connect(face, &FaceManager::showFaceFocuse, this, &ProStorage::showFaceFocuse);
@@ -53,6 +53,9 @@ void ProStorage::init()
     connect(identify, &FaceIdentify::tempShow, this, &ProStorage::tempShow);
     tempManager->start();
 
+    IdCardModule *idcard = new IdCardModule;
+    idcard->start();
+
     ToolTcpServer * toolTcpServer = new ToolTcpServer();
     toolTcpServer->start();
 
@@ -61,7 +64,6 @@ void ProStorage::init()
 
     ServerDataList *serverList = new ServerDataList;
     mqttClient->setPacket(serverList);
-
     bool status = face->init();
     qt_debug() << "---------------init status:" << status;
     while(!status)
@@ -78,7 +80,6 @@ void ProStorage::init()
     }
     face->start();
     identify->start();
-    netManager->start();
     userRequest->start();
     if(switchCtl->m_protocol)
     {

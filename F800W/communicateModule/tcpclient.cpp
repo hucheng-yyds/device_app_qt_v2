@@ -46,7 +46,7 @@ void TcpClient::ConnectHost()
     if (m_tcpSocket->state() != QAbstractSocket::ConnectedState)
     {
         qt_debug()<<"ip connnect fail";
-        m_connectTimer->start();
+        m_requestTimer->start();
         switchCtl->m_netStatus = false;
     }
     else
@@ -54,7 +54,7 @@ void TcpClient::ConnectHost()
         qt_debug()<<"ip connnect suc";
         system("ntpclient -s -d -c 1 -i 5 -h "+ switchCtl->m_ntpAddr.toUtf8() +" > /dev/null");
         system("hwclock -w");
-        m_connectTimer->stop();
+        m_requestTimer->stop();
         if(!m_heartbeatTimer->isActive())
         {
             m_heartbeatTimer->start();
@@ -190,7 +190,7 @@ void TcpClient::OnReadData()
     bool ok;
     recData.clear();
     recData = m_tcpSocket->readAll();
-    m_requestTimer->stop();
+    m_connectTimer->stop();
     if(recData.mid(0,4) == QString("OFZL"))
     {
         /*OFLN + version(1 byte) + type(1 byte) + cmd(1byte) + msgLen(4byte) + msgBody*/
@@ -686,6 +686,10 @@ void TcpClient::WriteDataToServer(int msgType, QJsonObject &postObj)
     {
         if (!m_requestTimer->isActive())
         {
+            if (m_connectTimer->isActive())
+            {
+                m_connectTimer->stop();
+            }
             m_requestTimer->start();
         }
         return ;
@@ -707,8 +711,8 @@ void TcpClient::WriteDataToServer(int msgType, QJsonObject &postObj)
     qt_debug() << "cmdType:" << msgType << "size:" << backT;
     //以下是为了防止发送数据的同时读取数据出现问题
     m_tcpSocket->flush();
-    if (!m_requestTimer->isActive())
+    if (!m_connectTimer->isActive())
     {
-        m_requestTimer->start();
+        m_connectTimer->start();
     }
 }

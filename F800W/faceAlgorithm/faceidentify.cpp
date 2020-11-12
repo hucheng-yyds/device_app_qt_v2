@@ -12,6 +12,44 @@ FaceIdentify::FaceIdentify()
     m_bgrImage = new unsigned char[VIDEO_WIDTH*VIDEO_HEIGHT* 3 / 2];
 }
 
+bool FaceIdentify::idCardFaceComparison(char *feature_result)
+{
+    int size = 0;
+    float result = 0;
+    QString file = "sfz.bmp";
+    char *featureFrist;
+    FaceHandle *faceHandle = nullptr;
+    int count = 0;
+    bool idPass = false;
+    auto image = cv::imread(file.toStdString());
+    if(!image.empty())
+    {
+        FacePoseBlur pose_blur;
+        detect((const char *)image.data, image.cols, image.rows, BGR, 0.75, &faceHandle, &count);
+        if(count > 0)
+        {
+            extract(faceHandle[0], &featureFrist, &size);
+            compare(featureFrist, feature_result, size, &result);
+            QString name = switchCtl->m_idCardDatas.at(0);
+            if (result > switchCtl->m_idcardValue)
+            {
+                idPass = true;
+                emit faceResultShow(name, 0, m_iMFaceHandle[0].track_id, tr("认证通过"));
+                hardware->playSound(tr("认证通过").toUtf8(), "chengong.aac");
+            }
+            else
+            {
+                idPass = false;
+                emit faceResultShow(name, 0, m_iMFaceHandle[0].track_id, tr("人证失败"));
+                hardware->playSound(tr("认证通过").toUtf8(), "rzshibai.aac");
+            }
+            releaseFeature(featureFrist);
+            releaseAllFace(faceHandle, count);
+        }
+    }
+    return idPass;
+}
+
 void FaceIdentify::run()
 {
     while (true)
@@ -43,6 +81,7 @@ void FaceIdentify::run()
         int offlineNmae = 0;
         int isOver = 0;
         QString snapshot = "";
+        bool idCardResult = false;
         char *feature_result = nullptr;
         int bgrLength = m_interFace->m_count, irLength;
         memcpy(m_bgrImage, m_interFace->m_bgrImage, VIDEO_WIDTH * VIDEO_HEIGHT * 3 / 2);
@@ -133,11 +172,26 @@ void FaceIdentify::run()
                     }
                     else
                     {
-                        isStranger = "1";
-                        QString result = tr("请联系管理员");
-                        emit faceResultShow(tr("未注册"), i, m_iMFaceHandle[i].track_id, result);
-                        egPass = false;
-                        face_id = 0;
+                        if(vi)
+                        {
+                            if(switchCtl->m_idCardFlag)
+                            {
+                                idCardResult = idCardFaceComparison(feature_result);
+                                switchCtl->m_idCardFlag = false;
+                            }
+                            else {
+                                emit faceResultShow(tr("未注册"), i, m_iMFaceHandle[i].track_id, tr("请刷身份证"));
+                                hardware->playSound(tr("请刷身份证").toUtf8(), "shenfenzh.aac");
+                                goto endIdentify;
+                            }
+                        }
+                        else {
+                            isStranger = "1";
+                            QString result = tr("请联系管理员");
+                            emit faceResultShow(tr("未注册"), i, m_iMFaceHandle[i].track_id, result);
+                            egPass = false;
+                            face_id = 0;
+                        }
                     }
                 }
                 else
@@ -157,17 +211,19 @@ void FaceIdentify::run()
                 }
             }
         }
-        if(tempCtl && (egPass || !vi))
+        if(tempCtl && (egPass || idCardResult || 0 == openMode.compare("Temp")))
         {
             emit showStartTemp();
             if(faceDoor)
             {
-                if(!authority)
+                if(!authority && !vi)
                 {
                     if (egPass)
                     {
                         hardware->playSound(tr("认证通过").toUtf8(), "chengong.aac");
-                    } else {
+                    }
+                    else
+                    {
                         hardware->playSound(tr("未注册").toUtf8(), "shibai.aac");
                     }
                 }
@@ -238,7 +294,7 @@ void FaceIdentify::run()
         }
         if(openMode.compare("FaceTemp") == 0)
         {
-            if(egPass && tempPass)
+            if((egPass && tempPass) || idCardResult)
             {
                 hardware->ctlLed(GREEN);
                 hardware->checkOpenDoor();
@@ -265,7 +321,7 @@ void FaceIdentify::run()
         }
         else if(openMode.compare("Face") == 0)
         {
-            if(egPass)
+            if(egPass || idCardResult)
             {
                 isSuccess = "1";
                 hardware->ctlLed(GREEN);
@@ -304,11 +360,14 @@ void FaceIdentify::run()
         datas.clear();
         uploadTime = QDateTime::currentDateTime().addSecs(28800).toString("yyyy-MM-dd HH:mm:ss");
         datas << uploadTime << m_tempVal << isSuccess << invalidReason << isStranger << "";
-        if(switchCtl->m_netStatus)
+        if(!switchCtl->m_uploadStrangerCtl && !vi)
         {
-            emit uploadopenlog(offlineNmae, face_id, snapshot, isOver, 1, tempCtl, datas);
+            if(switchCtl->m_netStatus)
+            {
+                emit uploadopenlog(offlineNmae, face_id, snapshot, isOver, 1, tempCtl, datas);
+            }
+            sqlDatabase->sqlInsertOffline(offlineNmae, face_id, 1, isOver, tempCtl, datas);
         }
-        sqlDatabase->sqlInsertOffline(offlineNmae, face_id, 1, isOver, tempCtl, datas);
 
 endIdentify:
         if(feature_result)

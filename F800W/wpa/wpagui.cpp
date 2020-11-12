@@ -27,7 +27,6 @@ int flagscan=0;
 int networkid=0;
 int flagadd=0;
 int wfauth=6;
-int wflev=6;
 
 WpaGui::WpaGui()
 {
@@ -213,7 +212,7 @@ int WpaGui::openCtrlConnection(const char *ifname)
 		wpa_ctrl_detach(monitor_conn);
 		wpa_ctrl_close(monitor_conn);
         monitor_conn = nullptr;
-        printf("111111111111111111111111open close\n");
+//        printf("111111111111111111111111open close\n");
 	}
 
 	qDebug("Trying to connect to '%s'", cfile);
@@ -291,23 +290,24 @@ int WpaGui::ctrlRequest(const char *cmd, char *buf, size_t *buflen)
 	return ret;
 }
 
-void WpaGui::updateStatus()
+int WpaGui::updateStatus()
 {
+    int wflev=6;
     char buf[2048], *start, *end;
 	size_t len;
 
 	pingsToStatusUpdate = 10;
 	int i,j,k,l;
 	len = sizeof(buf) - 1;
-	if (ctrl_conn == NULL || ctrlRequest("STATUS", buf, &len) < 0) {
+    if (ctrl_conn == nullptr || ctrlRequest("STATUS", buf, &len) < 0) {
 //		qDebug("Could not get status from wpa_supplicant");
-		return;
+        return 6;
 	}
 
 
 	buf[len] = '\0';
 
-	char *pairwise_cipher = NULL, *group_cipher = NULL;
+    char *pairwise_cipher = nullptr, *group_cipher = nullptr;
     QString sta(buf);
 	i=sta.indexOf("signal_level=");
 	//end=pos;
@@ -349,7 +349,8 @@ void WpaGui::updateStatus()
 			encr.append(group_cipher);
 			encr.append(" [group key only]");
 		}
-	} 
+    }
+    return wflev;
 }
 
 
@@ -742,7 +743,7 @@ void WpaGui::processMsg(char *msg)
                         tr("Disconnected from network."));
         currentIconType = TrayIconOffline;
         emit disconnected();
-        qDebug("111111111111111111111111111111111111111111111111111WPA_EVENT_DISCONNECTED");
+//        qDebug("111111111111111111111111111111111111111111111111111WPA_EVENT_DISCONNECTED");
 	}
 	else if (str_match(pos, WPA_EVENT_CONNECTED)) {
         showTrayMessage(QSystemTrayIcon::Information, 3,
@@ -751,7 +752,7 @@ void WpaGui::processMsg(char *msg)
         stopWpsRun(true);
         currentIconType = TrayIconConnected;
         emit connected();
-        qDebug("222222222222222222222222222222222222222222222222WPA_EVENT_CONNECTED");
+//        qDebug("222222222222222222222222222222222222222222222222WPA_EVENT_CONNECTED");
 	} else if (str_match(pos, WPS_EVENT_AP_AVAILABLE_PBC)) {
 		
 	} else if (str_match(pos, WPS_EVENT_AP_AVAILABLE_PIN)) {

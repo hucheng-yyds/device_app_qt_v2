@@ -5,6 +5,8 @@ SwitchCtl* SwitchCtl::m_Instance = nullptr;
 SwitchCtl::SwitchCtl()
 {
     m_faceThreshold = 72.0;
+    m_idCardFlag = false;
+    m_idCardDatas.clear();
     m_tempFlag = false;
     m_sync = false;
     m_upgrade = false;

@@ -67,7 +67,7 @@ public:
 
 public slots:
 	virtual void parse_argv();
-	virtual void updateStatus();
+    virtual int updateStatus();
 	virtual void updateNetworks();
 	virtual void helpIndex();
 	virtual void helpContents();

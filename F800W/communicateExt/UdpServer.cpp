@@ -47,7 +47,7 @@ void UdpServer::sendData()
         data = document.toJson(QJsonDocument::Compact);
         sendDatas.append(data);
         int ret = m_udpServer->writeDatagram(sendDatas, QHostAddress::Broadcast, 13208);
-        qt_debug() << ret << m_udpServer->error() << switchCtl->m_ipAddr;
+//        qt_debug() << ret << m_udpServer->error() << switchCtl->m_ipAddr;
 }
 
 void UdpServer::processPendingDatagram()

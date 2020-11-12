@@ -373,6 +373,10 @@ Item {
             sleep.restart();
         }
         onFaceTb: {
+            for (var i = 0; i < focusingList.length; i ++) {
+                focusingList[i].focusingVisible = false;
+                focusingList[i].trackId = 0;
+            }
             tbs.text = qsTr(text);
             standby.visible = false;
             face.visible = true;
@@ -399,9 +403,15 @@ Item {
                     netStatus.source = "image/4g1.png";
                     break;
                 case 4:
-                    netStatus.source = "image/network.png";
+                    netStatus.source = "image/4g2.png";
                     break;
                 case 5:
+                    netStatus.source = "image/4g3.png";
+                    break;
+                case 6:
+                    netStatus.source = "image/network.png";
+                    break;
+                case 7:
                     netStatus.source = "image/net_nosig.png";
                     break;
             }

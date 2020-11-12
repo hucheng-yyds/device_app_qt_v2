@@ -41,6 +41,7 @@ LIBS += -laaccomm -laacdec -laacenc -laacsbrdec -laacsbrenc -ldl
 LIBS += -lopencv_core -lopencv_imgcodecs -lopencv_imgproc -lopencv_calib3d -lopencv_features2d  -lopencv_flann -lopencv_highgui -lopencv_videoio
 LIBS += -lmsc -lpaho-embed-mqtt3c
 LIBS += -lfacesdk_dv300
+LIBS += -l100UD -lusb-1.0 -lidr220s_reader
 
 INCLUDEPATH     += $$PWD/hardware
 INCLUDEPATH     += $$PWD/timerCountDown
@@ -54,6 +55,7 @@ INCLUDEPATH     += $$PWD/communicateModule
 INCLUDEPATH     += $$PWD/communicateExt
 INCLUDEPATH     += $$PWD/temperature
 INCLUDEPATH     += $$PWD/logs
+INCLUDEPATH     += $$PWD/idModule
 INCLUDEPATH     += $$PWD/wpa
 
 include         ($$PWD/hardware/hardware.pri)
@@ -68,6 +70,7 @@ include         ($$PWD/communicateModule/communicatemodule.pri)
 include         ($$PWD/communicateExt/communicateExt.pri)
 include         ($$PWD/temperature/temperature.pri)
 include         ($$PWD/logs/log.pri)
+include         ($$PWD/idModule/idModule.pri)
 include         ($$PWD/wpa/wpa.pri)
 
 #RESOURCES += main.qrc

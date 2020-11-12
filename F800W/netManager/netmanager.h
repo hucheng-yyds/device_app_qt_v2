@@ -31,6 +31,9 @@ private:
     int getTimeZone();
     int getTimeZoneMin();
     QString getCurrentTime(QDateTime dataTime);
+    int m_eth0;
+    bool m_wifi;
+    bool m_fourG;
 
 private:
     WpaGui *m_wpa;

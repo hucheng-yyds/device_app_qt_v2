@@ -52,6 +52,8 @@ int get_if_miireg(const char *if_name, int reg_num )
 
 NetManager::NetManager()
 {
+    m_fourG = false;
+    m_wifi = false;
     m_wpa = new WpaGui;
     connect(m_wpa, &WpaGui::connected, this, &NetManager::onConnected);
     connect(m_wpa, &WpaGui::disconnected, this, &NetManager::onDisconnected);
@@ -61,44 +63,80 @@ NetManager::NetManager()
 void NetManager::run()
 {
     QString ip = getIP();
+    int netWorkMode = 7;
     int seq = 0;
+    int size = 0;
     while(true)
     {
-        int eth0 = get_if_miireg("eth0", 0x01);
+        m_eth0 = get_if_miireg("eth0", 0x01);
         if(seq > 2)
         {
             ip = getIP();
             seq = 0;
-//            if(eth0 <= 0)
-//            {
-//                QString userName = switchCtl->m_wifiName;
-//                QString userPwd = switchCtl->m_wifiPwd;
-//                m_wpa->updateStatus();
-//                if (!userName.isEmpty() && !userPwd.isEmpty() && WpaGui::TrayIconOffline == m_wpa->state())
-//                {
-//                    m_wpa->enableNetwork(userName.toUtf8().data(), userPwd.toUtf8().data(), AUTH_WPA2_PSK);
-//                }
-//            }
-//            else {
-//                if (WpaGui::TrayIconConnected == m_wpa->state())
-//                {
-//                    m_wpa->removeNetwork();
-//                }
-//                if(WpaGui::TrayIconOffline != m_wpa->state())
-//                {
-//                    m_wpa->setState(WpaGui::TrayIconOffline);
-//                    m_wpa->removeNetwork();
-//                }
-//            }
+            if(m_eth0 <= 0)
+            {
+                QString userName = switchCtl->m_wifiName;
+                QString userPwd = switchCtl->m_wifiPwd;
+                int value = m_wpa->updateStatus();
+                if(value > 80)
+                {
+                    netWorkMode = 0;
+                }
+                else if(value > 60)
+                {
+                    netWorkMode = 1;
+                }
+                else if(value > 20){
+                    netWorkMode = 2;
+                }
+                else {
+                    switchCtl->m_netStatus = false;
+                    m_wifi = false;
+                    if (WpaGui::TrayIconConnected == m_wpa->state())
+                    {
+                        m_wpa->removeNetwork();
+                    }
+                    if(WpaGui::TrayIconOffline != m_wpa->state())
+                    {
+                        m_wpa->setState(WpaGui::TrayIconOffline);
+                        m_wpa->removeNetwork();
+                    }
+                }
+                size++;
+                if(size > 60)
+                {
+                    size = 0;
+                    qt_debug() << "===============" << value << userName << userPwd << m_wpa->state();
+                }
+                if (!userName.isEmpty() && !userPwd.isEmpty() && WpaGui::TrayIconOffline == m_wpa->state())
+                {
+                    m_wpa->enableNetwork(userName.toUtf8().data(), userPwd.toUtf8().data(), AUTH_WPA2_PSK);
+                }
+            }
+            else {
+                if (WpaGui::TrayIconConnected == m_wpa->state())
+                {
+                    m_wpa->removeNetwork();
+                }
+                if(WpaGui::TrayIconOffline != m_wpa->state())
+                {
+                    m_wpa->setState(WpaGui::TrayIconOffline);
+                    m_wpa->removeNetwork();
+                }
+            }
         }
-        if(eth0 > 0)
+        if(m_eth0 > 0)
         {
-            emit networkChanged(4, switchCtl->m_netStatus);
+            emit networkChanged(6, switchCtl->m_netStatus);
+        }
+        else if(m_wifi)
+        {
+            emit networkChanged(netWorkMode, switchCtl->m_netStatus);
         }
         else
         {
             switchCtl->m_netStatus = false;
-            emit networkChanged(5, false);
+            emit networkChanged(7, false);
         }
         switchCtl->m_ipAddr = ip;
         int count = sqlDatabase->m_localFaceSet.size();
@@ -117,17 +155,18 @@ void NetManager::run()
 
 void NetManager::onConnected()
 {
-
+    qt_debug() << "wifi connect success";
 }
 
 void NetManager::onDisconnected()
 {
-
+    m_wifi = false;
+    qt_debug() << "wifi disconnect";
 }
 
 void NetManager::onPskError()
 {
-
+    qt_debug() << "onPskError";
 }
 
 QString NetManager::getCurrentTime(QDateTime dataTime)
@@ -196,7 +235,7 @@ QString NetManager::getIP()
         {
             if(addressEntryItem.ip().protocol()==QAbstractSocket::IPv4Protocol)
             {
-                if(interface.name() == "eth0")
+                if(m_eth0 > 0 && interface.name() == "eth0")
                 {
                     bool manual = false;
                     if(!switchCtl->m_ipMode)
@@ -238,6 +277,13 @@ QString NetManager::getIP()
                         ipAddr = entryList.value(0).ip().toString();
                         addressEntryList.clear();
                     }
+                    break;
+                }
+                else if(interface.name() == "wlan0")
+                {
+                    QList<QNetworkAddressEntry>entryList=interface.addressEntries();
+                    ipAddr = entryList.value(0).ip().toString();
+                    m_wifi = true;
                     break;
                 }
             }

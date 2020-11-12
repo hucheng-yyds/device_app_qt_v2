@@ -23,7 +23,10 @@ public:
         }
         return m_Instance;
     }
-
+    // 刷身份证成功标志
+    bool m_idCardFlag;
+    // 身份证数据
+    QStringList m_idCardDatas;
     // 测温结束标志
     bool m_tempFlag;
     // 测温数值

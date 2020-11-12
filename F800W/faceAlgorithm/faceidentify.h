@@ -17,6 +17,8 @@ protected:
 public slots:
 
 private:
+    // 人证比对
+    bool idCardFaceComparison(char *feature_result);
     // 处理开门权限
     QStringList dealOpencondition(int faceId);
 
