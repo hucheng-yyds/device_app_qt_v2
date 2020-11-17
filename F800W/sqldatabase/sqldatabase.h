@@ -54,9 +54,11 @@ public:
     // 查询所有离线记录id
     QList<int> sqlSelectAllOffLine();
     // 离线记录查询
-    QVariantList sqlSelectOffline(int userid);
+    QVariantList sqlSelectOffline(int id);
     // 根据人员id 删除对应离线记录
-    void sqlDeleteOffline(int userid);
+    void sqlDeleteOffline(int id);
+    // 删除所有离线记录
+    void sqlDeleteAllOffline();
 
     // 根据失败id查询对应内容
     int sqlSelectFaile(int id);

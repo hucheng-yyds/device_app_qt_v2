@@ -286,7 +286,7 @@ QList<int> SqlDatabase::sqlSelectAllOffLine()
     m_mutex.lock();
     QList<int> values;
     QSqlQuery query1(m_database);
-    QString query_sql = "select userId from offline";
+    QString query_sql = "select oId from offline";
     query1.prepare(query_sql);
     if (!query1.exec())
     {
@@ -303,14 +303,15 @@ QList<int> SqlDatabase::sqlSelectAllOffLine()
     return values;
 }
 
-QVariantList SqlDatabase::sqlSelectOffline(int userid)
+QVariantList SqlDatabase::sqlSelectOffline(int id)
 {
     m_mutex.lock();
     QVariantList values;
+    values.clear();
     QSqlQuery query(m_database);
-    QString query_sql = "select * from offline where userId = ?";
+    QString query_sql = "select * from offline where oId = ?";
     query.prepare(query_sql);
-    query.addBindValue(userid);
+    query.addBindValue(id);
     if (!query.exec())
     {
         qDebug() << query.lastError();
@@ -319,22 +320,35 @@ QVariantList SqlDatabase::sqlSelectOffline(int userid)
     {
         while(query.next())
         {
-            values << query.value(0) << query.value(1) << query.value(2) << query.value(3) << query.value(4)
+            values << query.value(1) << query.value(2) << query.value(3) << query.value(4)
                   << query.value(5) << query.value(6) << query.value(7) << query.value(8) << query.value(9)
-                  << query.value(10) << query.value(11) << query.value(12);
+                  << query.value(10) << query.value(11);
         }
     }
     m_mutex.unlock();
     return values;
 }
 
-void SqlDatabase::sqlDeleteOffline(int userid)
+void SqlDatabase::sqlDeleteOffline(int id)
 {
     m_mutex.lock();
     QSqlQuery query(m_database);
     QString delete_sql = "delete from offline where oId = ?";
     query.prepare(delete_sql);
-    query.addBindValue(userid);
+    query.addBindValue(id);
+    if (!query.exec())
+    {
+        qDebug() << query.lastError();
+    }
+    m_mutex.unlock();
+}
+
+void SqlDatabase::sqlDeleteAllOffline()
+{
+    m_mutex.lock();
+    QSqlQuery query(m_database);
+    QString delete_sql = "delete from offline";
+    query.prepare(delete_sql);
     if (!query.exec())
     {
         qDebug() << query.lastError();

@@ -1,0 +1,4 @@
+#ifndef OFFLINERECORD_H
+#define OFFLINERECORD_H
+
+#endif // OFFLINERECORD_H

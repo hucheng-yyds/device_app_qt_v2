@@ -1,0 +1,4 @@
+#ifndef RCODEMODULE_H
+#define RCODEMODULE_H
+
+#endif // RCODEMODULE_H
