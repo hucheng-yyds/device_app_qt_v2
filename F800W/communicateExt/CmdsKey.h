@@ -34,6 +34,7 @@
 #define key_volume                          "volume"                // 音量控制
 #define key_temp_warnValue                  "warnValue"             // 测温告警值
 #define key_temp_comp                       "tempComp"              // 温度补偿值
+#define key_log                             "log"              // 温度补偿值
 
 #define key_faceDoorCtl                     "faceDoorCtl"           // 门禁开关
 #define key_tempCtl                         "tempCtl"               // 测温开关

@@ -464,3 +464,36 @@ QJsonObject HttpsClient::requestAuth(const QString &url, const QJsonObject &json
 
     return document.object();
 }
+
+void HttpsClient::httpsDownload(const QString &url)
+{
+    QNetworkRequest request;
+    request.setUrl(url);
+    request.setHeader(QNetworkRequest::ContentTypeHeader , "application/json");
+    request.setRawHeader("TOKEN", m_strKey.toLocal8Bit());
+    qt_debug() << "httpsDownload start";
+
+    QNetworkAccessManager manager;
+    QNetworkReply *reply = manager.get(request);
+    QEventLoop eventloop;
+    connect(reply, &QNetworkReply::finished, &eventloop, &QEventLoop::quit);
+    eventloop.exec(QEventLoop::ExcludeUserInputEvents);
+    if (reply->error() == QNetworkReply::NoError) {
+        QString headStr = reply->header(QNetworkRequest::ContentTypeHeader).toString();
+        qt_debug() << headStr;
+        if (headStr.contains("application/octet-stream")) {
+            QFile file("update.tar.xz");
+            file.open(QIODevice::ReadWrite);
+            qt_debug() << file.write(reply->readAll());
+            file.close();
+        }
+        qt_debug() << "httpsDownload success";
+    } else {
+        QVariant statusCodeV = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
+        qt_debug() << "get status code: " << statusCodeV.toInt();
+        qt_debug() << "get status code: " << (int)reply->error();
+    }
+
+    qt_debug() << "httpsDownload end";
+    reply->deleteLater();
+}

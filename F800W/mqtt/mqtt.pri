@@ -1,8 +1,8 @@
 HEADERS += \
-    $$PWD/mqttclient.h \
     $$PWD/Countdown.h \
     $$PWD/FP.h \
     $$PWD/IPStack.h \
+    $$PWD/mqttclient.h \
     $$PWD/MQTTClient.h \
     $$PWD/MQTTConnect.h \
     $$PWD/MQTTEthernet.h \

@@ -1,6 +1,3 @@
-#RESOURCES += \
-#$$PWD/pic/pic.qrc
- 
 HEADERS += \
     $$PWD/ToolTcpServer.h \
     $$PWD/UdpServer.h \
@@ -8,5 +5,4 @@ HEADERS += \
  
 SOURCES += \
     $$PWD/ToolTcpServer.cpp \
-    $$PWD/UdpServer.cpp \
-#INCLUDEPATH += customedWdt
+    $$PWD/UdpServer.cpp

@@ -9,7 +9,7 @@
 
 #define switchCtl SwitchCtl::getInstance()
 
-#define VERSION     "2.0.0"
+#define VERSION     "2.0.1"
 #define DEVICE_TYPE "F800W"
 
 class SwitchCtl
@@ -33,7 +33,8 @@ public:
     QString m_tempVal;
     // 测温比对结果
     int m_tempResult;
-
+    // 离线记录上传标志
+    bool m_offlineFlag;
     // 同步中标志
     bool m_sync;
     // 升级中标志
@@ -154,6 +155,12 @@ public:
     bool m_rcode;
     // 音量控制 0 - 100 0是静音
     int m_volume;
+    // ic卡开关
+    bool m_ic;
+
+
+    //当前日志模块的输出方向，true:输出到文件,false:输出到配置工具
+       bool m_log;
     // wifi用户名
     QString m_wifiName;
     // wifi密码

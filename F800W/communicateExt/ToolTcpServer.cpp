@@ -17,7 +17,9 @@ ToolTcpServer::ToolTcpServer()
     dataArray.clear();
     void onGetDevIp(const QString &ver, const QString &name, const QString &number, const QString &devIp, const QString &devSn);
 
-   m_udpServer.start();
+    m_udpServer.start();
+    system("rm base64SaveFile.txt");
+    system("rm update.tar.xz");
 }
 
 //void ToolTcpServer::onToolCmdResponse(ToolCmds cmd ,QByteArray dat)
@@ -52,11 +54,12 @@ void ToolTcpServer::onCamCalibration()
     ResponseDataToTool(Dev_CameraCalibration_response,jaSonObject);
 }
 
-void ToolTcpServer::onGetRealTimeLog(QByteArray dat)
+void ToolTcpServer::onGetRealTimeLog(QString dat)
 {
     QJsonObject jaSonObject;
     jaSonObject.insert("msgType","0");
-    jaSonObject.insert("data",QString(dat));
+    jaSonObject.insert("cmd","0");
+    jaSonObject.insert("data",dat);
     ResponseDataToTool(Dev_Debugging_response,jaSonObject);
 }
 
@@ -94,7 +97,54 @@ void ToolTcpServer::onNewConnect(void)
     qint16 port = m_tcpSocket->peerPort();
     qt_debug()<<ip<<port;
     connect(m_tcpSocket,SIGNAL(readyRead()),this,SLOT(onTcpRead()));
+    connect(m_tcpSocket,&QTcpSocket::stateChanged,this,&ToolTcpServer::OnStateChanged);
     sendSNtoClient();
+}
+
+void ToolTcpServer::OnStateChanged(QAbstractSocket::SocketState state)
+{
+    QString stateStr = "";
+//    qt_debug()<< "xxxxxxxxxxxxxxxxxxxxxxxxxxxx" << state;
+    switch(state)
+    {
+        case QAbstractSocket::HostLookupState:{
+            stateStr = tr("请求中...");
+             //m_bConnected = 1;
+              //  emit sigState(Socket_State::REQUESTING);
+            }
+            break;
+
+        case QAbstractSocket::ConnectingState:{
+            stateStr = tr("连接中...请稍后");
+            //m_bConnected = 2;
+               //  emit sigState(Socket_State::CONNITING);
+            }
+            break;
+         case QAbstractSocket::ConnectedState:
+        {
+            stateStr = tr("已连接");
+            //m_bConnected = 3;
+            emit sigToolTcpStateChange(true);
+        }
+            break;
+        case QAbstractSocket::ClosingState:
+        {
+            stateStr = tr("已关闭");
+            // m_bConnected = 0;
+            emit sigToolTcpStateChange(false);
+        }
+            break;
+        case QAbstractSocket::UnconnectedState:
+        {
+            stateStr = tr("连接断开");
+            // m_bConnected = 0;
+          emit sigToolTcpStateChange(false);
+        }
+            break;
+
+        default:
+            break;
+    }
 }
 
 void ToolTcpServer::onTcpRead(void)
@@ -354,6 +404,12 @@ void ToolTcpServer::setParameters(QJsonObject & data,QString msgType,QString cmd
     {
         switchCtl->m_screenCtl = data.value(key_screenCtl).toBool();
     }
+
+    if(data.contains(key_log))
+    {
+        switchCtl->m_log = data.value(key_log).toBool();
+    }
+
     switchCtl->saveSwitchParam();
     sendSNtoClient();
 }
@@ -546,7 +602,10 @@ void ToolTcpServer::parseData(QByteArray &recData)
                     {
                         if(msgType == "0")//实时日志操作
                         {
-                          emit sigRealTimeLog(true);
+                            if(cmdStr=="0")
+                                emit sigRealTimeLog(true);//输出到文件
+                            if(cmdStr=="1")
+                                emit sigRealTimeLog(false);
                         }
                         else if(msgType == "1")//摄像头抓取图片
                         {
@@ -763,6 +822,7 @@ void ToolTcpServer::sendSNtoClient()
 {
     QByteArray sendData = "";
     QJsonObject dat = switchCtl->readSwitchParam();
+    dat.insert("log",switchCtl->m_log);
     dat.insert("msgType","0");
     dat.insert("cmd","0");
     dat.insert("data",dat);

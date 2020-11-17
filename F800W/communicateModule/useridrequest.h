@@ -19,7 +19,6 @@ protected:
     virtual void run();
 
 public slots:
-    // 处理增量useid
     // 处理所有人员id
     void onAlluserId(const QJsonArray &jsonArr);
     // 处理单个人员数据
@@ -30,10 +29,8 @@ public slots:
     void onNewUsers(const QJsonArray &jsonArr);
 
 signals:
-    // 定时拉取全量
-    void allUserId();
-    // 向后台拉取全量人员权限
-    void allUserAuth();
+    // 向后台拉取全量IC卡
+    void allUserIc();
     // 发送获取单个人员数据
     void getUsers(int id);
     // 发送上传失败记录

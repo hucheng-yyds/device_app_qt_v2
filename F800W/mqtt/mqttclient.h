@@ -27,10 +27,12 @@ public:
         IdentifyRecord = 14,
         SetTcpServer = 15,
         ServerTime = 16,
+        IC = 17,
         FactorySetup = 18,
         UpgradeTTS = 20,
         ClearOfflineData = 21,
-        ClearFailFace = 22
+        ClearFailFace = 22,
+        Bind = 23
     };
     Q_ENUM(MqttCmd)
 

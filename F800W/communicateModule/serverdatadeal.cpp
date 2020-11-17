@@ -15,9 +15,71 @@ void ServerDataDeal::setHttp(HttpsClient *httpClient)
     m_httpsClient = httpClient;
 }
 
+bool ServerDataDeal::checkVersion(const QString &target, const QString &current)
+{
+    QList<QString> tList = target.split(".");
+    QList<QString> cList = current.split(".");
+    if (tList.value(0).toInt() > cList.value(0).toInt()) {
+        return true;
+    } else if (tList.value(1).toInt() > cList.value(1).toInt()) {
+        return true;
+    } else if (tList.value(2).toInt() > cList.value(2).toInt()) {
+        return true;
+    } else if (tList.value(3).toInt() > cList.value(3).toInt()) {
+        return true;
+    } else if (tList.value(4).toInt() > cList.value(4).toInt()) {
+        return true;
+    }
+    return false;
+}
+
 void ServerDataDeal::upgradeFile(const QJsonObject &obj)
 {
-
+    if (("1" == obj["deviceType"].toString() || DEVICE_TYPE == obj["deviceType"].toString()) &&
+            checkVersion(obj["version"].toString(), VERSION))
+    {
+        system("rm update.tar.xz");
+        m_httpsClient->httpsDownload(obj["downloadUrl"].toString());
+        QFile file("update.tar.xz");
+        if (!file.open(QFile::ReadWrite))
+        {
+            qt_debug() << "open failed!";
+            return ;
+        }
+        QByteArray data = file.readAll();
+        file.close();
+        QString md5 = QCryptographicHash::hash(data, QCryptographicHash::Md5).toHex();
+        if (md5 == obj["md5"].toString()) {
+            system("tar -xvf update.tar.xz && rm update.tar.xz");
+            if (QFile::exists("hi3516dv300_smp_image")) {
+                char* mac = switchCtl->m_sn.toUtf8().data();
+                if (mac[7] >= 'A') {
+                    mac[7] -= '7';
+                    mac[7] &= 0xE;
+                    mac[7] += '7';
+                } else {
+                    mac[7] -= '0';
+                    mac[7] &= 0xE;
+                    mac[7] += '0';
+                }
+                system("echo " + QByteArray(mac) + " > /dev/mmcblk0p6");
+                system("dd if=hi3516dv300_smp_image/u-boot-hi3516dv300.bin of=/dev/mmcblk0p1 &&"
+                       "dd if=hi3516dv300_smp_image/uImage_hi3516dv300_smp of=/dev/mmcblk0p2 &&"
+                       "rm hi3516dv300_smp_image -rf &&"
+                       "sync");
+            }
+            if(QFile::exists("updateAlgorithm"))
+            {
+                system("rm updateAlgorithm ofzl.db ofzluser.db userdata.db ofzldata.db");
+            }
+            system("reboot");
+        }
+        else
+        {
+            system("rm update.tar.xz");
+            qt_debug() << "md5 error !";
+        }
+    }
 }
 
 void ServerDataDeal::saveSetting(const QJsonObject &jsonData)
@@ -244,6 +306,7 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
             QJsonObject jsonData = jsonObj["data"].toObject();
             if(jsonData.contains("id"))
             {
+                switchCtl->m_offlineFlag = false;
                 hardware->ctlLed(GREEN);
                 hardware->checkOpenDoor();
                 QStringList datas;
@@ -257,6 +320,12 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
         }
         break;
     }
+    case MqttClient::Bind:
+    {
+        system("rm *.db");
+        emit allUserId();
+        break;
+    }
     case MqttClient::DeviceUpdate:
     {
         break;
@@ -268,8 +337,8 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
     }
     case MqttClient::Unbind:
     {
-        sqlDatabase->sqlDeleteAll();
         system("rm *.db");
+        system("reboot");
         break;
     }
     case MqttClient::ChangeSetting:
@@ -298,6 +367,14 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
     {
         QJsonObject jsonData = jsonObj["data"].toObject();
         QString timeZone = jsonData["timeZone"].toString();
+        switchCtl->m_timeZone = timeZone;
+        switchCtl->saveSwitchParam();
+        break;
+    }
+    case MqttClient::IC:
+    {
+        QJsonObject obj = jsonObj["data"].toObject();
+        dealIcNewData(obj);
         break;
     }
     case MqttClient::FactorySetup:
@@ -311,18 +388,43 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
     }
     case MqttClient::ClearOfflineData:
     {
-
+        sqlDatabase->sqlDeleteAllOffline();
         break;
     }
     case MqttClient::ClearFailFace:
     {
-
+        sqlDatabase->sqlDeleteAllFail();
         break;
     }
     default:
         break;
     }
-    emit responseServer(jsonData);
+    QString type = jsonObj.value("message").toString();
+    QString messageId = jsonObj.value("messageId").toString();
+    emit responseServer(type.replace("Req", "Rsp"), messageId, jsonData);
+}
+
+void ServerDataDeal::dealIcNewData(QJsonObject jsonObj)
+{
+    int mode = jsonObj.value("mode").toInt();
+    if(1 == mode)
+    {
+        QJsonArray values = jsonObj.value("cardData").toArray();
+        foreach(QJsonValue val, values)
+        {
+            QJsonObject obj = val.toObject();
+            int cmd = obj.value("operater").toInt();
+            int mid = obj.value("mid").toInt();
+            if(1 == cmd)
+            {
+                sqlDatabase->sqlInsertIc(mid, obj.value("cardNo").toString());
+            }
+            else
+            {
+                sqlDatabase->sqlDeleteIc(mid);
+            }
+        }
+    }
 }
 
 void ServerDataDeal::dealFaceNewData(QJsonObject jsonObj)

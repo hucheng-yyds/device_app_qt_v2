@@ -11,6 +11,8 @@ SwitchCtl::SwitchCtl()
     m_sync = false;
     m_upgrade = false;
     m_netStatus = false;
+    m_offlineFlag = true;
+    m_log = true;
     bool status = QFile::exists("./switch.json");
     qt_debug() << "====================================================" << status;
     if(!status)
@@ -71,6 +73,7 @@ SwitchCtl::SwitchCtl()
         m_tts = userObj.value("tts").toBool();
         m_tempValueBroadcast = userObj.value("tempValueBroadcast").toBool();
         m_rcode = userObj.value("rcode").toBool();
+        m_ic = userObj.value("ic").toBool();
         m_volume = userObj.value("volume").toInt();
         m_wifiName = wifiObj.value("wifiName").toString();
         m_wifiPwd = wifiObj.value("wifiPwd").toString();
@@ -143,6 +146,7 @@ void SwitchCtl::saveSwitchParam()
     userObj.insert("tempValueBroadcast", m_tempValueBroadcast);
     userObj.insert("rcode", m_rcode);
     userObj.insert("volume", m_volume);
+    userObj.insert("ic", m_ic);
 
     wifiObj.insert("wifiName", m_wifiName);
     wifiObj.insert("wifiPwd", m_wifiPwd);
@@ -226,6 +230,8 @@ void SwitchCtl::setSwitchDefault()
     m_tempValueBroadcast = false;
     m_rcode = false;
     m_volume = 100;
+    m_ic = false;
+
     m_wifiName = "";
     m_wifiPwd = "";
 
@@ -272,6 +278,7 @@ void SwitchCtl::setSwitchDefault()
     userObj.insert("tempValueBroadcast", m_tempValueBroadcast);
     userObj.insert("rcode", m_rcode);
     userObj.insert("volume", m_volume);
+    userObj.insert("ic", m_ic);
 
     wifiObj.insert("wifiName", m_wifiName);
     wifiObj.insert("wifiPwd", m_wifiPwd);

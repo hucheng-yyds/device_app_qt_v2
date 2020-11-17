@@ -15,6 +15,8 @@ public:
     int AlgorithmAuthorization();
     // 获取人脸图片
     int httpsRequestImage(int id, const QString &url);
+    // ota下载
+    void httpsDownload(const QString &url);
 
 public slots:
     // 根据人员id获取人员数据

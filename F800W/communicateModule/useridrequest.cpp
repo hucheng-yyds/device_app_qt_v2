@@ -59,7 +59,7 @@ void UserIdRequest::run()
             }
             else
             {
-                emit sigInsertFail();
+                emit allUserIc();
                 sleep(1);
                 updateIdentifyValue();
                 switchCtl->m_sync = false;
@@ -157,6 +157,17 @@ void UserIdRequest::tcpUpdateUsers(const QJsonObject &jsonObj)
     QString edittime = "", remark = "", startTime = "", expireTime = "", passTimeSection = "", passPeriod = "", mobile = "", photoName = "";
     int passNum = -1, isBlack = -1;
     int id = jsonObj["mid"].toInt();
+    QFile file1(QString("./%1.json").arg(id));
+    if(!file1.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        qDebug() << "File open failed!";
+    } else {
+        qDebug() <<"File open successfully!";
+    }
+    QJsonDocument jdoc(jsonObj);
+    file1.seek(0);
+    file1.write(jdoc.toJson());
+    file1.flush();
+    file1.close();
     QString name = "";
     QString photo = jsonObj["photo"].toString();
     bool status = false;
@@ -376,10 +387,15 @@ void UserIdRequest::onAlluserId(const QJsonArray &jsonArr)
 
 void UserIdRequest::onAllUsersIc(const QJsonArray &jsonArr)
 {
+    sqlDatabase->sqlDeleteAllIc();
     foreach(QJsonValue val, jsonArr)
     {
-
+        QJsonObject obj = val.toObject();
+        int mid = obj.value("mid").toInt();
+        QString cardNo = obj.value("cardNo").toString();
+        sqlDatabase->sqlInsertIc(mid, cardNo);
     }
+    emit sigInsertFail();
 }
 
 void UserIdRequest::onNewUsers(const QJsonArray &jsonArr)

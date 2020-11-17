@@ -33,13 +33,15 @@ LIBS += -L$$PWD/external/lib/opencv
 
 LIBS += $$PWD/external/lib/libvio.a
 LIBS += $$PWD/external/lib/libqrcodegen.a
+LIBS += $$PWD/external/lib/libHTmcu.a
+LIBS += $$PWD/external/lib/libcurl.a
 
 LIBS += -lisp -lmpi -l_hidehaze -l_hidrc -l_hildci -lhifisheyecalibrate -lsecurec -lhi_cipher -lsvpruntime -lnnie -l_hiae -l_hiawb
 LIBS += -lsns_imx327 -lsns_imx327_2l -lsns_imx307 -lsns_imx307_2l -lsns_imx335 -lsns_imx458 -lsns_mn34220 -lsns_os05a -lsns_c2395
 LIBS += -ldnvqe -lhdmi -lhi_cipher -live -lmd -ltde -lupvqe -lVoiceEngine -lgomp
 LIBS += -laaccomm -laacdec -laacenc -laacsbrdec -laacsbrenc -ldl
 LIBS += -lopencv_core -lopencv_imgcodecs -lopencv_imgproc -lopencv_calib3d -lopencv_features2d  -lopencv_flann -lopencv_highgui -lopencv_videoio
-LIBS += -lmsc -lpaho-embed-mqtt3c
+LIBS += -lmsc -lpaho-embed-mqtt3c -lcrypto -lssl
 LIBS += -lfacesdk_dv300
 LIBS += -l100UD -lusb-1.0 -lidr220s_reader
 
@@ -56,6 +58,9 @@ INCLUDEPATH     += $$PWD/communicateExt
 INCLUDEPATH     += $$PWD/temperature
 INCLUDEPATH     += $$PWD/logs
 INCLUDEPATH     += $$PWD/idModule
+INCLUDEPATH     += $$PWD/icModule
+INCLUDEPATH     += $$PWD/wgModule
+INCLUDEPATH     += $$PWD/rcodeModule
 INCLUDEPATH     += $$PWD/wpa
 
 include         ($$PWD/hardware/hardware.pri)
@@ -71,7 +76,11 @@ include         ($$PWD/communicateExt/communicateExt.pri)
 include         ($$PWD/temperature/temperature.pri)
 include         ($$PWD/logs/log.pri)
 include         ($$PWD/idModule/idModule.pri)
+include         ($$PWD/icModule/icModule.pri)
+include         ($$PWD/wgModule/wgModule.pri)
+include         ($$PWD/rcodeModule/rcodeModule.pri)
 include         ($$PWD/wpa/wpa.pri)
+
 
 #RESOURCES += main.qrc
 

@@ -124,16 +124,12 @@ void TcpClient::parseData(int cmdType, QByteArray &recData)
             {
                 parseGetUsers(jsonObj);
             }
-            if(cmdType == DEV_DOOR_RECORD_RESPONSE)
-            {
-//                parseUploadopenlog(jsonObj);
-            }
             if(cmdType == DEV_ALL_PERSON_ID_RESPONSE)
             {
                 qDebug() << "--------------------------------------------------------------------------------------------------------" << recData.size();
                 parseAllUserId(jsonObj);
             }
-            if(cmdType == DEV_RECORD_RESPONSE)
+            if(cmdType == DEV_DOOR_RECORD_RESPONSE)
             {
                 parseUploadData(jsonObj);
             }
@@ -385,29 +381,20 @@ void TcpClient::parseServerSeting(const QJsonObject &jsonObj)
 {
     if(jsonObj.contains("cmd"))
     {
-        switch (jsonObj["cmd"].toInt())
+        int cmd = jsonObj["cmd"].toInt();
+        if(13 == cmd)
         {
-            case 13:
+            QString messageId = jsonObj.value("messageId").toString();
+            responseServerSetup(messageId);
+        }
+        else if(17 == cmd)
+        {
+            QJsonObject data = jsonObj["data"].toObject();
+            int mode = data["mode"].toInt();
+            if(2 == mode)
             {
-                responseServerSetup();
-                break;
+                requestGetAllUserIC();
             }
-            case 17:
-            {
-                QJsonObject data = jsonObj["data"].toObject();
-                int mode = data["mode"].toInt();
-                if(2 == mode)
-                {
-//                    requestGetAllIC();
-                }
-                else if(1 == mode)
-                {
-//                    emit insertIC(data["cardData"].toArray());
-                }
-                break;
-            }
-            default:
-                break;
         }
     }
 }
@@ -581,14 +568,16 @@ void TcpClient::uploadopenlog(int id, int userId, const QString &photo, int isOv
     jsonObj.insert("isStranger", datas.at(4).toInt());
     jsonObj.insert("mjkh", datas.at(5));
     obj.insert("data", jsonObj);
-    WriteDataToServer(DEV_RECORD_REQUEST, obj);
+    WriteDataToServer(DEV_DOOR_RECORD_REQUEST, obj);
 }
 
-void TcpClient::responseServerSetup()
+void TcpClient::responseServerSetup(const QString &messageId)
 {
     QJsonObject jsonObj;
     jsonObj.insert("result", 200);
     jsonObj.insert("desc", "Success");
+    jsonObj.insert("messageId", messageId);
+    jsonObj.insert("message", "spGetConfigRsp");
     QJsonObject jsonData;
     jsonData.insert("name", switchCtl->m_devName);
     jsonData.insert("isTemp", switchCtl->m_tempCtl ? 1 : 0);
@@ -625,11 +614,13 @@ void TcpClient::responseServerSetup()
     m_tcpSocket->flush();
 }
 
-void TcpClient::responseServer(const QJsonObject &jsonData)
+void TcpClient::responseServer(const QString &type, const QString &messageId, const QJsonObject &jsonData)
 {
     QJsonObject jsonObj;
     jsonObj.insert("result", 200);
     jsonObj.insert("desc", "Success");
+    jsonObj.insert("messageId", messageId);
+    jsonObj.insert("message", type);
     jsonObj.insert("data", jsonData);
     QByteArray data;
     QByteArray sendData;

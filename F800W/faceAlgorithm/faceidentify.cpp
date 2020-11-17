@@ -6,6 +6,7 @@ FaceIdentify::FaceIdentify()
 {
     m_interFace = nullptr;
     m_tempFlag = false;
+    m_cardWork = false;
     m_tempVal = "0";
     m_tempResult = 0;
     m_irImage = new unsigned char[VIDEO_WIDTH*VIDEO_HEIGHT* 3 / 2];
@@ -79,6 +80,7 @@ void FaceIdentify::run()
         uint64_t face_id = 0;
         QString uploadTime = "";
         int offlineNmae = 0;
+        QString cardNo = "";
         int isOver = 0;
         QString snapshot = "";
         bool idCardResult = false;
@@ -91,7 +93,7 @@ void FaceIdentify::run()
         m_interFace->m_mutex.unlock();
         QVector<int> matchPair(bgrLength, irLength);
         BGR_IR_match(bgrHandle, bgrLength, irHandle, irLength, matchPair.data());
-        if (faceDoor)
+        if (faceDoor && !m_cardWork)
         {
             int i = 0;
             if (matchPair[m_iMFaceHandle[i].index] == irLength && ir)
@@ -139,6 +141,7 @@ void FaceIdentify::run()
                         if(name.isEmpty())
                         {
                             authority = true;
+                            emit faceResultShow(name, i, m_iMFaceHandle[i].track_id, tr("未授权"));
                             if(remark.isEmpty())
                             {
                                 hardware->playSound(tr("未授权").toUtf8(), "authority.aac");
@@ -166,7 +169,7 @@ void FaceIdentify::run()
                                     name = name.replace(0, name.size(), tr("您好"));
                                 }
                             }
-                            emit faceResultShow(name, i, m_iMFaceHandle[i].track_id, tr("认证通过"));
+                            emit faceResultShow(name, i, m_iMFaceHandle[i].track_id, tr("早上好") + name);
                             egPass = true;
                         }
                     }
@@ -188,7 +191,7 @@ void FaceIdentify::run()
                         else {
                             isStranger = "1";
                             QString result = tr("请联系管理员");
-                            emit faceResultShow(tr("未注册"), i, m_iMFaceHandle[i].track_id, result);
+                            emit faceResultShow(tr("未注册"), i, m_iMFaceHandle[i].track_id, tr("未注册"));
                             egPass = false;
                             face_id = 0;
                         }
@@ -210,13 +213,17 @@ void FaceIdentify::run()
                     }
                 }
             }
+            cardNo = sqlDatabase->sqlSelectIc(face_id);
         }
-        if(tempCtl && (egPass || idCardResult || 0 == openMode.compare("Temp")))
+        else if(m_cardWork) {
+            cardNo = m_cardNo;
+        }
+        if(tempCtl && (m_cardWork || egPass || !vi || (vi && idCardResult) || 0 == openMode.compare("Temp")))
         {
             emit showStartTemp();
             if(faceDoor)
             {
-                if(!authority && !vi)
+                if(!authority && (!vi || (vi && egPass)))
                 {
                     if (egPass)
                     {
@@ -228,7 +235,7 @@ void FaceIdentify::run()
                     }
                 }
             }
-            qt_debug() << "holding temp" << m_tempFlag;
+            qt_debug() << "holding temp" << switchCtl->m_tempFlag;
             while (1)
             {
                 msleep(10);
@@ -296,6 +303,7 @@ void FaceIdentify::run()
         {
             if((egPass && tempPass) || idCardResult)
             {
+                emit wgOut(cardNo.toUtf8());
                 hardware->ctlLed(GREEN);
                 hardware->checkOpenDoor();
                 isSuccess = "1";
@@ -319,11 +327,12 @@ void FaceIdentify::run()
                 hardware->ctlLed(RED);
             }
         }
-        else if(openMode.compare("Face") == 0)
+        else if(openMode.compare("Face") == 0 || !m_cardWork)
         {
             if(egPass || idCardResult)
             {
                 isSuccess = "1";
+                emit wgOut(cardNo.toUtf8());
                 hardware->ctlLed(GREEN);
                 hardware->checkOpenDoor();
             }
@@ -359,15 +368,22 @@ void FaceIdentify::run()
         isOver = tempPass ? 1 : 0;
         datas.clear();
         uploadTime = QDateTime::currentDateTime().addSecs(28800).toString("yyyy-MM-dd HH:mm:ss");
-        datas << uploadTime << m_tempVal << isSuccess << invalidReason << isStranger << "";
-        if(!switchCtl->m_uploadStrangerCtl && !vi)
+        datas << uploadTime << m_tempVal << isSuccess << invalidReason << isStranger << m_cardNo;
+        if((switchCtl->m_uploadStrangerCtl || egPass) && !vi)
         {
-            if(switchCtl->m_netStatus)
+            if(m_cardWork && !tempCtl)
             {
-                emit uploadopenlog(offlineNmae, face_id, snapshot, isOver, 1, tempCtl, datas);
             }
-            sqlDatabase->sqlInsertOffline(offlineNmae, face_id, 1, isOver, tempCtl, datas);
+            else {
+                if(switchCtl->m_netStatus)
+                {
+                    emit uploadopenlog(offlineNmae, face_id, snapshot, isOver, 1, tempCtl, datas);
+                }
+                sqlDatabase->sqlInsertOffline(offlineNmae, face_id, 1, isOver, tempCtl, datas);
+            }
         }
+        m_cardWork = false;
+        m_cardNo = "";
 
 endIdentify:
         if(feature_result)
@@ -380,6 +396,80 @@ endIdentify:
             releaseAllFace(irHandle, irLength);
         }
         m_interFace->m_iFaceHandle = nullptr;
+    }
+}
+
+void FaceIdentify::dealIcData(int mid, const QString &cardNo)
+{
+    m_cardWork = true;
+    QString isSuccess = "0";
+    QString isStranger = "0";
+    if(switchCtl->m_tempCtl)
+    {
+        m_cardNo = cardNo;
+        hardware->playSound(tr("请看摄像头").toUtf8(), "kansxt.aac");
+    }
+    else {
+        if(mid > 0)
+        {
+            QStringList value = dealOpencondition(mid);
+            QString name = value.at(0);
+            QString remark = value.at(1);
+            if(name.isEmpty())
+            {
+                emit icResultShow(1, tr("未授权"));
+                if(remark.isEmpty())
+                {
+                    hardware->playSound(tr("未授权").toUtf8(), "authority.aac");
+                }
+                else {
+                    hardware->playSound(remark.toUtf8(), "authority.aac");
+                }
+                isSuccess = "0";
+            }
+            else
+            {
+                if(0 == switchCtl->m_language)
+                {
+                    if(1 == switchCtl->m_nameMask)
+                    {
+                        if(name.size() > 3)
+                        {
+                            name = name.replace(0, 2, "**");
+                        }
+                        else if(name.size() > 1){
+                            name = name.replace(0, 1, '*');
+                        }
+                    }
+                    else if(2 == switchCtl->m_nameMask)
+                    {
+                        name = name.replace(0, name.size(), tr("您好"));
+                    }
+                }
+                emit icResultShow(1, name);
+                hardware->playSound(tr("认证通过").toUtf8(), "chengong.aac");
+                emit wgOut(cardNo.toUtf8());
+                hardware->ctlLed(GREEN);
+                hardware->checkOpenDoor();
+                isSuccess = "1";
+            }
+            isStranger = "0";
+        }
+        else {
+            emit icResultShow(1, tr("未注册"));
+            hardware->playSound(tr("未注册").toUtf8(), "shibai.aac");
+            hardware->ctlLed(RED);
+            isSuccess = "0";
+            isStranger = "1";
+        }
+        QStringList datas;
+        datas.clear();
+        int offlineNmae = QDateTime::currentDateTime().toTime_t();
+        datas << QDateTime::currentDateTime().addSecs(28800).toString("yyyy-MM-dd HH:mm:ss") << "" << isSuccess << "" << isStranger << cardNo;
+        emit uploadopenlog(offlineNmae, mid, "", 0, 3, 0, datas);
+        sqlDatabase->sqlInsertOffline(offlineNmae, mid, 3, 0, 0, datas);
+        m_cardWork = false;
+        m_cardNo = "";
     }
 }
 

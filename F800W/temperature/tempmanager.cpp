@@ -238,6 +238,7 @@ void TempManager::startTemp()
 {
     if(!m_startTemp)
     {
+        switchCtl->m_tempFlag = false;
         m_tempCount = 0;
     }
     m_tempStatus = false;

@@ -114,6 +114,7 @@ void NetManager::run()
                 }
             }
             else {
+                m_wifi = false;
                 if (WpaGui::TrayIconConnected == m_wpa->state())
                 {
                     m_wpa->removeNetwork();
@@ -147,7 +148,8 @@ void NetManager::run()
         QString curDate = getCurrentTime(dateTime);
         int hour = dateTime.toString("HH").toInt();
         int min = dateTime.toString("mm").toInt();
-        emit timeSync(curDate, dateTime.toString("HH:mm"), hour, min, dateTime.toString("MM-dd HH:mm"));
+        QString date = curDate.split(" ").at(1);
+        emit timeSync(curDate, dateTime.toString("HH:mm"), hour, min, date + " " + dateTime.toString("yy.MM.dd"));
         msleep(500);
         seq++;
     }
@@ -155,6 +157,7 @@ void NetManager::run()
 
 void NetManager::onConnected()
 {
+    m_wifi = true;
     qt_debug() << "wifi connect success";
 }
 
@@ -279,11 +282,10 @@ QString NetManager::getIP()
                     }
                     break;
                 }
-                else if(interface.name() == "wlan0")
+                else if(m_wifi && interface.name() == "wlan0")
                 {
                     QList<QNetworkAddressEntry>entryList=interface.addressEntries();
                     ipAddr = entryList.value(0).ip().toString();
-                    m_wifi = true;
                     break;
                 }
             }

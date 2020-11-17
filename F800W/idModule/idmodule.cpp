@@ -187,7 +187,13 @@ void IdCardModule::run()
             }
             fwrite(arrPhotoData, 1, iPhotoDataLen, fp_photo);
             fclose(fp_photo);
-            countdown_ms(4*1000);
+            int time = 4*1000;
+            if(!switchCtl->m_tempCtl)
+            {
+                time = 3*1000;
+            }
+            countdown_ms(time);
+            switchCtl->m_idCardDatas.clear();
             switchCtl->m_idCardDatas << name << id << sex << addr << birth << nation;
             switchCtl->m_idCardFlag = true;
         }

@@ -24,10 +24,12 @@ protected:
     void run();
 
 signals:
+    // 拉取全量
+    void allUserId();
     // 实时上传记录
     void uploadopenlog(int id, int userId, const QString &photo, int isOver,int type, int isTemp, const QStringList &datas);
     // 服务器应答
-    void responseServer(const QJsonObject &jsonData);
+    void responseServer(const QString &type, const QString &messageId, const QJsonObject &jsonData);
     // 处理增量users
     void newUsers(const QJsonArray &jsonArr);
     // 发送失败人脸入库
@@ -36,6 +38,8 @@ signals:
     void insertFaceGroups(int id, const QString &username, const QString &time, const QString &photoname, const QString &iphone);
 
 private:
+    // 版本比较
+    bool checkVersion(const QString &target, const QString &current);
     // 软件升级
     void upgradeFile(const QJsonObject &obj);
     // 配置修改
@@ -44,7 +48,8 @@ private:
     void dealJsonData(QJsonObject jsonObj);
     // 处理人脸变动数据
     void dealFaceNewData(QJsonObject jsonObj);
-
+    // 处理ic卡号变动
+    void dealIcNewData(QJsonObject jsonObj);
     void faceInsertSql(int id, int passnum, int idBack, const QStringList &data);
 
 private:

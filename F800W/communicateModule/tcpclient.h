@@ -26,8 +26,6 @@ public:
         DEV_ALL_PERSON_ID_RESPONSE = 12,
         DEV_DOOR_RECORD_REQUEST = 13,
         DEV_DOOR_RECORD_RESPONSE = 14,
-        DEV_RECORD_REQUEST = 15,
-        DEV_RECORD_RESPONSE = 16,
         DEV_RECORD_NO_PHOTO_REQUEST = 17,
         DEV_RECORD_NO_PHOTO_RESPONE = 18,
         DEV_RECORD_PHOTO_REQUEST = 19,
@@ -49,7 +47,7 @@ protected:
 
 public slots:
     // 服务器应答
-    void responseServer(const QJsonObject &jsonData);
+    void responseServer(const QString &type, const QString &messageId, const QJsonObject &jsonData);
     // 上传失败入库人员
     void requestInserFail();
     // 向后台拉取全量人员id
@@ -67,7 +65,7 @@ private:
     // 获取时区小时
     int getTimeZone();
     // 应答服务器设备端设置
-    void responseServerSetup();
+    void responseServerSetup(const QString &messageId);
     // 处理后台服务器设置
     void parseServerSeting(const QJsonObject &jsonObj);
     // 处理增量ic控制

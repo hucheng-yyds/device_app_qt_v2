@@ -15,6 +15,9 @@
 #include "serverdatalist.h"
 #include "ToolTcpServer.h"
 #include "idmodule.h"
+#include "icmodule.h"
+#include "offlinerecord.h"
+#include "wgmodule.h"
 
 // 公共接口层 ui界面接口层
 class ProStorage : public QThread
@@ -51,6 +54,10 @@ signals:
     void networkChanged(int type, bool net);
     // 人员同步和升级状态显示
     void faceTb(const QString &text);
+    // ic状态显示
+    void icResultShow(int result, const QString &cardNo);
+    // 读卡状态
+    void readIcStatus(int flag);
 
 private:
     // 功能模块初始化

@@ -47,17 +47,15 @@ public slots:
     void onGetTempHardwareInfo(QJsonObject );//通过此接口返回测温模块的硬件信息，返回字段如下:Temp
     void onCaptureCamPicture(QByteArray dat);//抓取到图片的数据
     void onCamCalibration();//摄像头校准的结果
-    void onGetRealTimeLog(QByteArray );//日志模块输入信息
+    void onGetRealTimeLog(QString);//日志模块输入信息
 
 signals:
     void sigCaptureCamPicture();//摄像头抓拍图片
     void sigCamCalibration();//摄像头校准
-
     void sigGetTempInfo(QByteArray tempInfo);//测温模块,tempInfo为uchar型命令
     void sigGetTempHardwareInfo();
-
     void sigRealTimeLog(bool);//控制日志模块
-
+    void sigToolTcpStateChange(bool state);//true:链接上了，false:链接断开
 
 private:
     QTcpServer   *m_tcpServer = nullptr;
@@ -80,6 +78,7 @@ private:
 private slots:
       void onNewConnect(void);
       void onTcpRead(void);
+      void OnStateChanged(QAbstractSocket::SocketState state);
 };
 
 #endif // TOOLTCPSERVER_H

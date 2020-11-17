@@ -31,7 +31,6 @@ void ProStorage::init()
         return;
     }
     Log *log = new Log;
-//    log->enable();
     NetManager *netManager = new NetManager;
     connect(netManager, &NetManager::showDeviceInfo, this, &ProStorage::showDeviceInfo);
     connect(netManager, &NetManager::networkChanged, this, &ProStorage::networkChanged);
@@ -52,18 +51,31 @@ void ProStorage::init()
     connect(identify, &FaceIdentify::showStartTemp, this, &ProStorage::showStartTemp);
     connect(identify, &FaceIdentify::tempShow, this, &ProStorage::tempShow);
     tempManager->start();
-
+    connect(identify, &FaceIdentify::icResultShow, this, &ProStorage::icResultShow);
     IdCardModule *idcard = new IdCardModule;
     idcard->start();
 
+    IcCardModule *iccard = new IcCardModule;
+    connect(iccard, &IcCardModule::sigIcInfo, identify, &FaceIdentify::dealIcData);
+    connect(iccard, &IcCardModule::readIcStatus, this, &ProStorage::readIcStatus);
+    iccard->start();
+
+    WgModule *wg = new WgModule;
+    connect(identify, &FaceIdentify::wgOut, wg, &WgModule::wgOut);
+    connect(wg, &WgModule::sigWgInfo, identify, &FaceIdentify::dealIcData);
+    wg->start();
+
     ToolTcpServer * toolTcpServer = new ToolTcpServer();
+    connect(toolTcpServer,&ToolTcpServer::sigRealTimeLog,log,&Log::onLogFun);
+    connect(toolTcpServer,&ToolTcpServer::sigToolTcpStateChange,log,&Log::onToolTcpStateChange);
+    connect( log,&Log::sigLogMsg,toolTcpServer,&ToolTcpServer::onGetRealTimeLog );
     toolTcpServer->start();
 
-    MqttClient *mqttClient = new MqttClient;
+//    MqttClient *mqttClient = new MqttClient;
     UserIdRequest *userRequest = new UserIdRequest;
 
     ServerDataList *serverList = new ServerDataList;
-    mqttClient->setPacket(serverList);
+//    mqttClient->setPacket(serverList);
     bool status = face->init();
     qt_debug() << "---------------init status:" << status;
     while(!status)
@@ -81,6 +93,7 @@ void ProStorage::init()
     face->start();
     identify->start();
     userRequest->start();
+    OfflineRecord *offlineRecord = new OfflineRecord;
     if(switchCtl->m_protocol)
     {
         ServerDataDeal *dataDeal = new ServerDataDeal;
@@ -92,15 +105,17 @@ void ProStorage::init()
         connect(tcpClient, &TcpClient::allUserId, userRequest, &UserIdRequest::onAlluserId);
         connect(userRequest, &UserIdRequest::getUsers, tcpClient, &TcpClient::requestGetUsers);
         connect(tcpClient, &TcpClient::updateUsers, userRequest, &UserIdRequest::onUpdateUsers);
-        connect(userRequest, &UserIdRequest::allUserId, tcpClient, &TcpClient::requestGetAllUserID);
+        connect(dataDeal, &ServerDataDeal::allUserId, tcpClient, &TcpClient::requestGetAllUserID);
         connect(tcpClient, &TcpClient::allUserIc, userRequest, &UserIdRequest::onAllUsersIc);
         connect(tcpClient, &TcpClient::newUserId, userRequest, &UserIdRequest::onNewUsers);
         connect(userRequest, &UserIdRequest::insertFaceGroups, face, &FaceManager::insertFaceGroups);
         connect(identify, &FaceIdentify::uploadopenlog, tcpClient, &TcpClient::uploadopenlog);
+        connect(offlineRecord, &OfflineRecord::uploadopenlog, tcpClient, &TcpClient::uploadopenlog);
         connect(dataDeal, &ServerDataDeal::newUsers, userRequest, &UserIdRequest::onNewUsers);
         connect(userRequest, &UserIdRequest::sigInsertFail, tcpClient, &TcpClient::requestInserFail);
         connect(dataDeal, &ServerDataDeal::responseServer, tcpClient, &TcpClient::responseServer);
         connect(dataDeal, &ServerDataDeal::uploadopenlog, tcpClient, &TcpClient::uploadopenlog);
+        connect(userRequest, &UserIdRequest::allUserIc, tcpClient, &TcpClient::requestGetAllUserIC);
         tcpClient->start();
         dataDeal->start();
     }
@@ -112,7 +127,8 @@ void ProStorage::init()
         connect(userRequest, &UserIdRequest::insertFaceGroups, face, &FaceManager::insertFaceGroups);
         httpClient->start();
     }
-    mqttClient->start();
+    offlineRecord->start();
+//    mqttClient->start();
     emit syncSuccess(switchCtl->m_faceDoorCtl, switchCtl->m_tempCtl);
 }
 

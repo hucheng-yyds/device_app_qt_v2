@@ -129,6 +129,7 @@ void FaceManager::run()
             }
             if (!m_interFace->m_iFaceHandle && m_isIdentify)
             {
+                switchCtl->m_offlineFlag = false;
                 m_interFace->m_iFaceHandle = bgrHandle;
                 m_interFace->m_faceHandle = m_sMFaceHandle;
                 m_interFace->m_count = bgrLength;
@@ -156,6 +157,7 @@ void FaceManager::run()
             backLightCount++;
             if(backLightCount > 100)
             {
+                switchCtl->m_offlineFlag = true;
                 backLightCount = 0;
                 onBreathingLight();
             }
@@ -330,7 +332,7 @@ void FaceManager::insertFaceGroups(int id, const QString &username, const QStrin
                 {
                     feature << QString::number(feature_result[i]);
                 }
-                qt_debug() << id << username << time << photoname << iphone;
+//                qt_debug() << id << username << time << photoname << iphone;
                 sqlDatabase->sqlInsert(id, username, time, feature.join(","), photoname, iphone);
                 insertFaceGroup(sqlDatabase->m_groupHandle, feature_result, size, id);
                 sqlDatabase->sqlDeleteFail(id);

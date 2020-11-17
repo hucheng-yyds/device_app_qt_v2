@@ -15,7 +15,7 @@ protected:
     virtual void run();
 
 public slots:
-
+    void dealIcData(int mid, const QString &cardNo);
 private:
     // 人证比对
     bool idCardFaceComparison(char *feature_result);
@@ -23,6 +23,10 @@ private:
     QStringList dealOpencondition(int faceId);
 
 signals:
+    // 韦根输出
+    void wgOut(const QByteArray &number);
+    // ic状态显示
+    void icResultShow(int result, const QString &cardNo);
     // 人脸检测结果显示 ui显示
     void faceResultShow(const QString &name, int index, int trackId, const QString &result);
     // 开始测温信号
@@ -42,5 +46,7 @@ private:
     bool m_tempFlag;
     QString m_tempVal;
     int m_tempResult;
+    QString m_cardNo;
+    bool m_cardWork;
 };
 #endif // FACEIDENTIFY_H

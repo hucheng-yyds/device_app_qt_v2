@@ -7,26 +7,13 @@ Item {
     property var focusingList: [focusing];
     property bool isEg;
     property bool isTemp;
+    property bool isResultz:false;
+    property bool isResulty:false;
     property int sleepTime : 5000;
 
     Focusing {
         id: focusing;
     }
-//    // 显示gif动画
-//    Rectangle {
-//        visible: false
-//        x: 300
-//        y: 500
-//        width: 422
-//        height: 235
-//        //color: "blue"
-
-//        AnimatedImage {
-//            id: animated
-//            source: "./gifs/aa.gif"
-//            playing: true
-//        }
-//    }
 
     // 初始化ui显示
     Text {
@@ -85,36 +72,155 @@ Item {
 
     Image {
         id: image_head
-        y: 60;
-        source: "image/temp_head.png"
+        x: 0
+        y: 2
+        source: "image/head_temp.png"
         visible: false
+    }
+
+    Rectangle {
+        id: tempBg
+        x: 250
+        y: 490
+        visible: false
+        color: "#FEFFFF"
+        radius: 30
+        width: 300
+        height: 300
     }
 
     // 体温正常显示绿色框
     Image {
         id: tempNormal
-        y: 60
-        source: "image/temp_normal.png"
-        visible: false
+        x: 325
+        y: 517
+        source: "image/tiwenzhc.png"
+        visible: isResultz
     }
 
     // 体温异常显示红色框
     Image {
         id: tempUnusual
-        y: 60
-        source: "image/temp_unusual.png"
+        x: 325
+        y: 517
+        source: "image/tiwenyc.png"
+        visible: isResulty
+    }
+
+    // 体温偏低
+    Image {
+        id: tempLow
+        x: 325
+        y: 517
+        source: "image/tiwenlow.png"
+        visible: tempInfoLow.visible
+    }
+
+    // 测温失败
+    Image {
+        id: tempError
+        x: 325
+        y: 517
+        source: "image/cwshibai.png"
+        visible: tempInfoError.visible
+    }
+
+    // 显示测温失败提示信息
+    Text {
+        id: tempInfoError
+        x: 298
+        y: 688
+        width: 205
+        height: 70
         visible: false
+        font {
+            pixelSize: 30
+            family: "multi-language"
+        }
+        color: "#9E9E9E"
+//        wrapMode: Text.WordWrap
+        text: qsTr("测温中请勿\n大幅度晃动头部")
+        anchors.horizontalCenter: parent.horizontalCenter
+        verticalAlignment: Text.AlignVCenter
+        horizontalAlignment: Text.AlignHCenter
+    }
+
+    // 显示测温偏低提示信息
+    Text {
+        id: tempInfoLow
+        x: 328
+        y: 688
+        width: 144
+        height: 70
+        visible: false
+        font {
+            pixelSize: 30
+            family: "multi-language"
+        }
+        color: "#9E9E9E"
+        text: qsTr("检查是否\n受风力影响")
+        anchors.horizontalCenter: parent.horizontalCenter
+        verticalAlignment: Text.AlignVCenter
+        horizontalAlignment: Text.AlignHCenter
+    }
+
+    // 显示测温中提示信息
+    Text {
+        id: temping
+        x: 333
+        y: 686
+        width: 135
+        height: 34
+        visible: false
+        font {
+            pixelSize: 36
+            family: "multi-language"
+        }
+        color: "#3F3F3F"
+        text: qsTr("测温中...")
+        anchors.horizontalCenter: parent.horizontalCenter
+        verticalAlignment: Text.AlignVCenter
+        horizontalAlignment: Text.AlignHCenter
+    }
+
+    Text {
+        id: tempingInfo
+        x: 297
+        y: 737
+        width: 135
+        height: 30
+        visible: temping.visible
+        font {
+            pixelSize: 30
+            family: "multi-language"
+        }
+        color: "#9E9E9E"
+        text: qsTr("请勿离开测温区")
+        anchors.horizontalCenter: parent.horizontalCenter
+        verticalAlignment: Text.AlignVCenter
+        horizontalAlignment: Text.AlignHCenter
+    }
+
+    AnimatedImage {
+        id: cewening
+        visible: temping.visible
+        x: 325
+        y: 517
+        source: "./gifs/cewen.gif"
+        playing: true
     }
 
     // 显示体温检测结果
     Text {
-        id: pose_blur
-        y: 89
+        id: tempResult
+        x: 320
+        y: 700
+        visible: false
         font {
-            pixelSize: 48
+            pixelSize: 54
             family: "multi-language"
         }
-        color: "#fffffe"
+        color: isResultz ? "#3F3F3F" : "#E5533D"
         text: qsTr("")
         anchors.horizontalCenter: parent.horizontalCenter
         verticalAlignment: Text.AlignVCenter
@@ -123,88 +229,42 @@ Item {
     // 定时器 清空体温检测结果
     Timer {
         id: pose_blur_Timer;
-        interval: 2200; running: false;
+        interval: 2000; running: false;
         onTriggered: {
-            pose_blur.text = qsTr("");
-            tempNormal.visible = false;
-            tempUnusual.visible = false;
+            tempBg.visible = false;
+            isResultz = false;
+            isResulty = false;
+            tempResult.visible = false;
+            tempInfoError.visible = false;
+            tempInfoLow.visible = false;
         }
-    }
-    Rectangle {
-        width: parent.width
-        height: 60
-        color: "black";
-        opacity: 0.5;
     }
 
     // 主界面界面显示时间
     Text {
         id: date
-        x: 290
-        y: 9
-        width: 219
+        x: 30
+        y: 16
+        height: 35
+        width: 283
         color: "#fffffe"
         font {
-            pixelSize: 30;
+            pixelSize: 38;
             family: "multi-language"
         }
         text: qsTr("")
-        verticalAlignment: Text.AlignVCenter
-        horizontalAlignment: Text.AlignHCenter
         style: Text.Raised
     }
 
-    // 显示版本号
-    Image {
-        id: image_version
-        x: 20
-        y: 15
-        source: "image/public_version.png"
-    }
-
     Text {
-        id: version;
-        x: 58
-        y: 9
-        font {
-            pixelSize: 30;
-            family: "multi-language"
-        }
-        color: "#fffffe"
-        text: qsTr("V0.0.0")
-        style: Text.Raised
-    }
-
-    Rectangle {
-        id: image_rect
-        x: 0
-        y: 1120
-        width: 800
-        height: 160
-        opacity: 0.5
-        color: "black"
-    }
-
-    // 显示设备二维码
-    Image {
-        id: smallQrCode
-        x: 644
-        y: 1130
-        sourceSize.width: 132
-        sourceSize.height: 132
-        Component.onCompleted: {
-            source = "file:///mnt/usr/qrcode.jpg";
-        }
-    }
-
-    // 显示设备名称
-    Text {
-        id: corporateName
-        x: 19
-        y: 1125
+        id: times
+        x: 29
+        y: 58
+        width: 292
+        height: 81
         color: "#fffffe"
         font {
-            pixelSize: 36
+            pixelSize: 112;
             family: "multi-language"
         }
         text: qsTr("")
@@ -214,17 +274,19 @@ Item {
     // 显示当前入库人数
     Image {
         id: image_people
-        x: 20
-        y: 1228
+        x: 0
+        y: 201
+        width: 68
+        height: 41
         source: "image/public_people.png"
     }
 
     Text {
         id: people;
-        x: 60
-        anchors.verticalCenter: image_people.verticalCenter
+        x: 70
+        y: 200
         font {
-            pixelSize: 24
+            pixelSize: 30
             family: "multi-language"
         }
         color: "#fffffe"
@@ -232,55 +294,129 @@ Item {
         style: Text.Raised
     }
 
-    // 显示设备ip
+
     Image {
-        id: image_ip
-        x: 160
-        y: 1228
-        source: "image/public_ip.png"
+        id: pngShow
+        visible: true
+        x: 0
+        y: 1072
+        width: 168
+        height: 170
+        source: "image/show.png"
+    }
+    AnimatedImage {
+        id: gifShow
+        visible: pngShow.visible
+        x: 0
+        y: 1072
+        width: 168
+        height: 170
+        source: "./gifs/show.gif"
+        playing: true
+    }
+    Image {
+        id: pngRun
+        visible: false
+        x: 0
+        y: 1072
+        width: 168
+        height: 170
+        source: "image/run.png"
+    }
+    AnimatedImage {
+        id: gifRun
+        visible: pngRun.visible
+        x: 0
+        y: 1072
+        width: 168
+        height: 170
+        source: "./gifs/run.gif"
+        playing: true
     }
 
+    // 显示设备名称
     Text {
-        id: ip;
-        x: 200
-        anchors.verticalCenter: image_ip.verticalCenter
+        id: corporateName
+        x: 176
+        y: 1132
+        color: "#fffffe"
         font {
-            pixelSize: 24;
+//            bold: "Medium"
+            pixelSize: 54
             family: "multi-language"
         }
-        color: "#fffffe"
         text: qsTr("")
         style: Text.Raised
+    }
+
+    Rectangle {
+        id: devIndoBg
+        x: 0
+        y: 1233
+        width: 800
+        height: 47
+        opacity: 0.5
+        color: "#000000"
     }
 
     // 显示设备sn码
-    Image {
-        id: image_sn
-        x: 20
-        y: 1183
-        source: "image/public_sn.png"
-    }
-
     Text {
         id: sn;
-        x: 60
-        anchors.verticalCenter: image_sn.verticalCenter
+        x: 13
+        y: 1236
         font {
             pixelSize: 24;
             family: "multi-language"
         }
-        color: "#fffffe"
+        color: "#666666"
         text: qsTr("")
+        style: Text.Raised
+    }
+
+    // 显示ip
+    Text {
+        id: ip;
+        x: 376
+        y: 1236
+        font {
+            pixelSize: 24;
+            family: "multi-language"
+        }
+        color: "#666666"
+        text: qsTr("")
+        style: Text.Raised
+    }
+
+    // 显示版本号
+
+    Text {
+        id: version;
+        x: 631
+        y: 1236
+        font {
+            pixelSize: 24;
+            family: "multi-language"
+        }
+        color: "#666666"
+        text: qsTr("V0.0.0")
         style: Text.Raised
     }
 
     // 定时器自动隐藏ui弹窗
     Timer {
         id: hideName;
-        interval: 3200; running: false;
+        interval: 3000; running: false;
         onTriggered: {
-            nameText.text = "";
             resultText.text = "";
+        }
+    }
+
+    Timer {
+        id: gifChange;
+        interval: 1000; running: false;
+        onTriggered: {
+            pngRun.visible = false
+            pngShow.visible = true
         }
     }
 
@@ -296,64 +432,27 @@ Item {
 
     // 检测结果显示
     Rectangle {
-        id: nameTextBg
-        y: 853
-        visible: resultText.text.length;
-        color: "#3f3f3f"
-        anchors.horizontalCenter: parent.horizontalCenter
-        width: 683
-        height: 134
-    }
-
-    Text {
-        id: nameText
-        anchors.verticalCenter: nameTextBg.verticalCenter
-        anchors.horizontalCenter: nameTextBg.horizontalCenter
-        text: qsTr("")
-        font {
-            pixelSize: 60
-            family: "multi-language"
-        }
-        color: "#fffffe"
-        style: Text.Raised
-    }
-
-    // 姓名和人脸框显示
-    Image {
-        id: iconFace
-        x: 90
-        y: 875
-        visible: nameTextBg.visible
-        source: "image/icon_face.png"
-    }
-
-    Image {
-        id: iconFaceBorder
-        x: 90
-        y: 875
-        visible: iconFace.visible
-        source: "image/icon_faceBorder.png"
-    }
-
-    Rectangle {
         id: resultTextBg
-        y: 987
+        x: 145
+        y: 1011
         visible: resultText.text.length
-        color: "#fffffe"
+        color: "#000000"
+        radius: 20
+        opacity: 0.5
         anchors.horizontalCenter: parent.horizontalCenter
-        width: 683
-        height: 109
+        width: 511
+        height: 98
     }
 
     Text {
         id: resultText
-        anchors.verticalCenter: resultTextBg.verticalCenter
-        anchors.horizontalCenter: resultTextBg.horizontalCenter
+        x: 176
+        y: 1016
         font {
-            pixelSize: 48
+            pixelSize: 54
             family: "multi-language"
         }
-        color: "#3f3f3f"
+        color: "#16DFEC"
         style: Text.Raised
     }
 
@@ -418,9 +517,11 @@ Item {
         }
 
         onFaceResultShow:{
-            nameText.text = qsTr(name)
             resultText.text = qsTr(result)
+            pngRun.visible = true
+            pngShow.visible = false
             hideName.restart()
+            gifChange.restart()
             sleep.restart()
         }
         onShowFaceFocuse:{
@@ -465,31 +566,53 @@ Item {
             version.text = qsTr("T" + ver);
             corporateName.text = qsTr(name);
             people.text = qsTr(number);
-            ip.text = qsTr(devIp);
-            sn.text = qsTr(devSn);
+            ip.text = qsTr("ip: " + devIp);
+            sn.text = qsTr("sn: " + devSn);
         }
         onShowStartTemp: {
-            resultText.text = qsTr("正在测温")
+            pose_blur_Timer.restart();
+            isResultz = false;
+            isResulty = false;
+            tempInfoLow.visible = false;
+            tempInfoError.visible = false;
+            tempResult.visible = false;
+            tempBg.visible = true;
+            temping.visible = true;
         }
         onTempShow: {
+            pngRun.visible = true
+            pngShow.visible = false
+            gifChange.restart()
+            temping.visible = false
             pose_blur_Timer.restart();
             if (result === 0) {
-                resultText.text = tempVal;
-                tempNormal.visible = false;
-                tempUnusual.visible = true;
-                pose_blur.text = qsTr("体温异常");
+                isResultz = false;
+                isResulty = true;
+                tempInfoLow.visible = false;
+                tempInfoError.visible = false;
+                tempResult.text = tempVal;
+                tempResult.visible = true;
             } else if (result === 1) {
-                resultText.text = tempVal;
-                tempNormal.visible = true;
-                tempUnusual.visible = false;
-                pose_blur.text = qsTr("体温正常");
+                isResultz = true;
+                isResulty = false;
+                tempInfoLow.visible = false;
+                tempInfoError.visible = false;
+                tempResult.text = tempVal;
+                tempResult.visible = true;
             } else if(result === -1)
             {
-                resultText.text = qsTr("体温偏低");
+                isResultz = false;
+                isResulty = false;
+                tempInfoLow.visible = true;
+                tempInfoError.visible = false;
+                tempResult.visible = false;
             }
             else {
-                resultText.text = qsTr("请重新测温");
-                pose_blur.text = qsTr("请露出额头或摘下眼镜");
+                isResultz = false;
+                isResulty = false;
+                tempInfoLow.visible = false;
+                tempInfoError.visible = true;
+                tempResult.visible = false;
             }
             sleep.restart();
         }
@@ -499,6 +622,7 @@ Item {
             standby.g_hours = hour;
             standby.g_minutes = min;
             date.text = qsTr(dataTime);
+            times.text = digitalClock;
         }
     }
 }
