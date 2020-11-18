@@ -210,6 +210,8 @@ Item {
         playing: true
     }
 
+
+
     // 显示体温检测结果
     Text {
         id: tempResult
@@ -237,7 +239,102 @@ Item {
             tempResult.visible = false;
             tempInfoError.visible = false;
             tempInfoLow.visible = false;
+            idCard.visible = false;
+            cardFail.visible = false;
+            cardSuccess.visible = false;
         }
+    }
+
+    // 显示读卡中提示信息
+    Text {
+        id: reading
+        x: 333
+        y: 686
+        width: 135
+        height: 34
+        visible: false
+        font {
+            pixelSize: 36
+            family: "multi-language"
+        }
+        color: "#3F3F3F"
+        text: qsTr("读卡中...")
+        anchors.horizontalCenter: parent.horizontalCenter
+        verticalAlignment: Text.AlignVCenter
+        horizontalAlignment: Text.AlignHCenter
+    }
+
+    Text {
+        id: readingInfo
+        x: 297
+        y: 737
+        width: 135
+        height: 30
+        visible: reading.visible
+        font {
+            pixelSize: 30
+            family: "multi-language"
+        }
+        color: "#9E9E9E"
+        text: qsTr("请勿离开读卡区")
+        anchors.horizontalCenter: parent.horizontalCenter
+        verticalAlignment: Text.AlignVCenter
+        horizontalAlignment: Text.AlignHCenter
+    }
+
+    AnimatedImage {
+        id: readingGif
+        visible: reading.visible
+        x: 325
+        y: 517
+        source: "./gifs/reading.gif"
+        playing: true
+    }
+
+    // 人证失败
+    Image {
+        id: cardFail
+        x: 325
+        y: 517
+        source: "image/icFail.png"
+        visible: false
+    }
+
+    // 人证成功
+    Image {
+        id: cardSuccess
+        x: 325
+        y: 517
+        source: "image/icSuccess.png"
+        visible: false
+    }
+
+    // 刷身份证
+    Image {
+        id: idCard
+        x: 325
+        y: 517
+        source: "image/idCard.png"
+        visible: false
+    }
+
+    // 提醒刷身份证信息
+    Text {
+        id: idCardRead
+        x: 327
+        y: 688
+        width: 144
+        height: 70
+        visible: idCard.visible
+        font {
+            pixelSize: 30
+            family: "multi-language"
+        }
+        color: "#9E9E9E"
+        text: qsTr("请将身份证\n放置读卡区")
+        anchors.horizontalCenter: parent.horizontalCenter
+        verticalAlignment: Text.AlignVCenter
+        horizontalAlignment: Text.AlignHCenter
     }
 
     // 主界面界面显示时间
@@ -517,7 +614,7 @@ Item {
         }
 
         onFaceResultShow:{
-            resultText.text = qsTr(result)
+            resultText.text = qsTr(showInfo)
             pngRun.visible = true
             pngShow.visible = false
             hideName.restart()
@@ -569,7 +666,80 @@ Item {
             ip.text = qsTr("ip: " + devIp);
             sn.text = qsTr("sn: " + devSn);
         }
+        onIcResultShow: {
+            pngRun.visible = true
+            pngShow.visible = false
+            hideName.restart()
+            gifChange.restart()
+            sleep.restart()
+            if(2 === result)
+            {
+                resultText.text = qsTr(showInfo)
+            }
+            else if(1 === result)
+            {
+                resultText.text = qsTr(showInfo)
+            }
+            else if(0 === result)
+            {
+                resultText.text = qsTr(showInfo)
+            }
+        }
+
+        onIdCardResultShow: {
+            pose_blur_Timer.restart();
+            tempBg.visible = true;
+            reading.visible = false;
+            if(2 === flag)
+            {
+                cardFail.visible = false;
+                resultText.text = showInfo;
+                cardSuccess.visible = true;
+                tempResult.text = qsTr(result)
+                tempResult.visible = true;
+            }
+            else if(1 === flag)
+            {
+                resultText.text = showInfo;
+                cardSuccess.visible = false;
+                cardFail.visible = true;
+                tempResult.text = qsTr(result)
+                tempResult.visible = true;
+            }
+            else if(0 === flag)
+            {
+                resultText.text = showInfo;
+                cardSuccess.visible = false;
+                cardFail.visible = false;
+                tempResult.visible = false;
+                idCard.visible = true;
+            }
+        }
+        onReadIcStatus: {
+            pose_blur_Timer.restart();
+            idCard.visible = false;
+            resultText.text = "";
+            cardSuccess.visible = false;
+            tempResult.visible = false;
+            tempBg.visible = true;
+            if(1 === flag)
+            {
+                tempResult.visible = false;
+                cardFail.visible = false;
+                reading.visible = true;
+            }
+            else
+            {
+                reading.visible = false;
+                cardFail.visible = true;
+                tempResult.text = qsTr("请重新刷卡");
+                tempResult.visible = true;
+            }
+        }
         onShowStartTemp: {
+            idCard.visible = false;
+            cardFail.visible = false;
+            cardSuccess.visible = false;
             pose_blur_Timer.restart();
             isResultz = false;
             isResulty = false;

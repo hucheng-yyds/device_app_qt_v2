@@ -52,6 +52,7 @@ void ProStorage::init()
     connect(identify, &FaceIdentify::tempShow, this, &ProStorage::tempShow);
     tempManager->start();
     connect(identify, &FaceIdentify::icResultShow, this, &ProStorage::icResultShow);
+    connect(identify, &FaceIdentify::idCardResultShow, this, &ProStorage::idCardResultShow);
     IdCardModule *idcard = new IdCardModule;
     idcard->start();
 

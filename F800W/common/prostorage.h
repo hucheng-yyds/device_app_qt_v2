@@ -34,8 +34,8 @@ protected:
 signals:
     // ui界面更新时间
     void timeSync(const QString &dataCur, const QString &digitalClock, int hour, int min, const QString &dataTime);
-    // 人脸检测结果显示 ui界面显示
-    void faceResultShow(const QString &name, int index, int trackId, const QString &result);
+    // 人脸检测结果显示 ui显示
+    void faceResultShow(const QString &name, int index, int trackId, const QString &result, const QString &showInfo);
     // 显示人脸框 ui界面显示
     void showFaceFocuse(int left, int top, int right, int bottom, int index, int trackId);
     // 隐藏人脸框 控制ui界面
@@ -55,7 +55,9 @@ signals:
     // 人员同步和升级状态显示
     void faceTb(const QString &text);
     // ic状态显示
-    void icResultShow(int result, const QString &cardNo);
+    void icResultShow(int result, const QString &cardNo, const QString &showInfo);
+    // 显示身份证信息
+    void idCardResultShow(int flag, const QString &name, const QString &result, const QString &showInfo);
     // 读卡状态
     void readIcStatus(int flag);
 

@@ -35,14 +35,14 @@ bool FaceIdentify::idCardFaceComparison(char *feature_result)
             if (result > switchCtl->m_idcardValue)
             {
                 idPass = true;
-                emit faceResultShow(name, 0, m_iMFaceHandle[0].track_id, tr("认证通过"));
+                emit idCardResultShow(2, name, tr("认证通过"), m_faceInfo + name);
                 hardware->playSound(tr("认证通过").toUtf8(), "chengong.aac");
             }
             else
             {
                 idPass = false;
-                emit faceResultShow(name, 0, m_iMFaceHandle[0].track_id, tr("人证失败"));
-                hardware->playSound(tr("认证通过").toUtf8(), "rzshibai.aac");
+                emit idCardResultShow(1, name, tr("认证失败"), name);
+                hardware->playSound(tr("认证失败").toUtf8(), "rzshibai.aac");
             }
             releaseFeature(featureFrist);
             releaseAllFace(faceHandle, count);
@@ -141,7 +141,7 @@ void FaceIdentify::run()
                         if(name.isEmpty())
                         {
                             authority = true;
-                            emit faceResultShow(name, i, m_iMFaceHandle[i].track_id, tr("未授权"));
+                            emit faceResultShow(name, i, m_iMFaceHandle[i].track_id, tr("未授权"), "");
                             if(remark.isEmpty())
                             {
                                 hardware->playSound(tr("未授权").toUtf8(), "authority.aac");
@@ -169,7 +169,7 @@ void FaceIdentify::run()
                                     name = name.replace(0, name.size(), tr("您好"));
                                 }
                             }
-                            emit faceResultShow(name, i, m_iMFaceHandle[i].track_id, tr("早上好") + name);
+                            emit faceResultShow(name, i, m_iMFaceHandle[i].track_id, tr("认证通过"), m_faceInfo + name);
                             egPass = true;
                         }
                     }
@@ -183,7 +183,7 @@ void FaceIdentify::run()
                                 switchCtl->m_idCardFlag = false;
                             }
                             else {
-                                emit faceResultShow(tr("未注册"), i, m_iMFaceHandle[i].track_id, tr("请刷身份证"));
+                                emit idCardResultShow(0, tr("未注册"), tr("请刷身份证"), tr("请刷身份证"));
                                 hardware->playSound(tr("请刷身份证").toUtf8(), "shenfenzh.aac");
                                 goto endIdentify;
                             }
@@ -191,7 +191,7 @@ void FaceIdentify::run()
                         else {
                             isStranger = "1";
                             QString result = tr("请联系管理员");
-                            emit faceResultShow(tr("未注册"), i, m_iMFaceHandle[i].track_id, tr("未注册"));
+                            emit faceResultShow(tr("未注册"), i, m_iMFaceHandle[i].track_id, tr("未注册"), tr("未注册"));
                             egPass = false;
                             face_id = 0;
                         }
@@ -407,6 +407,7 @@ void FaceIdentify::dealIcData(int mid, const QString &cardNo)
     if(switchCtl->m_tempCtl)
     {
         m_cardNo = cardNo;
+        emit icResultShow(2, tr("请看摄像头"), tr("请看摄像头"));
         hardware->playSound(tr("请看摄像头").toUtf8(), "kansxt.aac");
     }
     else {
@@ -417,7 +418,7 @@ void FaceIdentify::dealIcData(int mid, const QString &cardNo)
             QString remark = value.at(1);
             if(name.isEmpty())
             {
-                emit icResultShow(1, tr("未授权"));
+                emit icResultShow(1, tr("未授权"), tr("未授权"));
                 if(remark.isEmpty())
                 {
                     hardware->playSound(tr("未授权").toUtf8(), "authority.aac");
@@ -446,7 +447,7 @@ void FaceIdentify::dealIcData(int mid, const QString &cardNo)
                         name = name.replace(0, name.size(), tr("您好"));
                     }
                 }
-                emit icResultShow(1, name);
+                emit icResultShow(1, name, m_faceInfo + name);
                 hardware->playSound(tr("认证通过").toUtf8(), "chengong.aac");
                 emit wgOut(cardNo.toUtf8());
                 hardware->ctlLed(GREEN);
@@ -456,7 +457,7 @@ void FaceIdentify::dealIcData(int mid, const QString &cardNo)
             isStranger = "0";
         }
         else {
-            emit icResultShow(1, tr("未注册"));
+            emit icResultShow(0, tr("未注册"), tr("未注册"));
             hardware->playSound(tr("未注册").toUtf8(), "shibai.aac");
             hardware->ctlLed(RED);
             isSuccess = "0";

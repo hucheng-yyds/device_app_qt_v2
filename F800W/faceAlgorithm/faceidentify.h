@@ -26,9 +26,11 @@ signals:
     // 韦根输出
     void wgOut(const QByteArray &number);
     // ic状态显示
-    void icResultShow(int result, const QString &cardNo);
+    void icResultShow(int result, const QString &cardNo, const QString &showInfo);
     // 人脸检测结果显示 ui显示
-    void faceResultShow(const QString &name, int index, int trackId, const QString &result);
+    void faceResultShow(const QString &name, int index, int trackId, const QString &result, const QString &showInfo);
+    // 显示身份证信息
+    void idCardResultShow(int flag, const QString &name, const QString &result, const QString &showInfo);
     // 开始测温信号
     void startTemp();
     // UI显示正在测温
@@ -45,6 +47,7 @@ private:
     QVector<MFaceHandle> m_iMFaceHandle;
     bool m_tempFlag;
     QString m_tempVal;
+    QString m_faceInfo;
     int m_tempResult;
     QString m_cardNo;
     bool m_cardWork;
