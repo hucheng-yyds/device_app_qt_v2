@@ -1,6 +1,7 @@
 #include "icmodule.h"
 #include "spicard.h"
 #include "libHTRC.h"
+#include "datashare.h"
 
 IcCardModule::IcCardModule()
 {
@@ -45,21 +46,22 @@ void IcCardModule::run()
                                 fclose(fp);
                             }
                             icCountdown_ms(4*1000);
-                            switchCtl->m_idCardDatas.clear();
-                            switchCtl->m_idCardDatas << IdInfo.name << IdInfo.IdNumber << IdInfo.sex << IdInfo.Address << IdInfo.Birthday << IdInfo.nation;
-                            switchCtl->m_idCardFlag = true;
+                            dataShare->m_idCardDatas.clear();
+                            dataShare->m_idCardDatas << IdInfo.name << IdInfo.IdNumber << IdInfo.sex << IdInfo.Address << IdInfo.Birthday << IdInfo.nation;
+                            dataShare->m_idCardFlag = true;
+                            emit readIcStatus(2);
                         }
                         else
                         {
                             emit readIcStatus(0);
-                            switchCtl->m_idCardFlag = false;
+                            dataShare->m_idCardFlag = false;
                             hardware->playSound(tr("读卡失败").toUtf8(), "rkshibai.aac");
                         }
                     }
                 }
                 else
                 {
-                    switchCtl->m_idCardFlag = false;
+                    dataShare->m_idCardFlag = false;
                     if(icExpired())
                     {
                         QByteArray byte;
@@ -82,11 +84,11 @@ void IcCardModule::run()
             }
             else
             {
-                if(switchCtl->m_idCardFlag)
+                if(dataShare->m_idCardFlag)
                 {
                     if(icExpired())
                     {
-                        switchCtl->m_idCardFlag = false;
+                        dataShare->m_idCardFlag = false;
                         hardware->playSound(tr("已超时").toUtf8(), "chaoshi.aac");
                     }
                 }

@@ -1,4 +1,5 @@
 #include "offlinerecord.h"
+#include "datashare.h"
 
 OfflineRecord::OfflineRecord()
 {
@@ -10,14 +11,14 @@ void OfflineRecord::run()
     QList<int> offlineRecords;
     while(true)
     {
-        if(switchCtl->m_netStatus && !switchCtl->m_sync && switchCtl->m_offlineFlag)
+        if(dataShare->m_netStatus && !dataShare->m_sync && dataShare->m_offlineFlag)
         {
             offlineRecords.clear();
             offlineRecords = sqlDatabase->sqlSelectAllOffLine();
             int count = offlineRecords.size();
             for(int i = count -1; i >=0; i--)
             {
-                if(!switchCtl->m_netStatus || switchCtl->m_sync)
+                if(!dataShare->m_netStatus || dataShare->m_sync)
                 {
                     break;
                 }

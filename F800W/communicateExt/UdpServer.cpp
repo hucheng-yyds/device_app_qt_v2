@@ -3,6 +3,7 @@
 #include <QJsonObject>
 #include <QUuid>
 #include <QDataStream>
+#include "datashare.h"
 
 UdpServer::UdpServer()
 {
@@ -38,7 +39,7 @@ void UdpServer::sendData()
         QString strId = uuid.toString();
         json.insert("type",DEVICE_TYPE);
         json.insert("version",VERSION);
-        json.insert("ip", switchCtl->m_ipAddr);
+        json.insert("ip", dataShare->m_ipAddr);
         json.insert("uuid", strId);
         json.insert("v2",true);
         json.insert("mac", "");

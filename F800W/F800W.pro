@@ -46,7 +46,6 @@ LIBS += -lfacesdk_dv300
 LIBS += -l100UD -lusb-1.0 -lidr220s_reader
 
 INCLUDEPATH     += $$PWD/hardware
-INCLUDEPATH     += $$PWD/timerCountDown
 INCLUDEPATH     += $$PWD/common
 INCLUDEPATH     += $$PWD/functionSwitch
 INCLUDEPATH     += $$PWD/mqtt
@@ -64,7 +63,6 @@ INCLUDEPATH     += $$PWD/rcodeModule
 INCLUDEPATH     += $$PWD/wpa
 
 include         ($$PWD/hardware/hardware.pri)
-include         ($$PWD/timerCountDown/timerCountDown.pri)
 include         ($$PWD/common/common.pri)
 include         ($$PWD/functionSwitch/functionswitch.pri)
 include         ($$PWD/mqtt/mqtt.pri)

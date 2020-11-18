@@ -1,4 +1,5 @@
 #include "tcpclient.h"
+#include "datashare.h"
 
 TcpClient::TcpClient()
 {
@@ -47,7 +48,7 @@ void TcpClient::ConnectHost()
     {
         qt_debug()<<"ip connnect fail";
         m_requestTimer->start();
-        switchCtl->m_netStatus = false;
+        dataShare->m_netStatus = false;
     }
     else
     {
@@ -283,7 +284,7 @@ void TcpClient::pareLogin(const QJsonObject &jsonObj)
     int result = jsonObj.value("result").toInt();
     if(1 == messageId && 200 == result)
     {
-        switchCtl->m_netStatus = true;
+        dataShare->m_netStatus = true;
         requestGetAllUserID();
     }
     else if(1 == messageId && 1002 == result)
@@ -457,7 +458,8 @@ void TcpClient::requestLogin()
     dataObj.insert("messageId", "1");
     dataObj.insert("message", "loginReq");
     obj.insert("timestamp", timestamp.toInt());
-    obj.insert("dversion", "2");
+    obj.insert("dversion", VERSION);
+    obj.insert("protocolVersion", "2");
     obj.insert("sign", sign);
     dataObj.insert("data", obj);
     qt_debug() << dataObj;
@@ -475,7 +477,7 @@ void TcpClient::requestHeartbeat()
     obj.insert("capacity", 30000);
     obj.insert("appVersion", VERSION);
     obj.insert("networkName", "eth0");
-    obj.insert("ipAddr", switchCtl->m_ipAddr);
+    obj.insert("ipAddr", dataShare->m_ipAddr);
     obj.insert("languageSet", switchCtl->m_language);
     dataObj.insert("data", obj);
     WriteDataToServer(DEV_HEARTBEAT_REQUEST, dataObj);
@@ -586,7 +588,7 @@ void TcpClient::responseServerSetup(const QString &messageId)
     jsonData.insert("isVi", switchCtl->m_vi ? 1 : 0);
     jsonData.insert("tempThreshold", switchCtl->m_warnValue);
     jsonData.insert("tempComp", switchCtl->m_tempComp);
-    jsonData.insert("faceFeaturePairNumber", switchCtl->m_faceThreshold);
+    jsonData.insert("faceFeaturePairNumber", dataShare->m_faceThreshold);
     jsonData.insert("identifyWaitTime", switchCtl->m_identifyWaitTime);
     jsonData.insert("volume", switchCtl->m_volume);
     jsonData.insert("doorDelayTime", switchCtl->m_doorDelayTime);

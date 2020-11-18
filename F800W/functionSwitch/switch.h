@@ -4,7 +4,6 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QFile>
-#include <QDebug>
 #include "log.h"
 
 #define switchCtl SwitchCtl::getInstance()
@@ -23,33 +22,6 @@ public:
         }
         return m_Instance;
     }
-    // 刷身份证成功标志
-    bool m_idCardFlag;
-    // 身份证数据
-    QStringList m_idCardDatas;
-    // 测温结束标志
-    bool m_tempFlag;
-    // 测温数值
-    QString m_tempVal;
-    // 测温比对结果
-    int m_tempResult;
-    // 离线记录上传标志
-    bool m_offlineFlag;
-    // 同步中标志
-    bool m_sync;
-    // 升级中标志
-    bool m_upgrade;
-    // 网路在线状态标志
-    bool m_netStatus;
-    // 人脸比对阈值 根据入库人数自动调节
-    double m_faceThreshold;
-    // 设备sn码
-    QString m_sn;
-    // 设备ip
-    QString m_ipAddr;
-    // tcp后台登录的密码
-    QString m_passwd;
-
     // 保存屏的参数
     void saveSreenParam();
     // 读取屏的参数
@@ -61,6 +33,8 @@ public:
     // 恢复开关量默认值
     void setSwitchDefault();
 
+    // 设备sn码
+    QString m_sn;
     // 旋转角度，1是90度，3是270度
     int m_angle;
     // 屏的参数 0:5.5寸屏 3和4：8寸屏 9：10寸屏
@@ -157,10 +131,9 @@ public:
     int m_volume;
     // ic卡开关
     bool m_ic;
+    // tcp后台登录的密码
+    QString m_passwd;
 
-
-    //当前日志模块的输出方向，true:输出到文件,false:输出到配置工具
-       bool m_log;
     // wifi用户名
     QString m_wifiName;
     // wifi密码

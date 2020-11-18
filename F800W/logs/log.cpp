@@ -1,5 +1,5 @@
 #include "log.h"
-#include "switch.h"
+#include "datashare.h"
 QStringList Log::logList;
 
 void Log::outputMessage(QtMsgType type, const QMessageLogContext &context, const QString &msg)
@@ -41,25 +41,20 @@ void Log::outputMessageOnLine(QtMsgType type, const QMessageLogContext &context,
 
 Log::Log(QObject *parent) : QObject(parent)
 {
-     timer = new QTimer(this);
-     timer->setInterval(500);
-     connect(timer,&QTimer::timeout,[=](){
-
-         if( switchCtl->m_log ==false)
-         if(Log::logList.length()!=0)
-         {
-             for(int i = 0;i<Log::logList.length();i++)
-             {
+    timer = new QTimer(this);
+    timer->setInterval(500);
+    connect(timer,&QTimer::timeout,[=](){
+        if( dataShare->m_log ==false)
+        if(Log::logList.length()!=0)
+        {
+            for(int i = 0;i<Log::logList.length();i++)
+            {
                 emit sigLogMsg(Log::logList.at(i));
-             }
-             Log::logList.clear();
-         }
-     });
-   // timer->start();
-//    if(switchCtl->m_log)
-//        qInstallMessageHandler(outputMessage);
-//    else
-//        qInstallMessageHandler(outputMessageOnLine);
+            }
+            Log::logList.clear();
+        }
+    });
+//    qInstallMessageHandler(outputMessageOnLine);
 }
 
 void Log::onToolTcpStateChange(bool state)//true:链接上了，false:链接断开
@@ -68,7 +63,7 @@ void Log::onToolTcpStateChange(bool state)//true:链接上了，false:链接断�
     {
         qt_debug() << state;
         timer->stop();
-        switchCtl->m_log = true;
+        dataShare->m_log = true;
         qInstallMessageHandler(outputMessage);
     }
 }
@@ -78,12 +73,12 @@ void Log::onLogFun(bool on)
 {
     if(on)
     {
-        switchCtl->m_log = true;
+        dataShare->m_log = true;
         timer->stop();
         qInstallMessageHandler(outputMessage);
 
     }else {
-        switchCtl->m_log = false;
+        dataShare->m_log = false;
         timer->start();
         qInstallMessageHandler(outputMessageOnLine);
     }

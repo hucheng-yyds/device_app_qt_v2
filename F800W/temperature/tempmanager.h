@@ -24,7 +24,6 @@ protected:
 
 signals:
     void tempeatureInfo(QByteArray tempInfo);
-    void sendTempResult(const QString &tempVal, int result);
 
 public slots:
     // 温度模块命令控制接口 -> 温度校准 全屏测温和关全屏测温
@@ -63,7 +62,14 @@ private:
     // 根据取出的温度值，判断当前的测温数据 返回值0:温度大于预警值 1:温度正常 -1:体温偏低 -2:测温失败
     int compareTemp(const QString &tempVal);
 
+    // 是否已到定时的时长，是返回true，否返回false
+    bool expired();
+    // 设置定时时长。 从当前时间开始的定时时长，单位ms
+    void countdown_ms(int ms);
+
 private:
+    // 定时到达的结束时间 单位ms
+    qint64 m_endTimerMs;
     int m_fileSize;
     int m_upgradeFileSize;
     char *m_fileBuf;

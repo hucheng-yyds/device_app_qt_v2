@@ -8,7 +8,6 @@
 #include "switch.h"
 #include "qalhardware.h"
 #include "sqldatabase.h"
-#include "countdown.h"
 
 #define VIDEO_WIDTH     800
 #define VIDEO_HEIGHT    1280

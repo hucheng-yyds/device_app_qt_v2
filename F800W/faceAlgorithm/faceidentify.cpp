@@ -1,7 +1,8 @@
 #include "faceidentify.h"
+#include "datashare.h"
 
 extern QSemaphore g_usedSpace;
-
+extern bool g_idRead;
 FaceIdentify::FaceIdentify()
 {
     m_interFace = nullptr;
@@ -31,7 +32,7 @@ bool FaceIdentify::idCardFaceComparison(char *feature_result)
         {
             extract(faceHandle[0], &featureFrist, &size);
             compare(featureFrist, feature_result, size, &result);
-            QString name = switchCtl->m_idCardDatas.at(0);
+            QString name = dataShare->m_idCardDatas.at(0);
             if (result > switchCtl->m_idcardValue)
             {
                 idPass = true;
@@ -63,6 +64,10 @@ void FaceIdentify::run()
         QString openMode = switchCtl->m_openMode;
         if(tempCtl)
         {
+            if(identifyExpired())
+            {
+                m_cardWork = false;
+            }
             m_tempFlag = false;
             emit startTemp();
         }
@@ -133,7 +138,7 @@ void FaceIdentify::run()
                     extract(bgrHandle[m_iMFaceHandle[i].index], &feature_result, &size);
                     identifyFromFaceGroup(sqlDatabase->m_groupHandle, feature_result, size, &result, &face_id);
                     m_interFace->m_mutex.unlock();
-                    if ((result > switchCtl->m_faceThreshold) && (face_id > 0))
+                    if ((result > dataShare->m_faceThreshold) && (face_id > 0))
                     {
                         QStringList value = dealOpencondition(face_id);
                         QString name = value.at(0);
@@ -177,10 +182,10 @@ void FaceIdentify::run()
                     {
                         if(vi)
                         {
-                            if(switchCtl->m_idCardFlag)
+                            if(dataShare->m_idCardFlag)
                             {
                                 idCardResult = idCardFaceComparison(feature_result);
-                                switchCtl->m_idCardFlag = false;
+                                dataShare->m_idCardFlag = false;
                             }
                             else {
                                 emit idCardResultShow(0, tr("未注册"), tr("请刷身份证"), tr("请刷身份证"));
@@ -217,11 +222,21 @@ void FaceIdentify::run()
         }
         else if(m_cardWork) {
             cardNo = m_cardNo;
+            int mid = sqlDatabase->sqlSelectIcId(cardNo);
+            if(mid > 0)
+            {
+                egPass = true;
+                isStranger = "0";
+            }
+            else {
+                egPass = false;
+                isStranger = "1";
+            }
         }
         if(tempCtl && (m_cardWork || egPass || !vi || (vi && idCardResult) || 0 == openMode.compare("Temp")))
         {
             emit showStartTemp();
-            if(faceDoor)
+            if(faceDoor && !m_cardWork)
             {
                 if(!authority && (!vi || (vi && egPass)))
                 {
@@ -235,17 +250,17 @@ void FaceIdentify::run()
                     }
                 }
             }
-            qt_debug() << "holding temp" << switchCtl->m_tempFlag;
+            qt_debug() << "holding temp" << dataShare->m_tempFlag;
             while (1)
             {
                 msleep(10);
-                if(switchCtl->m_tempFlag)
+                if(dataShare->m_tempFlag)
                 {
                     break;
                 }
             }
-            m_tempVal = switchCtl->m_tempVal;
-            m_tempResult = switchCtl->m_tempResult;
+            m_tempVal = dataShare->m_tempVal;
+            m_tempResult = dataShare->m_tempResult;
             if(switchCtl->m_fahrenheit)
             {
                 emit tempShow(QString("%1℉").arg(m_tempVal), m_tempResult);
@@ -254,7 +269,7 @@ void FaceIdentify::run()
             {
                 emit tempShow(QString("%1℃").arg(m_tempVal), m_tempResult);
             }
-            switchCtl->m_tempFlag = false;
+            dataShare->m_tempFlag = false;
             msleep(150);
             qt_debug() << m_tempVal << m_tempResult;
             float warnValue = switchCtl->m_warnValue;
@@ -375,7 +390,7 @@ void FaceIdentify::run()
             {
             }
             else {
-                if(switchCtl->m_netStatus)
+                if(dataShare->m_netStatus)
                 {
                     emit uploadopenlog(offlineNmae, face_id, snapshot, isOver, 1, tempCtl, datas);
                 }
@@ -401,68 +416,88 @@ endIdentify:
 
 void FaceIdentify::dealIcData(int mid, const QString &cardNo)
 {
-    m_cardWork = true;
-    QString isSuccess = "0";
-    QString isStranger = "0";
-    if(switchCtl->m_tempCtl)
+    if(cardNo.isEmpty())
     {
-        m_cardNo = cardNo;
-        emit icResultShow(2, tr("请看摄像头"), tr("请看摄像头"));
-        hardware->playSound(tr("请看摄像头").toUtf8(), "kansxt.aac");
+        m_cardWork = false;
     }
     else {
-        if(mid > 0)
+        m_cardWork = true;
+    }
+    m_cardNo = cardNo;
+    bool tempCtl = switchCtl->m_tempCtl;
+    if(tempCtl)
+    {
+        identifyCountdown_ms(3*1000);
+    }
+    QString isSuccess = "0";
+    QString isStranger = "0";
+    if(mid > 0)
+    {
+        QStringList value = dealOpencondition(mid);
+        QString name = value.at(0);
+        QString remark = value.at(1);
+        if(name.isEmpty())
         {
-            QStringList value = dealOpencondition(mid);
-            QString name = value.at(0);
-            QString remark = value.at(1);
-            if(name.isEmpty())
+            emit icResultShow(1, tr("未授权"), tr("未授权"));
+            if(remark.isEmpty())
             {
-                emit icResultShow(1, tr("未授权"), tr("未授权"));
-                if(remark.isEmpty())
-                {
-                    hardware->playSound(tr("未授权").toUtf8(), "authority.aac");
-                }
-                else {
-                    hardware->playSound(remark.toUtf8(), "authority.aac");
-                }
-                isSuccess = "0";
+                hardware->playSound(tr("未授权").toUtf8(), "authority.aac");
             }
-            else
+            else {
+                hardware->playSound(remark.toUtf8(), "authority.aac");
+            }
+            isSuccess = "0";
+        }
+        else
+        {
+            if(0 == switchCtl->m_language)
             {
-                if(0 == switchCtl->m_language)
+                if(1 == switchCtl->m_nameMask)
                 {
-                    if(1 == switchCtl->m_nameMask)
+                    if(name.size() > 3)
                     {
-                        if(name.size() > 3)
-                        {
-                            name = name.replace(0, 2, "**");
-                        }
-                        else if(name.size() > 1){
-                            name = name.replace(0, 1, '*');
-                        }
+                        name = name.replace(0, 2, "**");
                     }
-                    else if(2 == switchCtl->m_nameMask)
+                    else if(name.size() > 1)
                     {
-                        name = name.replace(0, name.size(), tr("您好"));
+                        name = name.replace(0, 1, '*');
                     }
                 }
-                emit icResultShow(1, name, m_faceInfo + name);
+                else if(2 == switchCtl->m_nameMask)
+                {
+                    name = name.replace(0, name.size(), tr("您好"));
+                }
+            }
+            emit icResultShow(1, name, m_faceInfo + name);
+            if(tempCtl)
+            {
+                hardware->playSound(tr("请看摄像头").toUtf8(), "kansxt.aac");
+            }
+            else {
                 hardware->playSound(tr("认证通过").toUtf8(), "chengong.aac");
                 emit wgOut(cardNo.toUtf8());
                 hardware->ctlLed(GREEN);
                 hardware->checkOpenDoor();
                 isSuccess = "1";
             }
-            isStranger = "0";
+        }
+        isStranger = "0";
+    }
+    else {
+        emit icResultShow(0, tr("未注册"), tr("未注册"));
+        if(tempCtl)
+        {
+            hardware->playSound(tr("请看摄像头").toUtf8(), "kansxt.aac");
         }
         else {
-            emit icResultShow(0, tr("未注册"), tr("未注册"));
             hardware->playSound(tr("未注册").toUtf8(), "shibai.aac");
             hardware->ctlLed(RED);
             isSuccess = "0";
             isStranger = "1";
         }
+    }
+    if(!tempCtl)
+    {
         QStringList datas;
         datas.clear();
         int offlineNmae = QDateTime::currentDateTime().toTime_t();
@@ -597,4 +632,27 @@ QStringList FaceIdentify::dealOpencondition(int faceId)
 void FaceIdentify::setFaceInter(FaceInterface *inter)
 {
     m_interFace = inter;
+}
+
+bool FaceIdentify::identifyExpired()
+{
+    QDateTime origin_time = QDateTime::fromString("1970-01-01 08:00:00","yyyy-MM-dd hh:mm:ss");
+    QDateTime current_date_time =QDateTime::currentDateTime();
+    qint64 now = origin_time.msecsTo(current_date_time);
+    if(now >= m_endTimerMs)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+void FaceIdentify::identifyCountdown_ms(int ms)
+{
+    QDateTime origin_time = QDateTime::fromString("1970-01-01 08:00:00","yyyy-MM-dd hh:mm:ss");
+    QDateTime current_date_time =QDateTime::currentDateTime();
+    qint64 now = origin_time.msecsTo(current_date_time);
+    m_endTimerMs = now + ms;
 }

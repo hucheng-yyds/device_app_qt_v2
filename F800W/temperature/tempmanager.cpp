@@ -10,6 +10,7 @@
 #include <QDebug>
 #include <QFile>
 #include <QDateTime>
+#include "datashare.h"
 
 TempManager::TempManager()
 {
@@ -236,14 +237,22 @@ void TempManager::openAllScreenTemp(bool status)
 
 void TempManager::startTemp()
 {
-    if(!m_startTemp)
+    if(expired())
     {
-        switchCtl->m_tempFlag = false;
-        m_tempCount = 0;
+        if(!m_startTemp)
+        {
+            dataShare->m_tempFlag = false;
+            int count = 1500;
+            if(switchCtl->m_loose)
+            {
+                count = 500;
+            }
+            countdown_ms(count);
+        }
+        m_tempStatus = false;
+        m_startTemp = true;
+        tcflush(m_fd, TCIOFLUSH);
     }
-    m_tempStatus = false;
-    m_startTemp = true;
-    tcflush(m_fd, TCIOFLUSH);
 }
 
 void TempManager::tcflsh()
@@ -255,27 +264,39 @@ void TempManager::timeckeck()
 {
     if(m_startTemp)
     {
-        m_tempCount++;
-        int count = 0;
-        if(switchCtl->m_loose)
-        {
-            count = 500;
-        }
-        else {
-            count = 1500;
-        }
-        if(m_tempCount * 200 >= count)
+        if(expired())
         {
             m_startTemp = false;
             m_tempCount = 0;
             QString tempVal = getTemperature();
             int result = compareTemp(tempVal);
-            switchCtl->m_tempFlag = true;
-            switchCtl->m_tempVal = tempVal;
-            switchCtl->m_tempResult = result;
-//            emit sendTempResult(tempVal, result);
+            dataShare->m_tempFlag = true;
+            dataShare->m_tempVal = tempVal;
+            dataShare->m_tempResult = result;
         }
     }
+}
+
+bool TempManager::expired()
+{
+    QDateTime origin_time = QDateTime::fromString("1970-01-01 08:00:00","yyyy-MM-dd hh:mm:ss");
+    QDateTime current_date_time =QDateTime::currentDateTime();
+    qint64 now = origin_time.msecsTo(current_date_time);
+    if(now >= m_endTimerMs)
+    {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+void TempManager::countdown_ms(int ms)
+{
+    QDateTime origin_time = QDateTime::fromString("1970-01-01 08:00:00","yyyy-MM-dd hh:mm:ss");
+    QDateTime current_date_time =QDateTime::currentDateTime();
+    qint64 now = origin_time.msecsTo(current_date_time);
+    m_endTimerMs = now + ms;
 }
 
 QString TempManager::getTemperature()

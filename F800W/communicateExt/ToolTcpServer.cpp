@@ -3,6 +3,7 @@
 #include <QDebug>
 #include "switch.h"
 #include "sqldatabase.h"
+#include "datashare.h"
 
 ToolTcpServer::ToolTcpServer()
 {
@@ -407,7 +408,7 @@ void ToolTcpServer::setParameters(QJsonObject & data,QString msgType,QString cmd
 
     if(data.contains(key_log))
     {
-        switchCtl->m_log = data.value(key_log).toBool();
+        dataShare->m_log = data.value(key_log).toBool();
     }
 
     switchCtl->saveSwitchParam();
@@ -822,7 +823,7 @@ void ToolTcpServer::sendSNtoClient()
 {
     QByteArray sendData = "";
     QJsonObject dat = switchCtl->readSwitchParam();
-    dat.insert("log",switchCtl->m_log);
+    dat.insert("log",dataShare->m_log);
     dat.insert("msgType","0");
     dat.insert("cmd","0");
     dat.insert("data",dat);

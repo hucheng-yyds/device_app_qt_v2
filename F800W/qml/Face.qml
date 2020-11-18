@@ -242,6 +242,7 @@ Item {
             idCard.visible = false;
             cardFail.visible = false;
             cardSuccess.visible = false;
+            kansxt.visible = false;
         }
     }
 
@@ -332,6 +333,35 @@ Item {
         }
         color: "#9E9E9E"
         text: qsTr("请将身份证\n放置读卡区")
+        anchors.horizontalCenter: parent.horizontalCenter
+        verticalAlignment: Text.AlignVCenter
+        horizontalAlignment: Text.AlignHCenter
+    }
+
+    // 看摄像头
+    AnimatedImage {
+        id: kansxtGif
+        visible: kansxt.visible
+        x: 325
+        y: 517
+        source: "./gifs/kansxt.gif"
+        playing: true
+    }
+
+    // 看摄像头信息
+    Text {
+        id: kansxt
+        x: 342
+        y: 688
+        width: 144
+        height: 70
+        visible: idCard.visible
+        font {
+            pixelSize: 30
+            family: "multi-language"
+        }
+        color: "#9E9E9E"
+        text: qsTr("请将人脸\n正对设备")
         anchors.horizontalCenter: parent.horizontalCenter
         verticalAlignment: Text.AlignVCenter
         horizontalAlignment: Text.AlignHCenter
@@ -614,6 +644,7 @@ Item {
         }
 
         onFaceResultShow:{
+            kansxt.visible = false;
             resultText.text = qsTr(showInfo)
             pngRun.visible = true
             pngShow.visible = false
@@ -684,12 +715,17 @@ Item {
             {
                 resultText.text = qsTr(showInfo)
             }
+            hideName.restart()
+            standby.visible = false;
+            face.visible = true;
+            sleep.restart();
         }
 
         onIdCardResultShow: {
             pose_blur_Timer.restart();
             tempBg.visible = true;
             reading.visible = false;
+            kansxt.visible = false;
             if(2 === flag)
             {
                 cardFail.visible = false;
@@ -714,6 +750,10 @@ Item {
                 tempResult.visible = false;
                 idCard.visible = true;
             }
+            hideName.restart()
+            standby.visible = false;
+            face.visible = true;
+            sleep.restart();
         }
         onReadIcStatus: {
             pose_blur_Timer.restart();
@@ -724,17 +764,27 @@ Item {
             tempBg.visible = true;
             if(1 === flag)
             {
+                kansxt.visible = false;
                 tempResult.visible = false;
                 cardFail.visible = false;
                 reading.visible = true;
             }
-            else
+            else if(2 === flag)
             {
+                reading.visible = false;
+                kansxt.visible = true;
+            }
+            else if(0 === flag)
+            {
+                kansxt.visible = false;
                 reading.visible = false;
                 cardFail.visible = true;
                 tempResult.text = qsTr("请重新刷卡");
                 tempResult.visible = true;
             }
+            standby.visible = false;
+            face.visible = true;
+            sleep.restart();
         }
         onShowStartTemp: {
             idCard.visible = false;

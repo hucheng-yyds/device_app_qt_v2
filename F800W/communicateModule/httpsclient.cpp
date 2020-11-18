@@ -1,4 +1,5 @@
 #include "httpsclient.h"
+#include "datashare.h"
 
 HttpsClient::HttpsClient()
 {
@@ -217,7 +218,7 @@ QJsonObject HttpsClient::requestGet(const QString &url)
             m_requestAllowTimer->start();
             disconnect(reply, &QNetworkReply::finished, &eventloop, &QEventLoop::quit);
             reply->abort();
-            switchCtl->m_netStatus = false;
+            dataShare->m_netStatus = false;
             qDebug() << "post time out";
         }
         reply->deleteLater();
@@ -280,7 +281,7 @@ QJsonObject HttpsClient::requestPost(const QString &url, const QJsonObject &json
             m_requestAllowTimer->start();
             disconnect(reply, &QNetworkReply::finished, &eventloop, &QEventLoop::quit);
             reply->abort();
-            switchCtl->m_netStatus = false;
+            dataShare->m_netStatus = false;
             qDebug() << "post time out";
         }
         reply->deleteLater();
@@ -300,7 +301,7 @@ void HttpsClient::HttpLogin()
         int code = jsonObj["code"].toInt();
         if (0 == code)
         {
-            switchCtl->m_netStatus = true;
+            dataShare->m_netStatus = true;
             emit mqttReconnect();
             QJsonValue value = jsonObj["token"];
             m_strKey = value.toString();
@@ -331,7 +332,7 @@ void HttpsClient::HttpHeartbeat()
     jsonObj.insert("apkInfo", VERSION);
     jsonObj.insert("networkType", 1);
     jsonObj.insert("networkName", "有线");
-    jsonObj.insert("ipAddr", switchCtl->m_ipAddr);
+    jsonObj.insert("ipAddr", dataShare->m_ipAddr);
     requestPost(m_heartbeatCmd, jsonObj);
 }
 

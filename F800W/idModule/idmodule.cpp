@@ -5,6 +5,9 @@
 #include<sys/time.h>
 #include <QTextCodec>
 #include "idmodule.h"
+#include "datashare.h"
+
+bool g_idRead = false;
 
 IdCardModule::IdCardModule()
 {
@@ -40,11 +43,11 @@ void IdCardModule::run()
         iRet = CVR_Authenticate();
         if(iRet != 1)
         {
-            if(switchCtl->m_idCardFlag)
+            if(dataShare->m_idCardFlag)
             {
                 if(expired())
                 {
-                    switchCtl->m_idCardFlag = false;
+                    dataShare->m_idCardFlag = false;
                     hardware->playSound(tr("已超时").toUtf8(), "chaoshi.aac");
                 }
             }
@@ -58,39 +61,24 @@ void IdCardModule::run()
                 CVR_CloseComm();
                 continue;
             }
-            char dest[20];
-            memset(dest, 0, 20);
-            sprintf(dest, "%x", SNR);
-            QString cardid = QString("%1%2%3%4%5%6%7%8").arg(dest[6]).arg(dest[7]).arg(dest[4]).arg(dest[5]).arg(dest[2]).arg(dest[3]).arg(dest[0]).arg(dest[1]);
-//            QVariantList varList = sqlDatabase->sqlICSelect(cardid.toLower(), "cardNo");
-//            emit idCardShowHome();
-//            if (varList.isEmpty()) {
-//                emit sigOpenDoor(false, 0, cardid.toLower());
-//                if (settings->isTemp) {
-//                    isSuccess = true;
-//                } else {
-//                    isSuccess = false;
-//                }
-//            } else {
-//                int mid = varList.value(2).toInt();
-//                emit sigOpenDoor(true, mid, varList.value(0).toString());
-//                if (settings->isTemp) {
-//                    isSuccess = true;
-//                } else {
-//                    isSuccess = false;
-//                }
-//            }
-             qt_debug() << "ic read" << name << isSuccess;
-
-            if (isSuccess) {
-                sleep(6);
-            } else {
-                sleep(3);
+            else if(expired()) {
+                char dest[20];
+                memset(dest, 0, 20);
+                sprintf(dest, "%x", SNR);
+                QString cardid = QString("%1%2%3%4%5%6%7%8").arg(dest[6]).arg(dest[7]).arg(dest[4]).arg(dest[5]).arg(dest[2]).arg(dest[3]).arg(dest[0]).arg(dest[1]);
+                int time = 3*1000;
+                if(switchCtl->m_tempCtl)
+                {
+                    time = 4*1000;
+                }
+                int mid = sqlDatabase->sqlSelectIcId(cardid);
+                countdown_ms(time);
+                emit sigIdInfo(mid, cardid);
             }
-//            emit idCardFinish();
         }
         else if(expired() && switchCtl->m_vi)
         {
+            emit readIdStatus(1);
             //读卡
             iRet = CVR_Read_Content(2);
             if(iRet != 1)
@@ -105,6 +93,7 @@ void IdCardModule::run()
             iRet = GetCertType((unsigned char*)strTemp, &strTempLen);
             if(iRet != 1)
             {
+                emit readIdStatus(0);
                 qt_debug() << "GetCertType failed, Ret = " << iRet;
                 continue;
             }
@@ -114,6 +103,7 @@ void IdCardModule::run()
             iRet = GetPeopleName(strTemp, &strTempLen);
             if(iRet != 1)
             {
+                emit readIdStatus(0);
                 qt_debug() << "GetPeopleName failed, Ret =" << iRet;
                 continue;
             }
@@ -124,6 +114,7 @@ void IdCardModule::run()
             iRet = GetPeopleSex(strTemp, &strTempLen);
             if(iRet != 1)
             {
+                emit readIdStatus(0);
                 qt_debug() << "GetPeopleSex failed, Ret =" << iRet;
                 continue;
             }
@@ -135,6 +126,7 @@ void IdCardModule::run()
             iRet = GetPeopleNation(strTemp, &strTempLen);
             if(iRet != 1)
             {
+                emit readIdStatus(0);
                 qt_debug() << "GetPeopleNation failed, Ret =" << iRet;
                 continue;
             }
@@ -145,6 +137,7 @@ void IdCardModule::run()
             iRet = GetPeopleIDCode(strTemp, &strTempLen);
             if(iRet != 1)
             {
+                emit readIdStatus(0);
                 qt_debug() << "GetPeopleIDCode failed, Ret =" << iRet;
                 continue;
             }
@@ -155,6 +148,7 @@ void IdCardModule::run()
             iRet = GetPeopleBirthday(strTemp, &strTempLen);
             if(iRet != 1)
             {
+                emit readIdStatus(0);
                 qt_debug() << "GetPeopleBirthday failed, Ret =" << iRet;
                 continue;
             }
@@ -165,6 +159,7 @@ void IdCardModule::run()
             iRet = GetPeopleAddress(strTemp, &strTempLen);
             if(iRet != 1)
             {
+                emit readIdStatus(0);
                 qt_debug() << "GetPeopleAddress failed, Ret =" << iRet;
                 continue;
             }
@@ -176,6 +171,7 @@ void IdCardModule::run()
             iRet = GetBMPData(arrPhotoData, &iPhotoDataLen);
             if(iRet != 1)
             {
+                emit readIdStatus(0);
                 qt_debug() << "GetBMPData failed, Ret =" << iRet;
                 continue;
             }
@@ -193,9 +189,11 @@ void IdCardModule::run()
                 time = 3*1000;
             }
             countdown_ms(time);
-            switchCtl->m_idCardDatas.clear();
-            switchCtl->m_idCardDatas << name << id << sex << addr << birth << nation;
-            switchCtl->m_idCardFlag = true;
+            dataShare->m_idCardDatas.clear();
+            dataShare->m_idCardDatas << name << id << sex << addr << birth << nation;
+            dataShare->m_idCardFlag = true;
+            emit readIdStatus(2);
+            qt_debug() << dataShare->m_idCardFlag << dataShare->m_idCardDatas;
         }
         else {
         }

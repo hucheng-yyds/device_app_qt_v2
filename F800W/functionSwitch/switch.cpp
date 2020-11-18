@@ -4,15 +4,6 @@ SwitchCtl* SwitchCtl::m_Instance = nullptr;
 
 SwitchCtl::SwitchCtl()
 {
-    m_faceThreshold = 72.0;
-    m_idCardFlag = false;
-    m_idCardDatas.clear();
-    m_tempFlag = false;
-    m_sync = false;
-    m_upgrade = false;
-    m_netStatus = false;
-    m_offlineFlag = true;
-    m_log = true;
     bool status = QFile::exists("./switch.json");
     qt_debug() << "====================================================" << status;
     if(!status)
@@ -214,7 +205,7 @@ void SwitchCtl::setSwitchDefault()
     m_timeZone = "(UTC+08:00)";
     m_openMode = "FaceTemp";
     m_identifyDistance = 1;
-    m_doorDelayTime = 3;
+    m_doorDelayTime = 2;
     m_helet = false;
     m_mask = 0;
     m_showIc = false;

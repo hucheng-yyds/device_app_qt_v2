@@ -34,6 +34,10 @@ private:
     void localFaceInsert();
     // 根据人脸底库更新阈值
     void updateIdentifyValue();
+    // 是否已到定时的时长，是返回true，否返回false
+    bool faceExpired();
+    // 设置定时时长。 从当前时间开始的定时时长，单位ms
+    void faceCountdown_ms(int ms);
 
 signals:
     // 显示人脸框 ui界面显示
@@ -53,6 +57,6 @@ private:
     FaceInterface *m_interFace;
     bool m_isIdentify;
     QMutex m_mutex;
-    CountDown *m_timer;
+    qint64 m_endTimerMs;
 };
 #endif // FACEMANAGER_H

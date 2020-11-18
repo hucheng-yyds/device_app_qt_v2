@@ -4,6 +4,7 @@
 #include "idInclude.h"
 #include "switch.h"
 #include "qalhardware.h"
+#include "sqldatabase.h"
 
 class IdCardModule : public QThread
 {
@@ -15,7 +16,10 @@ protected:
     virtual void run();
 
 signals:
-
+    // 读卡状态
+    void readIdStatus(int flag);
+    // 处理ic数据
+    void sigIdInfo(int mid, const QString &cardNo);
 private:
     // 是否已到定时的时长，是返回true，否返回false
     bool expired();

@@ -1,5 +1,6 @@
 #include <QFile>
 #include "useridrequest.h"
+#include "datashare.h"
 
 UserIdRequest::UserIdRequest()
 {
@@ -12,27 +13,27 @@ void UserIdRequest::updateIdentifyValue()
     int count = sqlDatabase->m_localFaceSet.size();
     if (0 == count || count < 1000)
     {
-        switchCtl->m_faceThreshold = 61;
+        dataShare->m_faceThreshold = 61;
     }
     else if (1000 <= count && count < 5000)
     {
-        switchCtl->m_faceThreshold = 65;
+        dataShare->m_faceThreshold = 65;
     }
     else if (5000 <= count && count < 10000)
     {
-        switchCtl->m_faceThreshold = 66;
+        dataShare->m_faceThreshold = 66;
     }
     else if (10000 <= count && count < 20000)
     {
-        switchCtl->m_faceThreshold = 68;
+        dataShare->m_faceThreshold = 68;
     }
     else if (20000 <= count && count < 50000)
     {
-        switchCtl->m_faceThreshold = 70;
+        dataShare->m_faceThreshold = 70;
     }
     else if (50000 <= count && count < 100000)
     {
-        switchCtl->m_faceThreshold = 71;
+        dataShare->m_faceThreshold = 71;
     }
 }
 
@@ -48,7 +49,7 @@ void UserIdRequest::run()
             {
                 if(m_faceSyncStatus)
                 {
-                    switchCtl->m_sync = true;
+                    dataShare->m_sync = true;
                     count = 0;
                     m_faceSyncStatus = false;
                     m_curFaceId = *m_updateFace.begin();
@@ -62,7 +63,7 @@ void UserIdRequest::run()
                 emit allUserIc();
                 sleep(1);
                 updateIdentifyValue();
-                switchCtl->m_sync = false;
+                dataShare->m_sync = false;
                 m_startFaceDownload = false;
             }
             if(!m_faceSyncStatus)
@@ -157,17 +158,17 @@ void UserIdRequest::tcpUpdateUsers(const QJsonObject &jsonObj)
     QString edittime = "", remark = "", startTime = "", expireTime = "", passTimeSection = "", passPeriod = "", mobile = "", photoName = "";
     int passNum = -1, isBlack = -1;
     int id = jsonObj["mid"].toInt();
-    QFile file1(QString("./%1.json").arg(id));
-    if(!file1.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        qDebug() << "File open failed!";
-    } else {
-        qDebug() <<"File open successfully!";
-    }
-    QJsonDocument jdoc(jsonObj);
-    file1.seek(0);
-    file1.write(jdoc.toJson());
-    file1.flush();
-    file1.close();
+//    QFile file1(QString("./%1.json").arg(id));
+//    if(!file1.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+//        qDebug() << "File open failed!";
+//    } else {
+//        qDebug() <<"File open successfully!";
+//    }
+//    QJsonDocument jdoc(jsonObj);
+//    file1.seek(0);
+//    file1.write(jdoc.toJson());
+//    file1.flush();
+//    file1.close();
     QString name = "";
     QString photo = jsonObj["photo"].toString();
     bool status = false;

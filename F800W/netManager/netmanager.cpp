@@ -11,6 +11,7 @@
 #include <linux/sockios.h>
 #include <errno.h>
 #include "netmanager.h"
+#include "datashare.h"
 
 int get_if_miireg(const char *if_name, int reg_num )
 {
@@ -90,7 +91,7 @@ void NetManager::run()
                     netWorkMode = 2;
                 }
                 else {
-                    switchCtl->m_netStatus = false;
+                    dataShare->m_netStatus = false;
                     m_wifi = false;
                     if (WpaGui::TrayIconConnected == m_wpa->state())
                     {
@@ -128,18 +129,18 @@ void NetManager::run()
         }
         if(m_eth0 > 0)
         {
-            emit networkChanged(6, switchCtl->m_netStatus);
+            emit networkChanged(6, dataShare->m_netStatus);
         }
         else if(m_wifi)
         {
-            emit networkChanged(netWorkMode, switchCtl->m_netStatus);
+            emit networkChanged(netWorkMode, dataShare->m_netStatus);
         }
         else
         {
-            switchCtl->m_netStatus = false;
+            dataShare->m_netStatus = false;
             emit networkChanged(7, false);
         }
-        switchCtl->m_ipAddr = ip;
+        dataShare->m_ipAddr = ip;
         int count = sqlDatabase->m_localFaceSet.size();
         emit showDeviceInfo(switchCtl->m_tempCtl, VERSION, switchCtl->m_devName, QString("%1").arg(count), ip, switchCtl->m_sn);
         msleep(100);

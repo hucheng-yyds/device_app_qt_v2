@@ -1,11 +1,11 @@
 #include "facemanager.h"
+#include "datashare.h"
 
 QSemaphore g_usedSpace(0);
 
 FaceManager::FaceManager()
 {
     m_isIdentify = false;
-    m_timer = new CountDown;
 }
 
 void FaceManager::updateIdentifyValue()
@@ -13,27 +13,27 @@ void FaceManager::updateIdentifyValue()
     int count = sqlDatabase->m_localFaceSet.size();
     if (0 == count || count < 1000)
     {
-        switchCtl->m_faceThreshold = 61;
+        dataShare->m_faceThreshold = 61;
     }
     else if (1000 <= count && count < 5000)
     {
-        switchCtl->m_faceThreshold = 65;
+        dataShare->m_faceThreshold = 65;
     }
     else if (5000 <= count && count < 10000)
     {
-        switchCtl->m_faceThreshold = 66;
+        dataShare->m_faceThreshold = 66;
     }
     else if (10000 <= count && count < 20000)
     {
-        switchCtl->m_faceThreshold = 68;
+        dataShare->m_faceThreshold = 68;
     }
     else if (20000 <= count && count < 50000)
     {
-        switchCtl->m_faceThreshold = 70;
+        dataShare->m_faceThreshold = 70;
     }
     else if (50000 <= count && count < 100000)
     {
-        switchCtl->m_faceThreshold = 71;
+        dataShare->m_faceThreshold = 71;
     }
 }
 
@@ -63,15 +63,15 @@ void FaceManager::run()
 
     while(true)
     {
-        if(switchCtl->m_sync)
+        if(dataShare->m_sync)
         {
             status = true;
             hardware->ctlWDG();
             emit faceTb(tr("正在同步中..."));
             hardware->ctlLed(OFF);
-            if(!switchCtl->m_netStatus)
+            if(!dataShare->m_netStatus)
             {
-                switchCtl->m_sync = false;
+                dataShare->m_sync = false;
             }
             hardware->checkOpenDoor();
             hardware->ctlWDG();
@@ -129,7 +129,7 @@ void FaceManager::run()
             }
             if (!m_interFace->m_iFaceHandle && m_isIdentify)
             {
-                switchCtl->m_offlineFlag = false;
+                dataShare->m_offlineFlag = false;
                 m_interFace->m_iFaceHandle = bgrHandle;
                 m_interFace->m_faceHandle = m_sMFaceHandle;
                 m_interFace->m_count = bgrLength;
@@ -157,7 +157,7 @@ void FaceManager::run()
             backLightCount++;
             if(backLightCount > 100)
             {
-                switchCtl->m_offlineFlag = true;
+                dataShare->m_offlineFlag = true;
                 backLightCount = 0;
                 onBreathingLight();
             }
@@ -260,21 +260,24 @@ void FaceManager::sort(FaceHandle *faceHandle, int count)
     {
         if (m_sMFaceHandle.at(0).track_id == m_interFace->m_faceHandle.at(0).track_id)
         {
-            if (!m_timer->expired())
+            if (!faceExpired())
             {
                 if (m_interFace->m_quality && !m_interFace->m_iStop)
                 {
-                    m_isIdentify = false;
+                    if(!(dataShare->m_idCardFlag && switchCtl->m_vi))
+                    {
+                        m_isIdentify = false;
+                    }
                 }
             }
             else
             {
-                m_timer->countdown_ms(waitTime*1000);
+                faceCountdown_ms(waitTime*1000);
             }
         }
         else
         {
-            m_timer->countdown_ms(waitTime*1000);
+            faceCountdown_ms(waitTime*1000);
         }
     }
 }
@@ -407,4 +410,27 @@ void FaceManager::localFaceInsert()
     }
     emit faceTb(tr(""));
     updateIdentifyValue();
+}
+
+bool FaceManager::faceExpired()
+{
+    QDateTime origin_time = QDateTime::fromString("1970-01-01 08:00:00","yyyy-MM-dd hh:mm:ss");
+    QDateTime current_date_time =QDateTime::currentDateTime();
+    qint64 now = origin_time.msecsTo(current_date_time);
+    if(now >= m_endTimerMs)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+void FaceManager::faceCountdown_ms(int ms)
+{
+    QDateTime origin_time = QDateTime::fromString("1970-01-01 08:00:00","yyyy-MM-dd hh:mm:ss");
+    QDateTime current_date_time =QDateTime::currentDateTime();
+    qint64 now = origin_time.msecsTo(current_date_time);
+    m_endTimerMs = now + ms;
 }

@@ -21,6 +21,10 @@ private:
     bool idCardFaceComparison(char *feature_result);
     // 处理开门权限
     QStringList dealOpencondition(int faceId);
+    // 是否已到定时的时长，是返回true，否返回false
+    bool identifyExpired();
+    // 设置定时时长。 从当前时间开始的定时时长，单位ms
+    void identifyCountdown_ms(int ms);
 
 signals:
     // 韦根输出
@@ -51,5 +55,6 @@ private:
     int m_tempResult;
     QString m_cardNo;
     bool m_cardWork;
+    qint64 m_endTimerMs;
 };
 #endif // FACEIDENTIFY_H

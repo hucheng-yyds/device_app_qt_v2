@@ -1,4 +1,5 @@
 #include "serverdatadeal.h"
+#include "datashare.h"
 
 ServerDataDeal::ServerDataDeal()
 {
@@ -306,7 +307,7 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
             QJsonObject jsonData = jsonObj["data"].toObject();
             if(jsonData.contains("id"))
             {
-                switchCtl->m_offlineFlag = false;
+                dataShare->m_offlineFlag = false;
                 hardware->ctlLed(GREEN);
                 hardware->checkOpenDoor();
                 QStringList datas;
