@@ -133,6 +133,9 @@ void QalHardWare::checkCloseDoor()
     if (expired()) {
         m_i = 0;
         ioctl(m_fd, RELAY_SET, &m_i);
+        ctlLed(OFF);
+        ctlBLN(ON);
+        ctlIrWhite(OFF);
     }
 }
 

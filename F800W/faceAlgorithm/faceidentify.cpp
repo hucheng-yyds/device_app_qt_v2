@@ -316,7 +316,7 @@ void FaceIdentify::run()
         }
         if(openMode.compare("FaceTemp") == 0)
         {
-            if((egPass && tempPass) || idCardResult)
+            if((egPass || idCardResult) && tempPass)
             {
                 emit wgOut(cardNo.toUtf8());
                 hardware->ctlLed(GREEN);

@@ -163,7 +163,7 @@ void FaceManager::run()
             }
             releaseAllFace(bgrHandle, bgrLength);
         }
-        hardware->checkOpenDoor();
+        hardware->checkCloseDoor();
         hardware->ctlWDG();
         if (ir)
         {

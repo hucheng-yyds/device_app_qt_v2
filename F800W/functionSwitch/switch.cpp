@@ -205,7 +205,7 @@ void SwitchCtl::setSwitchDefault()
     m_timeZone = "(UTC+08:00)";
     m_openMode = "FaceTemp";
     m_identifyDistance = 1;
-    m_doorDelayTime = 2;
+    m_doorDelayTime = 3;
     m_helet = false;
     m_mask = 0;
     m_showIc = false;
