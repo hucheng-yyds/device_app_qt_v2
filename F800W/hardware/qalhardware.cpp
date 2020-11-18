@@ -135,7 +135,6 @@ void QalHardWare::checkCloseDoor()
         ioctl(m_fd, RELAY_SET, &m_i);
         ctlLed(OFF);
         ctlBLN(ON);
-        ctlIrWhite(OFF);
     }
 }
 
