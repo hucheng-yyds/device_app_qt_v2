@@ -24,7 +24,7 @@ SqlDatabase::SqlDatabase()
     }
 
     QSqlQuery query(m_database);
-    if (!query.exec("create table userdata ("
+    if (!query.exec("create table if not exists userdata ("
                     "id int primary key,"
                     "username text,"
                     "edittime text,"
@@ -35,7 +35,7 @@ SqlDatabase::SqlDatabase()
     }
 
     QSqlQuery query1(m_database);
-    if (!query1.exec("create table offline ("
+    if (!query1.exec("create table if not exists offline ("
                     "id int primary key,"
                     "userId int,"
                     "unlockType int,"
@@ -50,14 +50,14 @@ SqlDatabase::SqlDatabase()
         qt_debug() << query1.lastError();
     }
     QSqlQuery query2(m_database);
-    if (!query2.exec("create table insertFail ("
+    if (!query2.exec("create table if not exists insertFail ("
                     "id int primary key,"
                     "type int)")) {
         qt_debug() << query2.lastError();
     }
 
     QSqlQuery query3(m_database);
-    if (!query3.exec("create table SaveIdentify ("
+    if (!query3.exec("create table if not exists SaveIdentify ("
                      "id int primary key,"
                      "userid text,"
                      "username text,"
@@ -70,7 +70,7 @@ SqlDatabase::SqlDatabase()
         qt_debug() << query3.lastError();
     }
     QSqlQuery query4(m_database);
-    if (!query4.exec("create table auths ("
+    if (!query4.exec("create table if not exists auths ("
                      "id int primary key,"
                      "passNum int,"
                      "startTime text,"
@@ -82,7 +82,7 @@ SqlDatabase::SqlDatabase()
         qt_debug() << query4.lastError();
     }
     QSqlQuery query5(m_database);
-    if (!query5.exec("create table iccard ("
+    if (!query5.exec("create table if not exists iccard ("
                      "id int primary key,"
                      "cardNo text)")) {
         qt_debug() << query5.lastError();
