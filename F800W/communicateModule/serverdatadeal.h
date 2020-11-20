@@ -3,7 +3,7 @@
 #include <QThread>
 #include <QJsonArray>
 #include <QJsonObject>
-#include "mqttclient.h"
+#include "mqttmodule.h"
 #include "sqldatabase.h"
 #include "httpsclient.h"
 #include "sample_vio.h"

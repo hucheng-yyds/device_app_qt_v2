@@ -292,15 +292,15 @@ void ServerDataDeal::saveSetting(const QJsonObject &jsonData)
 void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
 {
     QJsonObject jsonData;
-    qt_debug() << (MqttClient::MqttCmd)jsonObj["cmd"].toInt() << jsonObj.size();
+    qt_debug() << (MqttModule::MqttCmd)jsonObj["cmd"].toInt() << jsonObj.size();
     switch (jsonObj["cmd"].toInt())
     {
-    case MqttClient::UserData: {
+    case MqttModule::UserData: {
         QJsonObject jsonData = jsonObj["data"].toObject();
         dealFaceNewData(jsonData);
         break;
     }
-    case MqttClient::OpenDoor:
+    case MqttModule::OpenDoor:
     {
         if(jsonObj.contains("data"))
         {
@@ -321,50 +321,50 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
         }
         break;
     }
-    case MqttClient::Bind:
+    case MqttModule::Bind:
     {
         system("rm *.db");
         emit allUserId();
         break;
     }
-    case MqttClient::DeviceUpdate:
+    case MqttModule::DeviceUpdate:
     {
         break;
     }
-    case MqttClient::UploadLog:
+    case MqttModule::UploadLog:
     {
 
         break;
     }
-    case MqttClient::Unbind:
+    case MqttModule::Unbind:
     {
         system("rm *.db");
         system("reboot");
         break;
     }
-    case MqttClient::ChangeSetting:
+    case MqttModule::ChangeSetting:
     {
         QJsonObject obj = jsonObj["data"].toObject();
         saveSetting(obj);
         break;
     }
-    case MqttClient::UpgradeBase64:
+    case MqttModule::UpgradeBase64:
     {
         QJsonObject obj = jsonObj["data"].toObject();
         upgradeFile(obj);
         break;
     }
-    case MqttClient::Reboot:
+    case MqttModule::Reboot:
     {
         system("reboot");
         break;
     }
-    case MqttClient::SetTcpServer:
+    case MqttModule::SetTcpServer:
     {
 
         break;
     }
-    case MqttClient::ServerTime:
+    case MqttModule::ServerTime:
     {
         QJsonObject jsonData = jsonObj["data"].toObject();
         QString timeZone = jsonData["timeZone"].toString();
@@ -372,13 +372,13 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
         switchCtl->saveSwitchParam();
         break;
     }
-    case MqttClient::IC:
+    case MqttModule::IC:
     {
         QJsonObject obj = jsonObj["data"].toObject();
         dealIcNewData(obj);
         break;
     }
-    case MqttClient::FactorySetup:
+    case MqttModule::FactorySetup:
     {
         switchCtl->setSwitchDefault();
         system("rm *.db");
@@ -387,12 +387,12 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
         system("reboot");
         break;
     }
-    case MqttClient::ClearOfflineData:
+    case MqttModule::ClearOfflineData:
     {
         sqlDatabase->sqlDeleteAllOffline();
         break;
     }
-    case MqttClient::ClearFailFace:
+    case MqttModule::ClearFailFace:
     {
         sqlDatabase->sqlDeleteAllFail();
         break;

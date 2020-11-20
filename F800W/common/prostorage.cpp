@@ -55,6 +55,7 @@ void ProStorage::init()
     tempManager->start();
     connect(identify, &FaceIdentify::icResultShow, this, &ProStorage::icResultShow);
     connect(identify, &FaceIdentify::idCardResultShow, this, &ProStorage::idCardResultShow);
+
     IdCardModule *idcard = new IdCardModule;
     connect(idcard, &IdCardModule::sigIdInfo, identify, &FaceIdentify::dealIcData);
     connect(idcard, &IdCardModule::readIdStatus, this, &ProStorage::readIcStatus);
@@ -76,11 +77,11 @@ void ProStorage::init()
     connect( log,&Log::sigLogMsg,toolTcpServer,&ToolTcpServer::onGetRealTimeLog );
     toolTcpServer->start();
 
-//    MqttClient *mqttClient = new MqttClient;
+    MqttModule *mqttClient = new MqttModule;
     UserIdRequest *userRequest = new UserIdRequest;
 
     ServerDataList *serverList = new ServerDataList;
-//    mqttClient->setPacket(serverList);
+    mqttClient->setPacket(serverList);
     bool status = face->init();
     qt_debug() << "---------------init status:" << status;
     while(!status)
@@ -133,7 +134,7 @@ void ProStorage::init()
         httpClient->start();
     }
     offlineRecord->start();
-//    mqttClient->start();
+    mqttClient->start();
     emit syncSuccess(switchCtl->m_faceDoorCtl, switchCtl->m_tempCtl);
 }
 

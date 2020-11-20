@@ -10,7 +10,7 @@
 #include "tempmanager.h"
 #include "httpsclient.h"
 #include "useridrequest.h"
-#include "mqttclient.h"
+#include "mqttmodule.h"
 #include "serverdatadeal.h"
 #include "serverdatalist.h"
 #include "ToolTcpServer.h"
