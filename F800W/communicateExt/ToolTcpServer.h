@@ -53,10 +53,10 @@ signals:
     void sigCaptureCamPicture();//摄像头抓拍图片
     void sigCamCalibration();//摄像头校准
     void sigGetTempInfo(QByteArray tempInfo);//测温模块,tempInfo为uchar型命令
-    void sigGetTempHardwareInfo();
+    void sigGetTempHardwareInfo();//获取测温模块的信息
     void sigRealTimeLog(bool);//控制日志模块
     void sigToolTcpStateChange(bool state);//true:链接上了，false:链接断开
-
+    void sigSetAllScreenOn(bool);//打開或關閉全屏測溫
 private:
     QTcpServer   *m_tcpServer = nullptr;
     QTcpSocket   *m_tcpSocket = nullptr;
@@ -73,8 +73,9 @@ private:
     void sendSaveFileClient(QList<QStringList> fileList);
     void sendSaveEnd();
     void DevUpdate(QJsonObject rootDat);
-    void responseHardUpdate(QString state);
-
+    void VoicUpdate(QJsonObject rootObj);
+    void responseHardUpdate(ToolCmdHead cmd,QString state);//返回數據到配置工具
+    void responseDataToService(ToolCmdHead cmd,QJsonObject &sendObj);//返回數據到配置工具
 private slots:
       void onNewConnect(void);
       void onTcpRead(void);

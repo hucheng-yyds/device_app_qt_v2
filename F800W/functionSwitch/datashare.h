@@ -40,6 +40,13 @@ public:
     //当前日志模块的输出方向，true:输出到文件,false:输出到配置工具
     bool m_log;
 
+    //测温模块的信息
+    int         m_offset;
+    QString     m_tempType;
+    QString     m_tempVer;
+    int         m_offdata;
+    QString     m_tempDevice;
+
 private:
     static DataShare *m_Instance;
 };

@@ -823,7 +823,10 @@ static thread_return_type WINAPI MQTTClient_run(void* n)
 		if (rc == SOCKET_ERROR)
 		{
 			if (m->c->connected)
-				MQTTClient_disconnect_internal(m, 0);
+            {
+//                printf("000000000000000000000000000000000\n");
+                MQTTClient_disconnect_internal(m, 0);
+            }
 			else
 			{
 				if (m->c->connect_state == SSL_IN_PROGRESS)
@@ -907,8 +910,8 @@ static thread_return_type WINAPI MQTTClient_run(void* n)
 							if (dp->properties)
 							{
 								*(dp->properties) = disc->properties;
-								MQTTClient_disconnect1(m, 10, 0, 1, MQTTREASONCODE_SUCCESS, NULL);
-								Log(TRACE_MIN, -1, "Calling disconnected for client %s", m->c->clientID);
+                                MQTTClient_disconnect1(m, 10, 0, 1, MQTTREASONCODE_SUCCESS, NULL);
+//                                printf(TRACE_MIN, -1, "Calling disconnected for client %s", m->c->clientID);
 								Thread_start(call_disconnected, dp);
 							}
 							else
@@ -1078,6 +1081,7 @@ static void MQTTClient_closeSession(Clients* client, enum MQTTReasonCodes reason
 		client->net.ssl = NULL;
 #endif
 	}
+//    printf("==============================MQTTClient_closeSession=========================================================\n");
 	client->connected = 0;
 	client->connect_state = NOT_IN_PROGRESS;
 
@@ -1372,6 +1376,7 @@ static MQTTResponse MQTTClient_connectURIVersion(MQTTClient handle, MQTTClient_c
 			Log(TRACE_PROTOCOL, 1, NULL, m->c->net.socket, m->c->clientID, connack->rc);
 			if ((rc = connack->rc) == MQTTCLIENT_SUCCESS)
 			{
+//                printf("=======================MQTTCLIENT_SUCCESS=========================================================\n");
 				m->c->connected = 1;
 				m->c->good = 1;
 				m->c->connect_state = NOT_IN_PROGRESS;
@@ -1397,6 +1402,7 @@ static MQTTResponse MQTTClient_connectURIVersion(MQTTClient handle, MQTTClient_c
 				{
 					if ((resp.properties = malloc(sizeof(MQTTProperties))) == NULL)
 					{
+//                        printf("===============11111111111111111111111111=================================");
 						rc = PAHO_MEMORY_ERROR;
 						goto exit;
 					}
@@ -1418,7 +1424,9 @@ exit:
 		}
 	}
 	else
-		MQTTClient_disconnect1(handle, 0, 0, (MQTTVersion == 3), MQTTREASONCODE_SUCCESS, NULL); /* don't want to call connection lost */
+    {
+        MQTTClient_disconnect1(handle, 0, 0, (MQTTVersion == 3), MQTTREASONCODE_SUCCESS, NULL); /* don't want to call connection lost */
+    }
 
 	resp.reasonCode = rc;
 	FUNC_EXIT_RC(resp.reasonCode);
@@ -1908,7 +1916,6 @@ void MQTTProtocol_closeSession(Clients* c, int sendwill)
 int MQTTClient_disconnect(MQTTClient handle, int timeout)
 {
 	int rc = 0;
-
 	Thread_lock_mutex(mqttclient_mutex);
 	rc = MQTTClient_disconnect1(handle, timeout, 0, 1, MQTTREASONCODE_SUCCESS, NULL);
 	Thread_unlock_mutex(mqttclient_mutex);
@@ -1919,7 +1926,6 @@ int MQTTClient_disconnect(MQTTClient handle, int timeout)
 int MQTTClient_disconnect5(MQTTClient handle, int timeout, enum MQTTReasonCodes reason, MQTTProperties* props)
 {
 	int rc = 0;
-
 	Thread_lock_mutex(mqttclient_mutex);
 	rc = MQTTClient_disconnect1(handle, timeout, 0, 1, reason, props);
 	Thread_unlock_mutex(mqttclient_mutex);
@@ -2057,7 +2063,9 @@ MQTTResponse MQTTClient_subscribeMany5(MQTTClient handle, int count, char* const
 	}
 
 	if (rc == SOCKET_ERROR)
-		MQTTClient_disconnect_internal(handle, 0);
+    {
+        MQTTClient_disconnect_internal(handle, 0);
+    }
 	else if (rc == TCPSOCKET_COMPLETE)
 		rc = MQTTCLIENT_SUCCESS;
 
@@ -2207,7 +2215,9 @@ MQTTResponse MQTTClient_unsubscribeMany5(MQTTClient handle, int count, char* con
 	}
 
 	if (rc == SOCKET_ERROR)
-		MQTTClient_disconnect_internal(handle, 0);
+    {
+        MQTTClient_disconnect_internal(handle, 0);
+    }
 
 exit:
 	if (rc < 0)
@@ -2496,14 +2506,21 @@ static MQTTPacket* MQTTClient_cycle(int* sock, ELAPSED_TIME_TYPE timeout, int* r
 		if (m != NULL)
 		{
 			if (m->c->connect_state == TCP_IN_PROGRESS || m->c->connect_state == SSL_IN_PROGRESS)
+            {
 				*rc = 0;  /* waiting for connect state to clear */
+            }
 			else if (m->c->connect_state == WEBSOCKET_IN_PROGRESS)
+            {
 				*rc = WebSocket_upgrade(&m->c->net);
+            }
 			else
 			{
 				pack = MQTTPacket_Factory(m->c->MQTTVersion, &m->c->net, rc);
+//                printf("3333333333333333333333333333333333333333333333333333333333333=:%d\n", *rc);
 				if (*rc == TCPSOCKET_INTERRUPTED)
+                {
 					*rc = 0;
+                }
 			}
 		}
 
@@ -2719,7 +2736,9 @@ int MQTTClient_receive(MQTTClient handle, char** topicName, int* topicLen, MQTTC
 		rc = MQTTClient_deliverMessage(rc, m, topicName, topicLen, message);
 
 	if (rc == SOCKET_ERROR)
-		MQTTClient_disconnect_internal(handle, 0);
+    {
+        MQTTClient_disconnect_internal(handle, 0);
+    }
 
 exit:
 	FUNC_EXIT_RC(rc);
@@ -2751,7 +2770,9 @@ void MQTTClient_yield(void)
 		{
 			MQTTClients* m = (MQTTClient)(handles->current->content);
 			if (m->c->connect_state != DISCONNECTING)
-				MQTTClient_disconnect_internal(m, 0);
+            {
+                MQTTClient_disconnect_internal(m, 0);
+            }
 		}
 		Thread_unlock_mutex(mqttclient_mutex);
 		elapsed = MQTTTime_elapsed(start);

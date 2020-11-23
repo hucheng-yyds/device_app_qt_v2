@@ -2,8 +2,9 @@
 #define FACEIDENTIFY_H
 #include <QThread>
 #include "faceinterface.h"
+#include "tempcallback.h"
 
-class FaceIdentify : public QThread
+class FaceIdentify : public QThread, public TempCallBack
 {
     Q_OBJECT
 public:
@@ -13,6 +14,7 @@ public:
 
 protected:
     virtual void run();
+    void setTempResult(const QString &tempVal, int result);
 
 public slots:
     void dealIcData(int mid, const QString &cardNo);
@@ -29,6 +31,8 @@ private:
 signals:
     // 韦根输出
     void wgOut(const QByteArray &number);
+    // 口罩和安全帽显示
+    void maskHelmet(int flag);
     // ic状态显示
     void icResultShow(int result, const QString &cardNo, const QString &showInfo);
     // 人脸检测结果显示 ui显示

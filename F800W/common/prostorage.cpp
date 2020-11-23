@@ -52,6 +52,8 @@ void ProStorage::init()
     connect(identify, &FaceIdentify::startTemp, tempManager, &TempManager::startTemp);
     connect(identify, &FaceIdentify::showStartTemp, this, &ProStorage::showStartTemp);
     connect(identify, &FaceIdentify::tempShow, this, &ProStorage::tempShow);
+    connect(identify, &FaceIdentify::maskHelmet, this, &ProStorage::maskHelmet);
+    tempManager->setTempCallBack(identify);
     tempManager->start();
     connect(identify, &FaceIdentify::icResultShow, this, &ProStorage::icResultShow);
     connect(identify, &FaceIdentify::idCardResultShow, this, &ProStorage::idCardResultShow);
@@ -74,7 +76,13 @@ void ProStorage::init()
     ToolTcpServer * toolTcpServer = new ToolTcpServer();
     connect(toolTcpServer,&ToolTcpServer::sigRealTimeLog,log,&Log::onLogFun);
     connect(toolTcpServer,&ToolTcpServer::sigToolTcpStateChange,log,&Log::onToolTcpStateChange);
-    connect( log,&Log::sigLogMsg,toolTcpServer,&ToolTcpServer::onGetRealTimeLog );
+    connect(log,&Log::sigLogMsg,toolTcpServer,&ToolTcpServer::onGetRealTimeLog );
+
+    connect(toolTcpServer,&ToolTcpServer::sigGetTempInfo,tempManager,&TempManager::onSendCmdToTemp);
+    connect(tempManager,&TempManager::tempeatureInfo,toolTcpServer,&ToolTcpServer::onGetTempResponse);
+    connect(toolTcpServer,&ToolTcpServer::sigSetAllScreenOn,tempManager,&TempManager::openAllScreenTemp);
+    connect(toolTcpServer,&ToolTcpServer::sigGetTempHardwareInfo,tempManager,&TempManager::getTempInfo);
+
     toolTcpServer->start();
 
     MqttModule *mqttClient = new MqttModule;

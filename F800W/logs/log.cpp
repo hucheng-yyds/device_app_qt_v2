@@ -45,27 +45,26 @@ Log::Log(QObject *parent) : QObject(parent)
     timer->setInterval(500);
     connect(timer,&QTimer::timeout,[=](){
         if( dataShare->m_log ==false)
-        if(Log::logList.length()!=0)
         {
-            for(int i = 0;i<Log::logList.length();i++)
+            foreach(auto item,Log::logList)
             {
-                emit sigLogMsg(Log::logList.at(i));
+                emit sigLogMsg(item);
+                logList.removeOne(item);
             }
-            Log::logList.clear();
         }
     });
-//    qInstallMessageHandler(outputMessageOnLine);
+//    qInstallMessageHandler(outputMessage);
 }
 
 void Log::onToolTcpStateChange(bool state)//true:链接上了，false:链接断开
 {
-//    if(!state)//
-//    {
+    if(!state)//
+    {
 //        qt_debug() << state;
 //        timer->stop();
 //        dataShare->m_log = true;
 //        qInstallMessageHandler(outputMessage);
-//    }
+    }
 }
 
 

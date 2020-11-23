@@ -50,7 +50,7 @@ SwitchCtl::SwitchCtl()
         m_openMode = userObj.value("openMode").toString();
         m_identifyDistance = userObj.value("identifyDistance").toInt();
         m_doorDelayTime = userObj.value("doorDelayTime").toInt();
-        m_helet = userObj.value("helet").toBool();
+        m_helet = userObj.value("helet").toInt();
         m_mask = userObj.value("mask").toInt();
         m_showIc = userObj.value("showIc").toBool();
         m_fahrenheit = userObj.value("fahrenheit").toBool();
@@ -206,7 +206,7 @@ void SwitchCtl::setSwitchDefault()
     m_openMode = "FaceTemp";
     m_identifyDistance = 1;
     m_doorDelayTime = 3;
-    m_helet = false;
+    m_helet = 0;
     m_mask = 0;
     m_showIc = false;
     m_fahrenheit = false;

@@ -593,6 +593,7 @@ int WebSocket_getch(networkHandles *net, char* c)
 	FUNC_ENTRY;
 	if ( net->websocket )
 	{
+        printf("111111111111111111111111111111111111111\n");
 		struct ws_frame *frame = NULL;
 
 		if ( in_frames && in_frames->first )
@@ -624,8 +625,10 @@ int WebSocket_getch(networkHandles *net, char* c)
 		rc = SSLSocket_getch(net->ssl, net->socket, c);
 #endif
 	else
+    {
 		rc = Socket_getch(net->socket, c);
-
+//        printf("0-------------------------=%d\n", rc);
+    }
 exit:
 	FUNC_EXIT_RC(rc);
 	return rc;

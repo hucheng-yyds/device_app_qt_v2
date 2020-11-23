@@ -24,6 +24,8 @@ public slots:
     void insertFaceGroups(int id, const QString &username, const QString &time, const QString &photoname, const QString &iphone);
 
 private:
+    // 处理二维码数据
+    void dealRcodeData(const QByteArray &datas);
     // 根据人脸框的大小过滤每帧图片的人脸
     bool filter(const FaceRect &rect);
     // 取出每帧图片的最大人脸，并判断下轮比对是否开始

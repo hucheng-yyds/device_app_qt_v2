@@ -8,7 +8,7 @@
 
 #define switchCtl SwitchCtl::getInstance()
 
-#define VERSION     "2.0.2"
+#define VERSION     "2.0.4"
 #define DEVICE_TYPE "F800W"
 
 class SwitchCtl
@@ -100,7 +100,7 @@ public:
     // 开门等待时间 单位秒
     int m_doorDelayTime;
     // 安全帽开关
-    bool m_helet;
+    int m_helet;
     // 口罩开关 0:表示关闭 1:提醒 2:检测
     int m_mask;
     // 显示ic卡号 开关

@@ -335,7 +335,10 @@ int Socket_getch(int socket, char* c)
 
 	FUNC_ENTRY;
 	if ((rc = SocketBuffer_getQueuedChar(socket, c)) != SOCKETBUFFER_INTERRUPTED)
+    {
+        printf("1111111111111111111111111111111111111111111111=%d\n", rc);
 		goto exit;
+    }
 
 	if ((rc = recv(socket, c, (size_t)1, 0)) == SOCKET_ERROR)
 	{
@@ -352,7 +355,7 @@ int Socket_getch(int socket, char* c)
 	{
 		SocketBuffer_queueChar(socket, *c);
 		rc = TCPSOCKET_COMPLETE;
-	}
+    }
 exit:
 	FUNC_EXIT_RC(rc);
 	return rc;

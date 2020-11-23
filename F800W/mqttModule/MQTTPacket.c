@@ -116,30 +116,37 @@ void* MQTTPacket_Factory(int MQTTVersion, networkHandles* net, int* error)
 
 	/* read the packet data from the socket */
 	*error = WebSocket_getch(net, &header.byte);
-	if (*error != TCPSOCKET_COMPLETE)   /* first byte is the header byte */
-		goto exit; /* packet not read, *error indicates whether SOCKET_ERROR occurred */
-
+    if (*error != TCPSOCKET_COMPLETE)   /* first byte is the header byte */
+    {
+        goto exit; /* packet not read, *error indicates whether SOCKET_ERROR occurred */
+    }
 	/* now read the remaining length, so we know how much more to read */
-	if ((*error = MQTTPacket_decode(net, &remaining_length)) != TCPSOCKET_COMPLETE)
-		goto exit; /* packet not read, *error indicates whether SOCKET_ERROR occurred */
-
-	/* now read the rest, the variable header and payload */
+    if ((*error = MQTTPacket_decode(net, &remaining_length)) != TCPSOCKET_COMPLETE)
+    {
+        goto exit; /* packet not read, *error indicates whether SOCKET_ERROR occurred */
+    }
+    /* now read the rest, the variable header and payload */
 	data = WebSocket_getdata(net, remaining_length, &actual_len);
 	if (remaining_length && data == NULL)
 	{
+        data = WebSocket_getdata(net, remaining_length, &actual_len);
 		*error = SOCKET_ERROR;
-		goto exit; /* socket error */
+        goto exit; /* socket error */
 	}
 
 	if (actual_len < remaining_length)
+    {
 		*error = TCPSOCKET_INTERRUPTED;
-	else
+    }
+    else
 	{
 		ptype = header.bits.type;
 		if (ptype < CONNECT || (MQTTVersion < MQTTVERSION_5 && ptype >= DISCONNECT) ||
 				(MQTTVersion >= MQTTVERSION_5 && ptype > AUTH) ||
 				new_packets[ptype] == NULL)
-			Log(TRACE_MIN, 2, NULL, ptype);
+        {
+//            printf("------22222--------------------------------------%d, %d\n", TRACE_MIN, ptype);
+        }
 		else
 		{
 			if ((pack = (*new_packets[ptype])(MQTTVersion, header.byte, data, remaining_length)) == NULL)
@@ -155,6 +162,7 @@ void* MQTTPacket_Factory(int MQTTVersion, networkHandles* net, int* error)
 
 				if (buf == NULL)
 				{
+//                    printf("44444444444444444444444444444444444444444444444\n");
 					*error = SOCKET_ERROR;
 					goto exit;
 				}
@@ -168,10 +176,15 @@ void* MQTTPacket_Factory(int MQTTVersion, networkHandles* net, int* error)
 		}
 	}
 	if (pack)
+    {
 		net->lastReceived = MQTTTime_now();
+    }
 exit:
+//        printf("000000001111111111111=:%d\n", pack);
 	if (*error == TCPSOCKET_INTERRUPTED)
+    {
 		WebSocket_framePosSeekTo(headerWsFramePos);
+    }
 
 	FUNC_EXIT_RC(*error);
 	return pack;

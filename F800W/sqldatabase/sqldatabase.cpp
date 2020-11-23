@@ -113,6 +113,7 @@ QVariantList SqlDatabase::sqlSelect(int id)
 {
     m_mutex.lock();
     QVariantList value;
+    value.clear();
     QSqlQuery query(m_database);
     QString query_sql = "select * from userdata where id = ?";
     query.prepare(query_sql);

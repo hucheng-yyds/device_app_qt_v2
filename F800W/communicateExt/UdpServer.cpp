@@ -4,7 +4,6 @@
 #include <QUuid>
 #include <QDataStream>
 #include "datashare.h"
-
 UdpServer::UdpServer()
 {
     m_udpServer = new QUdpSocket;

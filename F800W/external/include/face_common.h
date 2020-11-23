@@ -81,7 +81,7 @@ typedef struct FaceAttr {
     float beard_confidence; //invalid param
     float hat[9];           // [no_hat, safety_helmet, chef_hat, student_hat, helmet, taoism_hat, kerchief, others, unknown]
     float hat_confidence;   //invalid param
-    float respirator[6];    // [no_respirator, surgical, anti-pollution, common, kitchen_transparent, unknown]
+    float respirator[7];    // [no_respirator, surgical, anti-pollution, common, kitchen_transparent, differ_respirator, unknown]
     float respirator_confidence; //invalid param
     float glasses[5];       // [no_glasses, glasses_with_dark_frame, regular_glasses, sunglasses, unknown]
     float glass_confidence; //invalid param

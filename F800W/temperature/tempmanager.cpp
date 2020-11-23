@@ -239,16 +239,33 @@ void TempManager::startTemp()
 {
     if(expired())
     {
-        if(!m_startTemp)
-        {
-            dataShare->m_tempFlag = false;
-            int count = 1500;
-            if(switchCtl->m_loose)
+        int lens = 0;
+        while (true) {
+            uchar buf[4095];
+            int len = read(m_fd, buf, 4095);
+            if (len <= 0)
             {
-                count = 500;
+                if(len < 0)
+                {
+                    close(m_fd);
+                    checkUART();
+                }
+                qt_debug() << "get temp data end" << len << m_fd;
+                break;
             }
-            countdown_ms(count);
+            lens += len;
+            if(lens > 20000)
+            {
+                qt_debug() << "start temp size > 20000";
+                break;
+            }
         }
+        int count = 1500;
+        if(switchCtl->m_loose)
+        {
+            count = 500;
+        }
+        countdown_ms(count);
         m_tempStatus = false;
         m_startTemp = true;
         tcflush(m_fd, TCIOFLUSH);
@@ -266,13 +283,15 @@ void TempManager::timeckeck()
     {
         if(expired())
         {
-            m_startTemp = false;
+
             m_tempCount = 0;
             QString tempVal = getTemperature();
             int result = compareTemp(tempVal);
-            dataShare->m_tempFlag = true;
-            dataShare->m_tempVal = tempVal;
-            dataShare->m_tempResult = result;
+            m_tempCallBack->setTempResult(tempVal, result);
+//            dataShare->m_tempFlag = true;
+//            dataShare->m_tempVal = tempVal;
+//            dataShare->m_tempResult = result;
+            m_startTemp = false;
         }
     }
 }
@@ -310,6 +329,7 @@ QString TempManager::getTemperature()
     qt_debug() << "start get temp";
     while (true) {
         uchar buf[4095];
+        memset(buf, 0, 4095);
         int len = read(m_fd, buf, 4095);
         if (len <= 0)
         {
@@ -325,7 +345,7 @@ QString TempManager::getTemperature()
         for (int i = 0; i < len; i ++) {
             join_buf << buf[i];
         }
-        if(join_len > 10000)
+        if(join_len > 20000)
         {
             qt_debug() << "get temp data size > 10000";
             break;
@@ -382,7 +402,7 @@ QString TempManager::getTemperature()
         maxVal = (maxVal)*1.8 + 32.0;
     }
     tempVal = QString::number(maxVal, 'f', 1);
-    if(m_tempStatus)
+    if(m_tempStatus && maxVal < 36.0)
     {
         tempVal = "0";
     }
@@ -424,7 +444,7 @@ int TempManager::compareTemp(const QString &tempVal)
     else {
         result = -2;
     }
-    if(m_tempStatus)
+    if(m_tempStatus && tempVal < "36.0")
     {
         result = -2;
     }
@@ -549,11 +569,11 @@ void TempManager::getTempInfo()
             qt_debug() << sum << join_buf[i+8];
             if(join_buf[i+8] == sum)
             {
-//                g_offset = join_buf[i+2];
-//                g_tempType = QString("%1.%2").arg(join_buf[i+3]).arg(join_buf[i+4]);
-//                g_tempVer = QString("%1").arg(join_buf[i+6]);
-//                g_offdata = join_buf[i+5];
-//                g_tempDevice = QString("%1").arg(join_buf[i+7]);
+                dataShare->m_offset = join_buf[i+2];
+                dataShare->m_tempType = QString("%1.%2").arg(join_buf[i+3]).arg(join_buf[i+4]);
+                dataShare->m_tempVer = QString("%1").arg(join_buf[i+6]);
+                dataShare->m_offdata = join_buf[i+5];
+                dataShare->m_tempDevice = QString("%1").arg(join_buf[i+7]);
             }
         }
     }

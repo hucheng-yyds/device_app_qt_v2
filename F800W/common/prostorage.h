@@ -60,6 +60,8 @@ signals:
     void idCardResultShow(int flag, const QString &name, const QString &result, const QString &showInfo);
     // 读卡状态
     void readIcStatus(int flag);
+    // 口罩和安全帽显示
+    void maskHelmet(int flag);
 
 private:
     // 功能模块初始化

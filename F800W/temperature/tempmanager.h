@@ -3,6 +3,7 @@
 #include <QThread>
 #include <QTimer>
 #include "switch.h"
+#include "tempcallback.h"
 
 //通信协议 地址[4]包数[2]长度[2]数据[*]校验[2]
 typedef struct {
@@ -18,6 +19,7 @@ class TempManager : public QThread
     Q_OBJECT
 public:
     explicit TempManager();
+    void setTempCallBack(TempCallBack *pointer){m_tempCallBack=pointer;}
 
 protected:
     virtual void run();
@@ -82,5 +84,6 @@ private:
     bool m_startTemp;
     float m_tempModule;
     int m_fd;
+    TempCallBack *m_tempCallBack;
 };
 #endif // TEMPMANAGER_H

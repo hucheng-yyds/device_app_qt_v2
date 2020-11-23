@@ -41,7 +41,7 @@ LIBS += -lsns_imx327 -lsns_imx327_2l -lsns_imx307 -lsns_imx307_2l -lsns_imx335 -
 LIBS += -ldnvqe -lhdmi -lhi_cipher -live -lmd -ltde -lupvqe -lVoiceEngine -lgomp
 LIBS += -laaccomm -laacdec -laacenc -laacsbrdec -laacsbrenc -ldl
 LIBS += -lopencv_core -lopencv_imgcodecs -lopencv_imgproc -lopencv_calib3d -lopencv_features2d  -lopencv_flann -lopencv_highgui -lopencv_videoio
-LIBS += -lmsc -lcrypto -lssl
+LIBS += -lmsc -lcrypto -lssl -lQr
 LIBS += -lfacesdk_dv300
 LIBS += -l100UD -lusb-1.0 -lidr220s_reader
 
@@ -88,6 +88,13 @@ DISTFILES += \
     qml/Focusing.qml \
     qml/QRcode.qml \
     qml/Standby.qml
+
+DISTFILES += \
+    oldqml/main.qml \
+    oldqml/Face.qml \
+    oldqml/Focusing.qml \
+    oldqml/QRcode.qml \
+    oldqml/Standby.qml
 
 
 # Additional import path used to resolve QML modules in Qt Creator's code model

@@ -243,6 +243,8 @@ Item {
             cardFail.visible = false;
             cardSuccess.visible = false;
             kansxt.visible = false;
+            helmet.visible = false;
+            mask.visible = false;
         }
     }
 
@@ -316,6 +318,44 @@ Item {
         x: 325
         y: 517
         source: "image/idCard.png"
+        visible: false
+    }
+
+    // 口罩
+    Rectangle {
+        id: maskBg
+        x: 250
+        y: 490
+        visible: mask.visible
+        color: "#FEFFFF"
+        radius: 30
+        width: 300
+        height: 300
+    }
+    Image {
+        id: mask
+        x: 329
+        y: 539
+        source: "image/mask.png"
+        visible: false
+    }
+
+    // 安全帽
+    Rectangle {
+        id: helmetBg
+        x: 250
+        y: 490
+        visible: helmet.visible
+        color: "#FEFFFF"
+        radius: 30
+        width: 300
+        height: 300
+    }
+    Image {
+        id: helmet
+        x: 329
+        y: 539
+        source: "image/helmet.png"
         visible: false
     }
 
@@ -590,11 +630,7 @@ Item {
             sync.visible = false;
             isEg = eg;
             isTemp = temp;
-            if (eg) {
-                iconFace.source = "image/icon_face.png"
-            } else {
-                iconFace.source = "image/icon_temp.png"
-            }
+
             image_head.visible = isTemp
             sleep.restart();
         }
@@ -644,6 +680,8 @@ Item {
         }
 
         onFaceResultShow:{
+            helmet.visible = false;
+            mask.visible = false;
             kansxt.visible = false;
             resultText.text = qsTr(showInfo)
             pngRun.visible = true
@@ -702,7 +740,6 @@ Item {
             pngShow.visible = false
             hideName.restart()
             gifChange.restart()
-            sleep.restart()
             if(2 === result)
             {
                 resultText.text = qsTr(showInfo)
@@ -715,12 +752,30 @@ Item {
             {
                 resultText.text = qsTr(showInfo)
             }
-            hideName.restart()
             standby.visible = false;
             face.visible = true;
             sleep.restart();
         }
-
+        onMaskHelmet: {
+            pngRun.visible = true
+            pngShow.visible = false
+            hideName.restart()
+            gifChange.restart()
+            sleep.restart()
+            pose_blur_Timer.restart();
+            standby.visible = false;
+            face.visible = true;
+            if(0 == flag)
+            {
+                helmet.visible = false;
+                mask.visible = true;
+            }
+            else if(1 == flag)
+            {
+                helmet.visible = true;
+                mask.visible = false;
+            }
+        }
         onIdCardResultShow: {
             pose_blur_Timer.restart();
             tempBg.visible = true;
@@ -787,6 +842,8 @@ Item {
             sleep.restart();
         }
         onShowStartTemp: {
+            helmet.visible = false;
+            mask.visible = false;
             idCard.visible = false;
             cardFail.visible = false;
             cardSuccess.visible = false;
