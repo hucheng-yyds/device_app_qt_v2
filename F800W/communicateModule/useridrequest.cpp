@@ -60,7 +60,13 @@ void UserIdRequest::run()
             }
             else
             {
-                emit allUserIc();
+                if(switchCtl->m_protocol)
+                {
+                    emit allUserIc();
+                }
+                else {
+
+                }
                 sleep(1);
                 updateIdentifyValue();
                 dataShare->m_sync = false;
@@ -89,12 +95,24 @@ void UserIdRequest::run()
 
 void UserIdRequest::httpsUpdateUsers(const QJsonObject &jsonObj)
 {
-    QJsonObject jsonData = jsonObj["users"].toObject();
+//    static int ids = 0;
+//    QFile file1(QString("./%1.json").arg(ids++));
+//    if(!file1.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+//        qDebug() << "File open failed!";
+//    } else {
+//        qDebug() <<"File open successfully!";
+//    }
+//    QJsonDocument jdoc(jsonObj);
+//    file1.seek(0);
+//    file1.write(jdoc.toJson());
+//    file1.flush();
+//    file1.close();
+//    QJsonObject jsonData = jsonObj["users"].toObject();
     QString startTime = "", expireTime = "", passTimeSection = "", passPeriod = "", mobile = "", photoName = "", cardNo = "", remark = "";
     QStringList text;
     text.clear();
     int passNum = -1, isBlack = -1;
-    int id = jsonData["mid"].toInt();
+    int id = jsonObj["mid"].toInt();
     m_updateFace.remove(id);
     QString name = jsonObj["username"].toString();
     QString photo = jsonObj["photo"].toString();
@@ -138,7 +156,7 @@ void UserIdRequest::httpsUpdateUsers(const QJsonObject &jsonObj)
     if(jsonObj.contains("mjkh"))
     {
         cardNo = jsonObj["mjkh"].toString();
-        if(!cardNo.isEmpty())
+        if(!cardNo.isEmpty() && cardNo.size() >= 6)
         {
             cardNo = cardNo.toLower();
             sqlDatabase->sqlInsertIc(id, cardNo);
@@ -149,7 +167,13 @@ void UserIdRequest::httpsUpdateUsers(const QJsonObject &jsonObj)
         }
     }
     text << startTime << expireTime << passPeriod << passTimeSection << remark;
+    qt_debug() << id << cardNo << name << edittime << photoName << mobile << passNum << isBlack << text;
     sqlDatabase->sqlInsertAuth(id, passNum, isBlack, text);
+    QFile file(QString::number(id) + ".jpg");
+    file.open(QIODevice::ReadWrite);
+    file.write(QByteArray::fromBase64(photo.toUtf8()));
+    file.close();
+    m_faceSyncStatus = true;
     emit insertFaceGroups(id, name, edittime, photoName, mobile);
 }
 

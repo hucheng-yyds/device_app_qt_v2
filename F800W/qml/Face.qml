@@ -772,8 +772,8 @@ Item {
             }
             else if(1 == flag)
             {
-                helmet.visible = true;
                 mask.visible = false;
+                helmet.visible = true;
             }
         }
         onIdCardResultShow: {
@@ -864,32 +864,32 @@ Item {
             pose_blur_Timer.restart();
             if (result === 0) {
                 isResultz = false;
-                isResulty = true;
                 tempInfoLow.visible = false;
                 tempInfoError.visible = false;
                 tempResult.text = tempVal;
                 tempResult.visible = true;
+                isResulty = true;
             } else if (result === 1) {
-                isResultz = true;
                 isResulty = false;
                 tempInfoLow.visible = false;
                 tempInfoError.visible = false;
                 tempResult.text = tempVal;
                 tempResult.visible = true;
+                isResultz = true;
             } else if(result === -1)
             {
                 isResultz = false;
                 isResulty = false;
-                tempInfoLow.visible = true;
                 tempInfoError.visible = false;
                 tempResult.visible = false;
+                tempInfoLow.visible = true;
             }
             else {
                 isResultz = false;
                 isResulty = false;
                 tempInfoLow.visible = false;
-                tempInfoError.visible = true;
                 tempResult.visible = false;
+                tempInfoError.visible = true;
             }
             sleep.restart();
         }
@@ -900,6 +900,7 @@ Item {
             standby.g_minutes = min;
             date.text = qsTr(dataTime);
             times.text = digitalClock;
+            sleepTime = sleeptime;
         }
     }
 }

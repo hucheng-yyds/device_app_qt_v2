@@ -73,6 +73,11 @@ void ProStorage::init()
     connect(wg, &WgModule::sigWgInfo, identify, &FaceIdentify::dealIcData);
     wg->start();
 
+    RcodeModule *rcode = new RcodeModule;
+    connect(face, &FaceManager::rcodeResult, rcode, &RcodeModule::recvRcodeResult);
+    connect(rcode, &RcodeModule::rcodeResultShow, this, &ProStorage::icResultShow);
+    rcode->start();
+
     ToolTcpServer * toolTcpServer = new ToolTcpServer();
     connect(toolTcpServer,&ToolTcpServer::sigRealTimeLog,log,&Log::onLogFun);
     connect(toolTcpServer,&ToolTcpServer::sigToolTcpStateChange,log,&Log::onToolTcpStateChange);
@@ -108,12 +113,11 @@ void ProStorage::init()
     identify->start();
     userRequest->start();
     OfflineRecord *offlineRecord = new OfflineRecord;
+    ServerDataDeal *dataDeal = new ServerDataDeal;
+    dataDeal->setPacket(serverList);
     if(switchCtl->m_protocol)
     {
-        ServerDataDeal *dataDeal = new ServerDataDeal;
         connect(dataDeal, &ServerDataDeal::insertFaceGroups, face, &FaceManager::insertFaceGroups);
-        dataDeal->setHttp(httpClient);
-        dataDeal->setPacket(serverList);
         TcpClient *tcpClient = new TcpClient;
         tcpClient->setPacket(serverList);
         connect(tcpClient, &TcpClient::allUserId, userRequest, &UserIdRequest::onAlluserId);
@@ -131,9 +135,9 @@ void ProStorage::init()
         connect(dataDeal, &ServerDataDeal::uploadopenlog, tcpClient, &TcpClient::uploadopenlog);
         connect(userRequest, &UserIdRequest::allUserIc, tcpClient, &TcpClient::requestGetAllUserIC);
         tcpClient->start();
-        dataDeal->start();
     }
     else {
+        dataDeal->setHttp(httpClient);
         connect(identify, &FaceIdentify::uploadopenlog, httpClient, &HttpsClient::httpsUploadopenlog);
         connect(httpClient, &HttpsClient::allUserId, userRequest, &UserIdRequest::onAlluserId);
         connect(userRequest, &UserIdRequest::getUsers, httpClient, &HttpsClient::HttpsGetUsers);
@@ -142,6 +146,7 @@ void ProStorage::init()
         httpClient->start();
     }
     offlineRecord->start();
+    dataDeal->start();
     mqttClient->start();
     emit syncSuccess(switchCtl->m_faceDoorCtl, switchCtl->m_tempCtl);
 }

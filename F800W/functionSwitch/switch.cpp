@@ -63,7 +63,7 @@ SwitchCtl::SwitchCtl()
         m_nameMask = userObj.value("nameMask").toInt();
         m_tts = userObj.value("tts").toBool();
         m_tempValueBroadcast = userObj.value("tempValueBroadcast").toBool();
-        m_rcode = userObj.value("rcode").toBool();
+        m_rcode = userObj.value("rcode").toInt();
         m_ic = userObj.value("ic").toBool();
         m_volume = userObj.value("volume").toInt();
         m_wifiName = wifiObj.value("wifiName").toString();
@@ -83,6 +83,10 @@ SwitchCtl::SwitchCtl()
         m_sn = obj.value("sn").toString();
         qt_debug() << m_angle << m_camera << m_screen << m_sn;
     }
+}
+
+SwitchCtl::~SwitchCtl()
+{
 }
 
 void SwitchCtl::saveSwitchParam()
@@ -219,7 +223,7 @@ void SwitchCtl::setSwitchDefault()
     m_nameMask = 0;
     m_tts = false;
     m_tempValueBroadcast = false;
-    m_rcode = false;
+    m_rcode = 0;
     m_volume = 100;
     m_ic = false;
 

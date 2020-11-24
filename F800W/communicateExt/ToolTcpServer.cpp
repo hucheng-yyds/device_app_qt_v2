@@ -233,7 +233,9 @@ void ToolTcpServer::setParameters(QJsonObject & data,QString msgType,QString cmd
     {
         switchCtl->m_closeScreenTime = data.value(key_closeScreenTime).toInt();
         if(switchCtl->m_closeScreenTime<3)
+        {
             switchCtl->m_closeScreenTime = 3;//s
+        }
     }
     // 后台通信协议开关 true:tcp协议，false:http协议
     if(data.contains(key_protocol))
@@ -301,7 +303,8 @@ void ToolTcpServer::setParameters(QJsonObject & data,QString msgType,QString cmd
     // 开门等待时间 单位秒
     if(data.contains(key_doorDelayTime))
     {
-        switchCtl->m_identifyDistance = data.value(key_doorDelayTime).toInt();
+        int doorTime = data.value(key_doorDelayTime).toInt();
+        switchCtl->m_doorDelayTime = (doorTime < 2 ? 2 : doorTime);
     }
     // 安全帽开关
     if(data.contains(key_helet))
@@ -360,7 +363,7 @@ void ToolTcpServer::setParameters(QJsonObject & data,QString msgType,QString cmd
     }
     if(data.contains(key_rcode))
     {
-        switchCtl->m_rcode = data.value(key_rcode).toBool();
+        switchCtl->m_rcode = data.value(key_rcode).toInt();
     }
     if(data.contains(key_volume))
     {
@@ -388,7 +391,8 @@ void ToolTcpServer::setParameters(QJsonObject & data,QString msgType,QString cmd
     }
     if(data.contains(key_identifyWaitTime))
     {
-        switchCtl->m_identifyWaitTime = data.value(key_identifyWaitTime).toInt();
+        int waitTime = data.value(key_identifyWaitTime).toInt();
+        switchCtl->m_identifyWaitTime = (waitTime < 3 ? 3 : waitTime);
     }
     if(data.contains(key_idcardValue))
     {
@@ -934,6 +938,7 @@ void ToolTcpServer::DevUpdate(QJsonObject rootObj)
     dataObj = rootObj.value("hardUpdate").toObject();
     if(dataObj.contains("hardUpdate"))
     {
+        dataShare->m_upgrade = true;
         QString verStr;
         if(dataObj.contains("number"))
         {
@@ -1025,6 +1030,7 @@ void ToolTcpServer::DevUpdate(QJsonObject rootObj)
                         system("rm update.tar.xz");
                         responseHardUpdate(Dev_FirmwareUpgrade_response,"error");
                     }
+                    dataShare->m_upgrade = false;
                 }
             }
         }

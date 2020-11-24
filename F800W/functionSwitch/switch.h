@@ -15,6 +15,7 @@ class SwitchCtl
 {
 public:
     explicit SwitchCtl();
+    ~SwitchCtl();
     static SwitchCtl *getInstance()
     {
         if (!m_Instance) {
@@ -125,8 +126,8 @@ public:
     bool m_tts;
     // 温度值播报数字开关，只有当tts打开才有效
     bool m_tempValueBroadcast;
-    // 二维码开关 true:打开 false:关闭
-    bool m_rcode;
+    // 二维码开关 0:关闭 1:摄像头识别 2：读头识别
+    int m_rcode;
     // 音量控制 0 - 100 0是静音
     int m_volume;
     // ic卡开关

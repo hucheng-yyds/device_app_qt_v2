@@ -87,15 +87,18 @@ void FaceIdentify::run()
         QStringList datas;
         bool authority = false;
         bool egPass = false;
+        int openDoorType = 1;
         bool tempPass = false;
         QString isSuccess = "0";
         QString isStranger = "0";
         QString invalidReason = "";
+        QString realName = "", cardNum = "", nation = "", addr = "", birth = "";
         uint64_t face_id = 0;
         QString uploadTime = "";
         int offlineNmae = 0;
         QString cardNo = "";
         int isOver = 0;
+        int sex = 0;
         QString snapshot = "";
         bool idCardResult = false;
         char *feature_result = nullptr;
@@ -108,41 +111,6 @@ void FaceIdentify::run()
         m_interFace->m_mutex.unlock();
         QVector<int> matchPair(bgrLength, irLength);
         BGR_IR_match(bgrHandle, bgrLength, irHandle, irLength, matchPair.data());
-        if (mask)
-        {
-            getFaceAttrResult(bgrHandle[m_iMFaceHandle[0].index],  &face_attr);
-            qt_debug() << "mask" <<  face_attr.respirator[0] << face_attr.respirator[1] << face_attr.respirator[2];
-            if (face_attr.respirator[0] > 0.8)
-            {
-                emit maskHelmet(0);
-                hardware->playSound(tr("请戴口罩").toUtf8(), "dkouzhao.aac");
-                if (2 == mask)
-                {
-                    sleep(2);
-                    goto endIdentify;
-                }
-                msleep(500);
-            }
-            else {
-
-            }
-        }
-        if (helmet)
-        {
-            getFaceAttrResult(bgrHandle[m_iMFaceHandle[0].index],  &face_attr);
-            qt_debug() << "helmet" <<  face_attr.hat[0] << face_attr.hat[1] << face_attr.hat[2] << face_attr.hat[3] << face_attr.hat[4] << face_attr.hat[5] << face_attr.hat[6] << face_attr.hat[7] << face_attr.hat[8];
-            if (face_attr.hat[0] > 0.8 || face_attr.hat[1] < 0.2)
-            {
-                emit maskHelmet(1);
-                hardware->playSound(tr("请戴安全帽").toUtf8(), "helmet.aac");
-                if (2 == helmet)
-                {
-                    sleep(2);
-                    goto endIdentify;
-                }
-                msleep(500);
-            }
-        }
         if (faceDoor && !m_cardWork)
         {
             int i = 0;
@@ -177,6 +145,41 @@ void FaceIdentify::run()
                 }
                 if (!m_interFace->m_iStop && m_interFace->m_quality)
                 {
+                    if (mask)
+                    {
+                        getFaceAttrResult(bgrHandle[m_iMFaceHandle[0].index],  &face_attr);
+                        qt_debug() << "mask" <<  face_attr.respirator[0] << face_attr.respirator[1] << face_attr.respirator[2];
+                        if (face_attr.respirator[0] > 0.8)
+                        {
+                            emit maskHelmet(0);
+                            hardware->playSound(tr("请戴口罩").toUtf8(), "dkouzhao.aac");
+                            if (2 == mask)
+                            {
+                                sleep(2);
+                                goto endIdentify;
+                            }
+                            msleep(500);
+                        }
+                        else {
+
+                        }
+                    }
+                    if (helmet)
+                    {
+                        getFaceAttrResult(bgrHandle[m_iMFaceHandle[0].index],  &face_attr);
+                        qt_debug() << "helmet" <<  face_attr.hat[0] << face_attr.hat[1] << face_attr.hat[2] << face_attr.hat[3] << face_attr.hat[4] << face_attr.hat[5] << face_attr.hat[6] << face_attr.hat[7] << face_attr.hat[8];
+                        if (face_attr.hat[0] > 0.8 || face_attr.hat[1] < 0.2)
+                        {
+                            emit maskHelmet(1);
+                            hardware->playSound(tr("请戴安全帽").toUtf8(), "helmet.aac");
+                            if (2 == helmet)
+                            {
+                                sleep(2);
+                                goto endIdentify;
+                            }
+                            msleep(500);
+                        }
+                    }
                     float result = 0.0;
                     int size = 0;
                     m_interFace->m_mutex.lock();
@@ -229,12 +232,20 @@ void FaceIdentify::run()
                         {
                             if(dataShare->m_idCardFlag)
                             {
+                                openDoorType = 4;
+                                realName = dataShare->m_idCardDatas.at(0);
+                                cardNum = dataShare->m_idCardDatas.at(1);
+                                nation = dataShare->m_idCardDatas.at(2);
+                                addr = dataShare->m_idCardDatas.at(3);
+                                birth = dataShare->m_idCardDatas.at(4);
+                                sex = dataShare->m_idCardDatas.at(5).compare("男") == 0 ? 1 : 2;
                                 idCardResult = idCardFaceComparison(feature_result);
                                 dataShare->m_idCardFlag = false;
                             }
                             else {
                                 emit idCardResultShow(0, tr("未注册"), tr("请刷身份证"), tr("请刷身份证"));
                                 hardware->playSound(tr("请刷身份证").toUtf8(), "shenfenzh.aac");
+                                msleep(500);
                                 goto endIdentify;
                             }
                         }
@@ -256,9 +267,11 @@ void FaceIdentify::run()
             {
                 if(!authority)
                 {
-                    if (egPass) {
+                    if (egPass)
+                    {
                         hardware->playSound(tr("认证通过").toUtf8(), "chengong.aac");
-                    } else {
+                    }
+                    else {
                         hardware->playSound(tr("未注册").toUtf8(), "shibai.aac");
                     }
                 }
@@ -378,6 +391,7 @@ void FaceIdentify::run()
         }
         else if(openMode.compare("Temp") == 0)
         {
+            openDoorType = 5;
             if(tempPass)
             {
                 isSuccess = "1";
@@ -430,7 +444,14 @@ void FaceIdentify::run()
         isOver = tempPass ? 1 : 0;
         datas.clear();
         uploadTime = QDateTime::currentDateTime().addSecs(28800).toString("yyyy-MM-dd HH:mm:ss");
-        datas << uploadTime << m_tempVal << isSuccess << invalidReason << isStranger << m_cardNo;
+        if(4 == openDoorType)
+        {
+            datas << uploadTime << m_tempVal << isSuccess << invalidReason << isStranger << m_cardNo << realName << cardNum << nation
+                  << addr << birth;
+        }
+        else {
+            datas << uploadTime << m_tempVal << isSuccess << invalidReason << isStranger << m_cardNo << "" << "" << "" << "" << "";
+        }
         if((switchCtl->m_uploadStrangerCtl || egPass) && !vi)
         {
             if(m_cardWork && !tempCtl)
@@ -439,9 +460,9 @@ void FaceIdentify::run()
             else {
                 if(dataShare->m_netStatus)
                 {
-                    emit uploadopenlog(offlineNmae, face_id, snapshot, isOver, 1, tempCtl, datas);
+                    emit uploadopenlog(offlineNmae, face_id, snapshot, isOver, 1, tempCtl, sex, datas);
                 }
-                sqlDatabase->sqlInsertOffline(offlineNmae, face_id, 1, isOver, tempCtl, datas);
+                sqlDatabase->sqlInsertOffline(offlineNmae, face_id, 1, isOver, tempCtl, sex, datas);
             }
         }
         m_cardWork = false;
@@ -551,9 +572,10 @@ void FaceIdentify::dealIcData(int mid, const QString &cardNo)
         QStringList datas;
         datas.clear();
         int offlineNmae = QDateTime::currentDateTime().toTime_t();
-        datas << QDateTime::currentDateTime().addSecs(28800).toString("yyyy-MM-dd HH:mm:ss") << "" << isSuccess << "" << isStranger << cardNo;
-        emit uploadopenlog(offlineNmae, mid, "", 0, 3, 0, datas);
-        sqlDatabase->sqlInsertOffline(offlineNmae, mid, 3, 0, 0, datas);
+        datas << QDateTime::currentDateTime().addSecs(28800).toString("yyyy-MM-dd HH:mm:ss") << "" << isSuccess << "" << isStranger
+              << cardNo << "" << "" << "" << "" << "";
+        emit uploadopenlog(offlineNmae, mid, "", 0, 3, 0, 0, datas);
+        sqlDatabase->sqlInsertOffline(offlineNmae, mid, 3, 0, 0, 0, datas);
         m_cardWork = false;
         m_cardNo = "";
     }

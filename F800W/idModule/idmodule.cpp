@@ -190,7 +190,7 @@ void IdCardModule::run()
             }
             countdown_ms(time);
             dataShare->m_idCardDatas.clear();
-            dataShare->m_idCardDatas << name << id << sex << addr << birth << nation;
+            dataShare->m_idCardDatas << name << id << nation << addr << birth << sex;
             dataShare->m_idCardFlag = true;
             emit readIdStatus(2);
             qt_debug() << dataShare->m_idCardFlag << dataShare->m_idCardDatas;

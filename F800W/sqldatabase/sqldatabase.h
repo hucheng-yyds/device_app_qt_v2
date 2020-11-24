@@ -38,6 +38,8 @@ public:
     QString sqlSelectAllUserTime(int id);
     // 根据人员id查询表中对应人员的其他信息
     QVariantList sqlSelect(int id);
+    // 根据手机号 查询用户id
+    int sqlSelectMobile(const QString &iphone);
     // 根据人员id查询表中对应人员的采集图片名称
     QString sqlSelectPhotoName(int id);
     // 人员信息插入表格
@@ -50,7 +52,7 @@ public:
     void sqlUpdate(int id, const QString &username, const QString &time, const QString &photoname, const QString &iphone);
 
     // 离线记录数据插入
-    void sqlInsertOffline(int id, int userid, int type, int isOver, int isTemp, const QStringList &datas);
+    void sqlInsertOffline(int id, int userid, int type, int isOver, int isTemp, int sex, const QStringList &datas);
     // 查询所有离线记录id
     QList<int> sqlSelectAllOffLine();
     // 离线记录查询

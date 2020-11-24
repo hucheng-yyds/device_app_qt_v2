@@ -11,6 +11,7 @@ class HttpsClient : public QThread
     Q_OBJECT
 public:
     explicit HttpsClient();
+    static int httpsQRCode(const QString &data);
     // 获取算法授权状态
     int AlgorithmAuthorization();
     // 获取人脸图片
@@ -24,7 +25,7 @@ public slots:
     // 上传离线记录
     void uploadOfflineDataImage(int userId, const QString &photo, int isOver, int type, int isTemp, const QStringList &datas);
     // 实时上传记录
-    void httpsUploadopenlog(int id, int userId, const QString &photo, int isOver,int type, int isTemp, const QStringList &datas);
+    void httpsUploadopenlog(int id, int userId, const QString &photo, int isOver,int type, int isTemp, int sex, const QStringList &datas);
     // 解绑后台
     void httpsUnbind();
 

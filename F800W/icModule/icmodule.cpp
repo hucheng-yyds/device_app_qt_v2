@@ -47,7 +47,7 @@ void IcCardModule::run()
                             }
                             icCountdown_ms(4*1000);
                             dataShare->m_idCardDatas.clear();
-                            dataShare->m_idCardDatas << IdInfo.name << IdInfo.IdNumber << IdInfo.sex << IdInfo.Address << IdInfo.Birthday << IdInfo.nation;
+                            dataShare->m_idCardDatas << IdInfo.name << IdInfo.IdNumber << IdInfo.nation << IdInfo.Address << IdInfo.Birthday << IdInfo.sex;
                             dataShare->m_idCardFlag = true;
                             emit readIcStatus(2);
                         }

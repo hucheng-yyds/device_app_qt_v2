@@ -1,4 +1,5 @@
 #include "serverdatalist.h"
+#include <QDebug>
 
 ServerDataList::ServerDataList()
 {

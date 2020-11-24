@@ -27,7 +27,7 @@ signals:
     // 拉取全量
     void allUserId();
     // 实时上传记录
-    void uploadopenlog(int id, int userId, const QString &photo, int isOver,int type, int isTemp, const QStringList &datas);
+    void uploadopenlog(int id, int userId, const QString &photo, int isOver,int type, int isTemp, int sex, const QStringList &datas);
     // 服务器应答
     void responseServer(const QString &type, const QString &messageId, const QJsonObject &jsonData);
     // 处理增量users

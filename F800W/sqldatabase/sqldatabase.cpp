@@ -12,7 +12,7 @@ SqlDatabase::SqlDatabase()
     else
     {
         m_database = QSqlDatabase::addDatabase("QSQLITE");
-        m_database.setDatabaseName("facedatas.db");
+        m_database.setDatabaseName("v2_datas.db");
         if (!m_database.open())
         {
             qt_debug() << "Error: Failed to connect database." << m_database.lastError();
@@ -46,7 +46,13 @@ SqlDatabase::SqlDatabase()
                     "isSuccess text,"
                     "isStranger text,"
                     "reason text,"
-                    "cardNo text)")) {
+                    "cardNo text,"
+                    "realName text,"
+                    "sex int,"
+                    "cardNum text,"
+                    "nation text,"
+                    "address text,"
+                    "birthday text)")) {
         qt_debug() << query1.lastError();
     }
     QSqlQuery query2(m_database);
@@ -54,20 +60,6 @@ SqlDatabase::SqlDatabase()
                     "id int primary key,"
                     "type int)")) {
         qt_debug() << query2.lastError();
-    }
-
-    QSqlQuery query3(m_database);
-    if (!query3.exec("create table if not exists SaveIdentify ("
-                     "id int primary key,"
-                     "userid text,"
-                     "username text,"
-                     "usersex text,"
-                     "usernation text,"
-                     "usertime text,"
-                     "temp text,"
-                     "path text,"
-                     "snaptime text)")) {
-        qt_debug() << query3.lastError();
     }
     QSqlQuery query4(m_database);
     if (!query4.exec("create table if not exists auths ("
@@ -103,6 +95,25 @@ QString SqlDatabase::sqlSelectPhotoName(int id)
     } else {
         while(query.next()) {
             value = query.value(0).toString();
+        }
+    }
+    m_mutex.unlock();
+    return value;
+}
+
+int SqlDatabase::sqlSelectMobile(const QString &iphone)
+{
+    m_mutex.lock();
+    int value = 0;
+    QSqlQuery query(m_database);
+    QString query_sql = "select id from userdata where iphone = ?";
+    query.prepare(query_sql);
+    query.addBindValue(iphone);
+    if (!query.exec()) {
+        qt_debug() << query.lastError();
+    } else {
+        while(query.next()) {
+            value = query.value(0).toInt();
         }
     }
     m_mutex.unlock();
@@ -268,12 +279,14 @@ void SqlDatabase::sqlDelete(int id)
     m_mutex.unlock();
 }
 
-void SqlDatabase::sqlInsertOffline(int id, int userid, int type, int isOver, int isTemp, const QStringList &datas)
+void SqlDatabase::sqlInsertOffline(int id, int userid, int type, int isOver, int isTemp, int sex, const QStringList &datas)
 {
     m_mutex.lock();
     QSqlQuery query(m_database);
-    QString cmd = QString("insert into offline values(%1, %2, %3,'%4','%5',%6,%7,'%8','%9','%10','%11')").arg(id).arg(userid).arg(type)
-            .arg(datas.at(0)).arg(datas.at(1)).arg(isOver).arg(isTemp).arg(datas.at(2)).arg(datas.at(3)).arg(datas.at(4)).arg(datas.at(5));
+    QString cmd = QString("insert into offline values(%1, %2, %3,'%4','%5',%6,%7,'%8','%9','%10','%11', '%12',%13,'%14','%15','%16','%17')")
+            .arg(id).arg(userid).arg(type).arg(datas.at(0)).arg(datas.at(1)).arg(isOver).arg(isTemp).arg(datas.at(2)).arg(datas.at(3))
+            .arg(datas.at(4)).arg(datas.at(5)).arg(datas.at(6)).arg(sex).arg(datas.at(7)).arg(datas.at(8)).arg(datas.at(9))
+            .arg(datas.at(10));
     if (!query.exec(cmd))
     {
         qt_debug() << query.lastError() << datas;
@@ -286,7 +299,7 @@ QList<int> SqlDatabase::sqlSelectAllOffLine()
     m_mutex.lock();
     QList<int> values;
     QSqlQuery query1(m_database);
-    QString query_sql = "select oId from offline";
+    QString query_sql = "select id from offline";
     query1.prepare(query_sql);
     if (!query1.exec())
     {
@@ -309,7 +322,7 @@ QVariantList SqlDatabase::sqlSelectOffline(int id)
     QVariantList values;
     values.clear();
     QSqlQuery query(m_database);
-    QString query_sql = "select * from offline where oId = ?";
+    QString query_sql = "select * from offline where id = ?";
     query.prepare(query_sql);
     query.addBindValue(id);
     if (!query.exec())
@@ -322,7 +335,8 @@ QVariantList SqlDatabase::sqlSelectOffline(int id)
         {
             values << query.value(0) << query.value(1) << query.value(2) << query.value(3) << query.value(4)
                   << query.value(5) << query.value(6) << query.value(7) << query.value(8) << query.value(9)
-                  << query.value(10);
+                  << query.value(10) << query.value(11) << query.value(12) << query.value(13) << query.value(14)
+                  << query.value(15) << query.value(16);
         }
     }
     m_mutex.unlock();
@@ -401,6 +415,7 @@ void SqlDatabase::sqlDeleteFail(int id)
         qt_debug() << query2.lastError();
     }
     m_localFaceFail.remove(id);
+    qt_debug() << id << m_localFaceFail.size();
     m_mutex.unlock();
 }
 

@@ -82,6 +82,16 @@ include         ($$PWD/wpa/wpa.pri)
 
 #RESOURCES += main.qrc
 
+TRANSLATIONS += \
+    language/OF_CH.ts \
+    language/OF_EN.ts \
+    language/OF_JA.ts \
+    language/OF_KOR.ts \
+    language/OF_RU.ts \
+    language/OF_IN.ts \
+    language/OF_Ita.ts \
+    language/OF_Ger.ts
+
 DISTFILES += \
     qml/main.qml \
     qml/Face.qml \

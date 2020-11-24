@@ -11,7 +11,23 @@ public:
 protected:
     virtual void run();
 
-private:
+public slots:
+    void recvRcodeResult(const QByteArray &results);
 
+signals:
+    // 二维码结果 ui显示
+    // ic状态显示
+    void rcodeResultShow(int result, const QString &cardNo, const QString &showInfo);
+
+private:
+    // 是否已到定时的时长，是返回true，否返回false
+    bool expired();
+    // 设置定时时长。 从当前时间开始的定时时长，单位ms
+    void countdown_ms(int ms);
+
+private:
+    QByteArray m_rcodeDatas;
+    int m_fd;
+    qint64 m_endTimerMs;
 };
 #endif // RCODEMODULE_H

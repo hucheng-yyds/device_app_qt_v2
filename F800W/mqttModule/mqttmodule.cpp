@@ -25,7 +25,6 @@ static int messageArrived(void* context, char* topicName, int topicLen, MQTTClie
     if(!g_recvDataOk)
     {
         g_payload.enqueue(QByteArray((char*)m->payload, (int)m->payloadlen));
-        qt_debug() << g_payload;
         g_recvDataOk = true;
     }
     else {
@@ -130,7 +129,6 @@ void MqttModule::run()
             FacePacketNode_t *packetNode = new FacePacketNode_t;
             packetNode->datas = g_payload.dequeue();
             m_packet->PushLogPacket(packetNode);
-//            qt_debug() << g_payload.dequeue();
             g_recvDataOk = false;
         }
         msleep(500);

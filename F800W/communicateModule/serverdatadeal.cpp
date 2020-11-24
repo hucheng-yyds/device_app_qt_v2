@@ -39,6 +39,7 @@ void ServerDataDeal::upgradeFile(const QJsonObject &obj)
     if (("1" == obj["deviceType"].toString() || DEVICE_TYPE == obj["deviceType"].toString()) &&
             checkVersion(obj["version"].toString(), VERSION))
     {
+        dataShare->m_upgrade = true;
         system("rm update.tar.xz");
         m_httpsClient->httpsDownload(obj["downloadUrl"].toString());
         QFile file("update.tar.xz");
@@ -80,6 +81,7 @@ void ServerDataDeal::upgradeFile(const QJsonObject &obj)
             system("rm update.tar.xz");
             qt_debug() << "md5 error !";
         }
+        dataShare->m_upgrade = false;
     }
 }
 
@@ -110,6 +112,10 @@ void ServerDataDeal::saveSetting(const QJsonObject &jsonData)
         {
             switchCtl->m_openMode = "Temp";
         }
+    }
+    if(jsonData.contains("rcode"))
+    {
+        switchCtl->m_rcode = jsonData["rcode"].toInt();
     }
     if(jsonData.contains("openDoorType"))
     {
@@ -188,7 +194,8 @@ void ServerDataDeal::saveSetting(const QJsonObject &jsonData)
     }
     if (jsonData.contains("identifyWaitTime"))
     {
-        switchCtl->m_identifyWaitTime = jsonData["identifyWaitTime"].toInt();
+        int waitTime = jsonData["identifyWaitTime"].toInt();
+        switchCtl->m_identifyWaitTime = (waitTime < 3 ? 3 : waitTime);
     }
     if(jsonData.contains("identifyIdCardValue"))
     {
@@ -223,7 +230,8 @@ void ServerDataDeal::saveSetting(const QJsonObject &jsonData)
     }
     if (jsonData.contains("doorDelayTime"))
     {
-        switchCtl->m_doorDelayTime = jsonData["doorDelayTime"].toInt();
+        int doorTime = jsonData["doorDelayTime"].toInt();
+        switchCtl->m_doorDelayTime = (doorTime < 2 ? 2 : doorTime);
     }
     if(jsonData.contains("isFahrenheit"))
     {
@@ -275,7 +283,8 @@ void ServerDataDeal::saveSetting(const QJsonObject &jsonData)
     }
     if(jsonData.contains("lowPowerTimes"))
     {
-        switchCtl->m_closeScreenTime = jsonData.value("lowPowerTimes").toInt();
+        int closeScreen = jsonData.value("lowPowerTimes").toInt();
+        switchCtl->m_closeScreenTime = (closeScreen < 3 ? 3 : closeScreen);
     }
     if(jsonData.contains("usernameMasking"))
     {
@@ -295,9 +304,16 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
     qt_debug() << (MqttModule::MqttCmd)jsonObj["cmd"].toInt() << jsonObj.size();
     switch (jsonObj["cmd"].toInt())
     {
-    case MqttModule::UserData: {
-        QJsonObject jsonData = jsonObj["data"].toObject();
-        dealFaceNewData(jsonData);
+    case MqttModule::UserData:
+    {
+        if(switchCtl->m_protocol)
+        {
+            QJsonObject jsonData = jsonObj["data"].toObject();
+            dealFaceNewData(jsonData);
+        }
+        else {
+            qt_debug() << jsonObj;
+        }
         break;
     }
     case MqttModule::OpenDoor:
@@ -314,9 +330,10 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
                 datas.clear();
                 int offlineNmae = QDateTime::currentDateTime().toTime_t();
                 int id = jsonData.value("id").toInt();
-                datas << QDateTime::currentDateTime().addSecs(28800).toString("yyyy-MM-dd HH:mm:ss") << "" << "1" << "" << "0" << "" ;
-                emit uploadopenlog(offlineNmae, id, "", 0, 2, 1, datas);
-                sqlDatabase->sqlInsertOffline(offlineNmae, id, 2, 0, 0, datas);
+                datas << QDateTime::currentDateTime().addSecs(28800).toString("yyyy-MM-dd HH:mm:ss") << "" << "1" << "" << "0"
+                      << "" << "" << "" << "" << "" << "";
+                emit uploadopenlog(offlineNmae, id, "", 0, 2, 1, 0, datas);
+                sqlDatabase->sqlInsertOffline(offlineNmae, id, 2, 0, 0, 0, datas);
             }
         }
         break;
@@ -400,9 +417,12 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
     default:
         break;
     }
-    QString type = jsonObj.value("message").toString();
-    QString messageId = jsonObj.value("messageId").toString();
-    emit responseServer(type.replace("Req", "Rsp"), messageId, jsonData);
+    if(switchCtl->m_protocol)
+    {
+        QString type = jsonObj.value("message").toString();
+        QString messageId = jsonObj.value("messageId").toString();
+        emit responseServer(type.replace("Req", "Rsp"), messageId, jsonData);
+    }
 }
 
 void ServerDataDeal::dealIcNewData(QJsonObject jsonObj)

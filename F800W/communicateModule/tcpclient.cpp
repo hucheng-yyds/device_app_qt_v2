@@ -546,7 +546,7 @@ int TcpClient::getTimeZoneMin()
     return minuteNum;
 }
 
-void TcpClient::uploadopenlog(int id, int userId, const QString &photo, int isOver,int type, int isTemp, const QStringList &datas)
+void TcpClient::uploadopenlog(int id, int userId, const QString &photo, int isOver,int type, int isTemp, int sex, const QStringList &datas)
 {
     qt_debug() << "uploadopenlog" << datas;
     QJsonObject jsonObj, obj;
@@ -569,6 +569,12 @@ void TcpClient::uploadopenlog(int id, int userId, const QString &photo, int isOv
     jsonObj.insert("invalidReason", datas.at(3));
     jsonObj.insert("isStranger", datas.at(4).toInt());
     jsonObj.insert("mjkh", datas.at(5));
+    jsonObj.insert("realName", datas.at(6));
+    jsonObj.insert("sex", sex);
+    jsonObj.insert("cardNum", datas.at(7));
+    jsonObj.insert("nation", datas.at(8));
+    jsonObj.insert("address", datas.at(9));
+    jsonObj.insert("birthday", datas.at(10));
     obj.insert("data", jsonObj);
     WriteDataToServer(DEV_DOOR_RECORD_REQUEST, obj);
 }
