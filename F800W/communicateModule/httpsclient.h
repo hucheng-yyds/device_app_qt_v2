@@ -12,6 +12,7 @@ class HttpsClient : public QThread
 public:
     explicit HttpsClient();
     static int httpsQRCode(const QString &data);
+    static bool httpsUserReq(int id, const QString &url);
     // 获取算法授权状态
     int AlgorithmAuthorization();
     // 获取人脸图片
@@ -22,8 +23,6 @@ public:
 public slots:
     // 根据人员id获取人员数据
     void HttpsGetUsers(int id);
-    // 上传离线记录
-    void uploadOfflineDataImage(int userId, const QString &photo, int isOver, int type, int isTemp, const QStringList &datas);
     // 实时上传记录
     void httpsUploadopenlog(int id, int userId, const QString &photo, int isOver,int type, int isTemp, int sex, const QStringList &datas);
     // 解绑后台
@@ -47,8 +46,6 @@ signals:
     void mqttReconnect();
 
 private:
-    // 上传离线记录不带图片的
-    void uploadOfflineDataNoImage();
     // http拉取全量数据
     void HttpsGetAllUserId();
     // 算法授权http请求
@@ -57,6 +54,8 @@ private:
     QJsonObject requestGet(const QString &url);
     // http post请求数据
     QJsonObject requestPost(const QString &url, const QJsonObject &jsonObj);
+    // http post心跳包请求数据
+    QJsonObject requestPostHeart(const QString &url, const QJsonObject &jsonObj);
 
 private:
     QString m_strKey;
@@ -88,6 +87,7 @@ private:
     QString m_companyId;
     // 场景id
     QString m_sceneId;
-
+    // 是否上传成功
+    bool m_uploadStatus;
 };
 #endif // HTTPSCLIENT_H

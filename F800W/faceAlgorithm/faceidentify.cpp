@@ -186,6 +186,7 @@ void FaceIdentify::run()
                     extract(bgrHandle[m_iMFaceHandle[i].index], &feature_result, &size);
                     identifyFromFaceGroup(sqlDatabase->m_groupHandle, feature_result, size, &result, &face_id);
                     m_interFace->m_mutex.unlock();
+                    qt_debug() << "-------------------------------------------------" << result << face_id;
                     if ((result > dataShare->m_faceThreshold) && (face_id > 0))
                     {
                         QStringList value = dealOpencondition(face_id);
@@ -441,7 +442,7 @@ void FaceIdentify::run()
             QString offline_path = "cp snap.jpg offline/" + QString::number(offlineNmae) + ".jpg";
             system(offline_path.toStdString().c_str());
         }
-        isOver = tempPass ? 1 : 0;
+        isOver = tempPass ? 0 : 1;
         datas.clear();
         uploadTime = QDateTime::currentDateTime().addSecs(28800).toString("yyyy-MM-dd HH:mm:ss");
         if(4 == openDoorType)

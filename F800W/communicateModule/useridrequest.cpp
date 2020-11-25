@@ -107,7 +107,6 @@ void UserIdRequest::httpsUpdateUsers(const QJsonObject &jsonObj)
 //    file1.write(jdoc.toJson());
 //    file1.flush();
 //    file1.close();
-//    QJsonObject jsonData = jsonObj["users"].toObject();
     QString startTime = "", expireTime = "", passTimeSection = "", passPeriod = "", mobile = "", photoName = "", cardNo = "", remark = "";
     QStringList text;
     text.clear();

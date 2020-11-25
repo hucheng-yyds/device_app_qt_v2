@@ -34,7 +34,7 @@ protected:
 
 signals:
     // ui界面更新时间
-    void timeSync(int sleeptime, const QString &dataCur, const QString &digitalClock, int hour, int min, const QString &dataTime);
+    void timeSync(int sleeptime, bool sleepctl, const QString &dataCur, const QString &digitalClock, int hour, int min, const QString &dataTime);
     // 人脸检测结果显示 ui显示
     void faceResultShow(const QString &name, int index, int trackId, const QString &result, const QString &showInfo);
     // 显示人脸框 ui界面显示

@@ -62,21 +62,26 @@ void ProStorage::init()
     connect(idcard, &IdCardModule::sigIdInfo, identify, &FaceIdentify::dealIcData);
     connect(idcard, &IdCardModule::readIdStatus, this, &ProStorage::readIcStatus);
     idcard->start();
-
-    IcCardModule *iccard = new IcCardModule;
-    connect(iccard, &IcCardModule::sigIcInfo, identify, &FaceIdentify::dealIcData);
-    connect(iccard, &IcCardModule::readIcStatus, this, &ProStorage::readIcStatus);
-    iccard->start();
+    if(switchCtl->m_vi)
+    {
+        IcCardModule *iccard = new IcCardModule;
+        connect(iccard, &IcCardModule::sigIcInfo, identify, &FaceIdentify::dealIcData);
+        connect(iccard, &IcCardModule::readIcStatus, this, &ProStorage::readIcStatus);
+        iccard->start();
+    }
 
     WgModule *wg = new WgModule;
     connect(identify, &FaceIdentify::wgOut, wg, &WgModule::wgOut);
     connect(wg, &WgModule::sigWgInfo, identify, &FaceIdentify::dealIcData);
     wg->start();
 
-    RcodeModule *rcode = new RcodeModule;
-    connect(face, &FaceManager::rcodeResult, rcode, &RcodeModule::recvRcodeResult);
-    connect(rcode, &RcodeModule::rcodeResultShow, this, &ProStorage::icResultShow);
-    rcode->start();
+    if(switchCtl->m_rcode > 0)
+    {
+        RcodeModule *rcode = new RcodeModule;
+        connect(face, &FaceManager::rcodeResult, rcode, &RcodeModule::recvRcodeResult);
+        connect(rcode, &RcodeModule::rcodeResultShow, this, &ProStorage::icResultShow);
+        rcode->start();
+    }
 
     ToolTcpServer * toolTcpServer = new ToolTcpServer();
     connect(toolTcpServer,&ToolTcpServer::sigRealTimeLog,log,&Log::onLogFun);
@@ -139,6 +144,7 @@ void ProStorage::init()
     else {
         dataDeal->setHttp(httpClient);
         connect(identify, &FaceIdentify::uploadopenlog, httpClient, &HttpsClient::httpsUploadopenlog);
+        connect(offlineRecord, &OfflineRecord::uploadopenlog, httpClient, &HttpsClient::httpsUploadopenlog);
         connect(httpClient, &HttpsClient::allUserId, userRequest, &UserIdRequest::onAlluserId);
         connect(userRequest, &UserIdRequest::getUsers, httpClient, &HttpsClient::HttpsGetUsers);
         connect(httpClient, &HttpsClient::updateUsers, userRequest, &UserIdRequest::onUpdateUsers);

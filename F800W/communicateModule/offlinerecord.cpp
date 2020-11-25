@@ -16,13 +16,14 @@ void OfflineRecord::run()
             offlineRecords.clear();
             offlineRecords = sqlDatabase->sqlSelectAllOffLine();
             int count = offlineRecords.size();
+            qt_debug() << "offlineRecords count:" << count;
             for(int i = count -1; i >=0; i--)
             {
-                if(!dataShare->m_netStatus || dataShare->m_sync)
+                if(!dataShare->m_netStatus || dataShare->m_sync || !dataShare->m_offlineFlag)
                 {
                     break;
                 }
-                QVariantList values = sqlDatabase->sqlSelectOffline(i);
+                QVariantList values = sqlDatabase->sqlSelectOffline(offlineRecords.at(i));
                 if(values.isEmpty())
                 {
                     continue;
@@ -45,7 +46,7 @@ void OfflineRecord::run()
                     qt_debug() << path << "open fail";
                 }
                 emit uploadopenlog(ids, values.at(1).toInt(), offlingImg, values.at(5).toInt(), values.at(2).toInt(), values.at(6).toInt(), values.at(12).toInt(), texts);
-                sleep(2);
+                sleep(5);
             }
             sleep(60);
         }

@@ -53,6 +53,8 @@ int get_if_miireg(const char *if_name, int reg_num )
 
 NetManager::NetManager()
 {
+    m_fourGcount = 0;
+    m_fourGstatus = 0;
     m_fourG = false;
     m_wifi = false;
     m_wpa = new WpaGui;
@@ -61,12 +63,70 @@ NetManager::NetManager()
     connect(m_wpa, &WpaGui::pskError, this, &NetManager::onPskError);
 }
 
+void NetManager::fourGInit()
+{
+    QString outputStr;
+    switch (m_fourGstatus)
+    {
+        case 0:
+        {
+            QString appName = "quectel-CM";
+            m_process->start("sh", QStringList() << "-c" << "ps -ef | grep quectel-CM | grep -v grep");
+            m_process->waitForFinished();
+            outputStr = QString::fromLocal8Bit(m_process->readAllStandardOutput());
+            bool quectel = outputStr.contains(appName);
+            if (!quectel) {
+                m_fourGstatus = 1;
+                qt_debug() << m_fourGstatus;
+            }
+            break;
+        }
+        case 1:
+        {
+            system("himm 0x10FF002C 0x500 > /dev/null &&\
+                   himm 0x120D1400 0x10 > /dev/null &&\
+                   himm 0x120D1040 0x00 > /dev/null &&\
+                   sleep 1 &&\
+                   himm 0x120D1040 0x10 > /dev/null &&\
+                   himm 0x10FF0024 0x600 > /dev/null &&\
+                   himm 0x120D1400 0x4 > /dev/null &&\
+                   himm 0x120D1010 0x4 > /dev/null &&\
+                   sleep 1 &&\
+                   himm 0x120D1010 0x0 > /dev/null");
+            m_fourGstatus = 2;
+            m_fourGcount = 0;
+            qt_debug() << m_fourGstatus;
+            break;
+        }
+        case 2:
+        {
+            m_process->start("sh", QStringList() << "-c" << "ls /dev/ttyUSB2");
+            m_process->waitForFinished();
+            outputStr = QString::fromLocal8Bit(m_process->readAllStandardOutput());
+            bool ttyUSB = outputStr.contains("/dev/ttyUSB2");
+            if (ttyUSB)
+            {
+                system("quectel-CM -s cmnet &");
+                m_fourGstatus = 0;
+                qt_debug() << m_fourGstatus;
+            }
+            m_fourGcount ++;
+            if (m_fourGcount > 15)
+            {
+                m_fourGstatus = 1;
+            }
+        }
+    }
+}
+
 void NetManager::run()
 {
     QString ip = getIP();
     int netWorkMode = 7;
     int seq = 0;
     int size = 0;
+    int fourCount = 0;
+    m_process = new QProcess;
     while(true)
     {
         m_eth0 = get_if_miireg("eth0", 0x01);
@@ -129,16 +189,35 @@ void NetManager::run()
         }
         if(m_eth0 > 0)
         {
+            m_fourG = false;
             emit networkChanged(6, dataShare->m_netStatus);
         }
         else if(m_wifi)
         {
+            m_fourG = false;
             emit networkChanged(netWorkMode, dataShare->m_netStatus);
         }
-        else
+        else if(!m_fourG)
         {
             dataShare->m_netStatus = false;
             emit networkChanged(7, false);
+        }
+        if(m_fourG)
+        {
+            int status = fourNetStatus();
+            if(status >= 25)
+            {
+                netWorkMode = 3;
+            }
+            else if(status >= 16)
+            {
+                netWorkMode = 4;
+            }
+            else if(status > 0)
+            {
+                netWorkMode = 5;
+            }
+            emit networkChanged(netWorkMode, dataShare->m_netStatus);
         }
         dataShare->m_ipAddr = ip;
         int count = sqlDatabase->m_localFaceSet.size();
@@ -150,10 +229,32 @@ void NetManager::run()
         int hour = dateTime.toString("HH").toInt();
         int min = dateTime.toString("mm").toInt();
         QString date = curDate.split(" ").at(1);
-        emit timeSync(switchCtl->m_closeScreenTime, curDate, dateTime.toString("HH:mm"), hour, min, date + " " + dateTime.toString("yy.MM.dd"));
+        emit timeSync(switchCtl->m_closeScreenTime, switchCtl->m_screenCtl, curDate, dateTime.toString("HH:mm"), hour, min, date + " " + dateTime.toString("yy.MM.dd"));
         msleep(500);
         seq++;
+        if(m_eth0 <= 0 && !m_wifi)
+        {
+            fourCount++;
+            if(fourCount > 5)
+            {
+                fourCount = 0;
+                fourGInit();
+            }
+        }
     }
+}
+
+int NetManager::fourNetStatus()
+{
+    system("echo \"AT+CSQ\" > /dev/ttyUSB2");
+    QString outputStr;
+    m_process->start("cat /dev/ttyUSB2 &");
+    m_process->waitForFinished(500);
+//    process->waitForFinished();
+    outputStr = QString::fromLocal8Bit(m_process->readAllStandardOutput());
+    system("killall cat");
+    int num = outputStr.mid(outputStr.indexOf("+CSQ:") + 6, 2).toInt();
+    return num;
 }
 
 void NetManager::onConnected()
@@ -283,11 +384,22 @@ QString NetManager::getIP()
                     }
                     break;
                 }
-                else if(m_wifi && interface.name() == "wlan0")
-                {
-                    QList<QNetworkAddressEntry>entryList=interface.addressEntries();
-                    ipAddr = entryList.value(0).ip().toString();
-                    break;
+                else {
+                    if(m_wifi && interface.name() == "wlan0")
+                    {
+                        QList<QNetworkAddressEntry>entryList=interface.addressEntries();
+                        ipAddr = entryList.value(0).ip().toString();
+                        break;
+                    }
+                    else if(interface.name() == "wwan0")
+                    {
+                        QList<QNetworkAddressEntry>entryList=interface.addressEntries();
+                        ipAddr = entryList.value(0).ip().toString();
+                        if (ipAddr.isEmpty() || entryList.value(0).prefixLength() > 32) {
+                            break;
+                        }
+                        m_fourG = true;
+                    }
                 }
             }
         }

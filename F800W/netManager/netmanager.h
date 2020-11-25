@@ -1,6 +1,7 @@
 #ifndef NETMANAGER_H
 #define NETMANAGER_H
 #include <QThread>
+#include <QProcess>
 #include "switch.h"
 #include "sqldatabase.h"
 #include "wpagui.h"
@@ -15,7 +16,7 @@ protected:
     virtual void run();
 signals:
     // ui界面更新时间
-    void timeSync(int sleeptime, const QString &dataCur, const QString &digitalClock, int hour, int min, const QString &dataTime);
+    void timeSync(int sleeptime, bool sleepctl, const QString &dataCur, const QString &digitalClock, int hour, int min, const QString &dataTime);
     // 发送信号 ui界面显示版本号 设备名称 同步人员个数 设备ip 设备sn码
     void showDeviceInfo(bool tempCtl, const QString &ver, const QString &name, const QString &number, const QString &devIp, const QString &devSn);
     // 切换网络状态
@@ -27,15 +28,20 @@ private slots:
     void onPskError();
 
 private:
+    int fourNetStatus();
+    void fourGInit();
     QString getIP();
     int getTimeZone();
     int getTimeZoneMin();
     QString getCurrentTime(QDateTime dataTime);
-    int m_eth0;
-    bool m_wifi;
-    bool m_fourG;
 
 private:
     WpaGui *m_wpa;
+    int m_fourGstatus;
+    int m_fourGcount;
+    int m_eth0;
+    bool m_wifi;
+    bool m_fourG;
+    QProcess* m_process;
 };
 #endif // NETMANAGER_H

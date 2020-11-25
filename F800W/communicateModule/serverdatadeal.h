@@ -46,6 +46,8 @@ private:
     void saveSetting(const QJsonObject &jsonData);
     // 处理后台数据
     void dealJsonData(QJsonObject jsonObj);
+    // 处理http增量数据
+    void dealHttpData(const QJsonObject &jsonObj);
     // 处理人脸变动数据
     void dealFaceNewData(QJsonObject jsonObj);
     // 处理ic卡号变动

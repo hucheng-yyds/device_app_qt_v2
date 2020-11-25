@@ -9,6 +9,7 @@ Item {
     property bool isTemp;
     property bool isResultz:false;
     property bool isResulty:false;
+    property bool sleepCtl: false;
     property int sleepTime : 5000;
 
     Focusing {
@@ -592,8 +593,11 @@ Item {
         id: sleep;
         interval: sleepTime; running: false;
         onTriggered: {
-            standby.visible = true;
-            face.visible = false;
+            if(!sleepCtl)
+            {
+                standby.visible = true;
+                face.visible = false;
+            }
         }
     }
 
@@ -901,6 +905,7 @@ Item {
             date.text = qsTr(dataTime);
             times.text = digitalClock;
             sleepTime = sleeptime;
+            sleepCtl = sleepctl;
         }
     }
 }

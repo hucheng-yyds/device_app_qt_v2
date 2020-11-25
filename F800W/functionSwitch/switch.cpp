@@ -226,6 +226,8 @@ void SwitchCtl::setSwitchDefault()
     m_rcode = 0;
     m_volume = 100;
     m_ic = false;
+    m_screenCtl = false;
+    m_closeScreenTime = 5000;
 
     m_wifiName = "";
     m_wifiPwd = "";
@@ -274,6 +276,8 @@ void SwitchCtl::setSwitchDefault()
     userObj.insert("rcode", m_rcode);
     userObj.insert("volume", m_volume);
     userObj.insert("ic", m_ic);
+    userObj.insert("screenCtl", m_screenCtl);
+    userObj.insert("closeScreenTime", m_closeScreenTime);
 
     wifiObj.insert("wifiName", m_wifiName);
     wifiObj.insert("wifiPwd", m_wifiPwd);

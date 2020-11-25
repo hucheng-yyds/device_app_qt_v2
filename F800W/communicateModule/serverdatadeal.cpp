@@ -288,14 +288,199 @@ void ServerDataDeal::saveSetting(const QJsonObject &jsonData)
     }
     if(jsonData.contains("usernameMasking"))
     {
-
+        int nameShow = jsonData.value("icCardShow").toInt();
+        switchCtl->m_nameMask = nameShow > 0 ? true : false;
     }
     if(jsonData.contains("icCardShow"))
     {
-
+        int icShow = jsonData.value("icCardShow").toInt();
+        switchCtl->m_showIc = icShow > 0 ? true : false;
     }
     switchCtl->saveSwitchParam();
     system("sync");
+}
+
+void ServerDataDeal::dealHttpData(const QJsonObject &jsonObj)
+{
+    qt_debug() << jsonObj;
+    int cmd = jsonObj.value("operater").toInt();
+    QJsonObject dataObj = jsonObj.value("data").toObject();
+    int mid = dataObj.value("mid").toInt();
+    QString edittime = "", remark = "", startTime = "", expireTime = "", passTimeSection = "", passPeriod = "", mobile = "", photoName = "";
+    int passNum = -1, isBlack = -1;
+    if(3 == cmd)
+    {
+        sqlDatabase->sqlDelete(mid);
+        sqlDatabase->sqlDeleteIc(mid);
+        sqlDatabase->sqlDeleteAuth(mid);
+    }
+    else
+    {
+        QString name = "";
+        QString photoUrl = dataObj["photoUrl"].toString();
+        bool status = false;
+        QVariantList value;
+        value.clear();
+        value = sqlDatabase->sqlSelect(mid);
+        if(value.size() > 0)
+        {
+            status = true;
+        }
+        if(dataObj.contains("updateDate"))
+        {
+            edittime = dataObj["updateDate"].toString();
+        }
+        else {
+            if(status)
+            {
+                edittime = value.at(2).toString();
+            }
+        }
+        if(dataObj.contains("username"))
+        {
+            name = dataObj["username"].toString();
+        }
+        else {
+            if(status)
+            {
+                name = value.at(1).toString();
+            }
+        }
+        if(dataObj.contains("mobile"))
+        {
+            mobile = dataObj["mobile"].toString();
+        }
+        else {
+            if(status)
+            {
+                mobile = value.at(5).toString();
+            }
+        }
+        if(dataObj.contains("photoName"))
+        {
+            photoName = dataObj["photoName"].toString();
+        }
+        else {
+            if(status)
+            {
+                photoName = value.at(4).toString();
+            }
+        }
+        if(!photoUrl.isEmpty())
+        {
+            m_httpsClient->httpsUserReq(mid, photoUrl);
+        }
+        if(value.size() > 0)
+        {
+            sqlDatabase->sqlUpdate(mid, name, edittime, photoName, mobile);
+        }
+        else {
+            emit insertFaceGroups(mid, name, edittime, photoName, mobile);
+        }
+        if(dataObj.contains("mjkh"))
+        {
+            QString cardNo = dataObj["mjkh"].toString();
+            QString card = sqlDatabase->sqlSelectIc(mid);
+            if(card.isEmpty())
+            {
+                if(!cardNo.isEmpty() && cardNo.size() >= 6)
+                {
+                    cardNo = cardNo.toLower();
+                    sqlDatabase->sqlInsertIc(mid, cardNo);
+                }
+            }
+            else {
+                if(!cardNo.isEmpty() && cardNo.size() >= 6)
+                {
+                    cardNo = cardNo.toLower();
+                    sqlDatabase->sqlUpdateIc(mid, cardNo);
+                }
+            }
+        }
+        status = false;
+        value.clear();
+        value = sqlDatabase->sqlSelectAuth(mid);
+        if(dataObj.contains("passNum"))
+        {
+            passNum = dataObj["passNum"].toInt();
+        }
+        else {
+            if(status)
+            {
+                passNum = value.at(1).toInt();
+            }
+        }
+        if(dataObj.contains("startTime"))
+        {
+            startTime = dataObj["startTime"].toString();
+        }
+        else {
+            if(status)
+            {
+                startTime = value.at(2).toString();
+            }
+        }
+        if(dataObj.contains("expireTime"))
+        {
+            expireTime = dataObj["expireTime"].toString();
+        }
+        else {
+            if(status)
+            {
+                expireTime = value.at(3).toString();
+            }
+        }
+        if(dataObj.contains("isBlack"))
+        {
+            isBlack = dataObj["isBlack"].toInt();
+        }
+        else {
+            if(status)
+            {
+                isBlack = value.at(4).toInt();
+            }
+        }
+        if(dataObj.contains("passPeriod"))
+        {
+            passPeriod = dataObj["passPeriod"].toString();
+        }
+        else {
+            if(status)
+            {
+                passPeriod = value.at(5).toString();
+            }
+        }
+        if(dataObj.contains("passTimeSection"))
+        {
+            passTimeSection = dataObj["passTimeSection"].toString();
+        }
+        else {
+            if(status)
+            {
+                passTimeSection = value.at(6).toString();
+            }
+        }
+        if(dataObj.contains("remark"))
+        {
+            remark = dataObj["remark"].toString();
+        }
+        else {
+            if(status)
+            {
+                remark = value.at(7).toString();
+            }
+        }
+        QStringList datas;
+        datas.clear();
+        datas << startTime << expireTime << passPeriod << passTimeSection << remark;
+        if(value.size() > 0)
+        {
+            sqlDatabase->sqlUpdateAuth(mid, passNum, isBlack, datas);
+        }
+        else {
+            sqlDatabase->sqlInsertAuth(mid, passNum, isBlack, datas);
+        }
+    }
 }
 
 void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
@@ -312,7 +497,7 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
             dealFaceNewData(jsonData);
         }
         else {
-            qt_debug() << jsonObj;
+            dealHttpData(jsonObj);
         }
         break;
     }

@@ -139,12 +139,13 @@ void FaceManager::run()
             {
                 int trackId = 0;
                 ret_code = getTrackId(bgrHandle[i], &trackId);
-                m_trackId.append(trackId);
+                m_trackId[i] = trackId;
             }
             sort(bgrHandle, bgrLength);
         }
         if (bgrLength > 0)
         {
+            dataShare->m_offlineFlag = false;
             backLightCount = 0;
             hardware->ctlIrWhite(IR_WHITE);
             for(int i = 0; i < m_sMFaceHandle.size(); i++)
@@ -164,7 +165,6 @@ void FaceManager::run()
             }
             if (!m_interFace->m_iFaceHandle && m_isIdentify)
             {
-                dataShare->m_offlineFlag = false;
                 m_interFace->m_iFaceHandle = bgrHandle;
                 m_interFace->m_faceHandle = m_sMFaceHandle;
                 m_interFace->m_count = bgrLength;
@@ -233,7 +233,10 @@ bool FaceManager::filter(const FaceRect &rect)
             else
             {
                 dis = width > 250;
-                region = rect.left > 92 && rect.top > 281 && rect.right < 708 && rect.bottom < 861;
+//                region = rect.left > 92 && rect.top > 281 && rect.right < 708 && rect.bottom < 861;
+                int x = (rect.right - rect.left)/2 + rect.left;
+                int y = (rect.bottom - rect.top)/4 + rect.top;
+                region = x > 330 && x < 480 &&  y > 526 && y < 646;
             }
             pass = dis && region;
             if (region && !dis)
@@ -267,7 +270,7 @@ void FaceManager::sort(FaceHandle *faceHandle, int count)
         if (filter(rect0))
         {
             buf.rect = rect0;
-            buf.track_id = m_trackId[i];
+            buf.track_id = m_trackId.at(i);
             buf.index = i;
             m_sMFaceHandle << buf;
         }
@@ -293,7 +296,6 @@ void FaceManager::sort(FaceHandle *faceHandle, int count)
         m_isIdentify = false;
     }
     m_sMFaceHandle.resize(1);
-
     if (m_sMFaceHandle.at(0).track_id && !m_interFace->m_iFaceHandle)
     {
         if (m_sMFaceHandle.at(0).track_id == m_interFace->m_faceHandle.at(0).track_id)
@@ -439,7 +441,7 @@ void FaceManager::localFaceInsert()
             {
                 ret[i] = result.at(i).toFloat();
             }
-            insertFaceGroup(sqlDatabase->m_groupHandle, ret.data(), 512, id);
+            insertFaceGroup(sqlDatabase->m_groupHandle, ret.data(), ret.size(), id);
         }
         else {
             qt_debug() << "value 0" << value;

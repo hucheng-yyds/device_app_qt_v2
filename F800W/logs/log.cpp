@@ -53,17 +53,17 @@ Log::Log(QObject *parent) : QObject(parent)
             }
         }
     });
-//    qInstallMessageHandler(outputMessage);
+    qInstallMessageHandler(outputMessage);
 }
 
 void Log::onToolTcpStateChange(bool state)//true:链接上了，false:链接断开
 {
     if(!state)//
     {
-//        qt_debug() << state;
-//        timer->stop();
-//        dataShare->m_log = true;
-//        qInstallMessageHandler(outputMessage);
+        qt_debug() << state;
+        timer->stop();
+        dataShare->m_log = true;
+        qInstallMessageHandler(outputMessage);
     }
 }
 
