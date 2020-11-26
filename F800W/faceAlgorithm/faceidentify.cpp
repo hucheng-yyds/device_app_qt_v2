@@ -252,8 +252,7 @@ void FaceIdentify::run()
                         }
                         else {
                             isStranger = "1";
-                            QString result = tr("请联系管理员");
-                            emit faceResultShow(tr("未注册"), i, m_iMFaceHandle[i].track_id, tr("未注册"), tr("未注册"));
+                            emit faceResultShow(tr("未注册"), i, m_iMFaceHandle[i].track_id, tr("请联系管理员"), tr("未注册"));
                             egPass = false;
                             face_id = 0;
                         }
@@ -319,8 +318,6 @@ void FaceIdentify::run()
                 }
             }
             m_tempFlag = false;
-//            m_tempVal = dataShare->m_tempVal;
-//            m_tempResult = dataShare->m_tempResult;
             if(switchCtl->m_fahrenheit)
             {
                 emit tempShow(QString("%1℉").arg(m_tempVal), m_tempResult);

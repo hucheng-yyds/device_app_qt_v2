@@ -221,7 +221,7 @@ void NetManager::run()
         }
         dataShare->m_ipAddr = ip;
         int count = sqlDatabase->m_localFaceSet.size();
-        emit showDeviceInfo(switchCtl->m_tempCtl, VERSION, switchCtl->m_devName, QString("%1").arg(count), ip, switchCtl->m_sn);
+        emit showDeviceInfo(switchCtl->m_tempCtl, switchCtl->m_faceDoorCtl, VERSION, switchCtl->m_devName, QString("%1").arg(count), ip, switchCtl->m_sn);
         msleep(100);
         int second = getTimeZoneMin()*60 + getTimeZone()*3600;
         QDateTime dateTime = QDateTime::currentDateTime().addSecs(second);
@@ -229,7 +229,7 @@ void NetManager::run()
         int hour = dateTime.toString("HH").toInt();
         int min = dateTime.toString("mm").toInt();
         QString date = curDate.split(" ").at(1);
-        emit timeSync(switchCtl->m_closeScreenTime, switchCtl->m_screenCtl, curDate, dateTime.toString("HH:mm"), hour, min, date + " " + dateTime.toString("yy.MM.dd"));
+        emit timeSync(switchCtl->m_closeScreenTime * 1000, switchCtl->m_screenCtl, curDate, dateTime.toString("HH:mm"), hour, min, date + " " + dateTime.toString("yy.MM.dd"));
         msleep(500);
         seq++;
         if(m_eth0 <= 0 && !m_wifi)
