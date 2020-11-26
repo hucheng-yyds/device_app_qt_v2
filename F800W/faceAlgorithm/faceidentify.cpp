@@ -507,7 +507,7 @@ void FaceIdentify::dealIcData(int mid, const QString &cardNo)
         QString remark = value.at(1);
         if(name.isEmpty())
         {
-            emit icResultShow(1, tr("未授权"), tr("未授权"));
+            emit icResultShow(0, tr("未授权"), tr("未授权"));
             if(remark.isEmpty())
             {
                 hardware->playSound(tr("未授权").toUtf8(), "authority.aac");

@@ -744,18 +744,7 @@ Item {
             pngShow.visible = false
             hideName.restart()
             gifChange.restart()
-            if(2 === result)
-            {
-                resultText.text = qsTr(showInfo)
-            }
-            else if(1 === result)
-            {
-                resultText.text = qsTr(showInfo)
-            }
-            else if(0 === result)
-            {
-                resultText.text = qsTr(showInfo)
-            }
+            resultText.text = qsTr(showInfo)
             standby.visible = false;
             face.visible = true;
             sleep.restart();

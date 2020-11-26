@@ -433,7 +433,16 @@ Item {
             }
         }
         onIcResultShow: {
-
+            if(0 === result)
+            {
+                textName.text = qsTr(name)
+                tips.text = qsTr("请联系管理员")
+            }
+            else if(1 === result)
+            {
+                textName.text = qsTr(name)
+                tips.text = qsTr("认证通过")
+            }
             hideName.restart()
             standby.visible = false;
             face.visible = true;
@@ -441,6 +450,8 @@ Item {
         }
 
         onIdCardResultShow: {
+            textName.text = qsTr(name)
+            tips.text = qsTr(result)
             pose_blur_Timer.restart();            
             hideName.restart()
             standby.visible = false;
@@ -448,6 +459,16 @@ Item {
             sleep.restart();
         }
         onReadIcStatus: {
+            if(1 === flag)
+            {
+                textName.text = qsTr("未注册")
+                tips.text = qsTr("正在读卡...")
+            }
+            else if(0 === flag)
+            {
+                textName.text = qsTr("未注册")
+                tips.text = qsTr("读卡失败")
+            }
             pose_blur_Timer.restart();
             standby.visible = false;
             face.visible = true;
