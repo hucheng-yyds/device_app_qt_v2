@@ -90,7 +90,7 @@ public:
     // 检测是否关门
     void checkOpenDoor();
     // 音频播放接口 支持tts播放和aac语音文件播放 前者播放对应content内容，后者对应filename文件名
-    void playSound(const char *content, const QString &filename);
+    void playSound(const char *content);
     // 播放aac语音文件
     void playSoundAac(int type, const QString &filename);
     // 播放tts翻译

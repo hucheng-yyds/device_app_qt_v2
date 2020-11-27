@@ -8,6 +8,7 @@
 #include <QMutex>
 #include <QDebug>
 #include "face_sdk.h"
+#include "FaceIDAPI.h"
 #include "log.h"
 
 #define sqlDatabase SqlDatabase::getInstance()

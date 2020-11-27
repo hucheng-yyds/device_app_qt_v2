@@ -61,7 +61,7 @@ void UserIdRequest::run()
             else
             {
                 emit allUserIc();
-                sleep(1);
+                sleep(3);
                 updateIdentifyValue();
                 dataShare->m_sync = false;
                 m_startFaceDownload = false;
@@ -314,6 +314,7 @@ void UserIdRequest::tcpUpdateUsers(const QJsonObject &jsonObj)
         sqlDatabase->sqlInsertAuth(id, passNum, isBlack, datas);
     }
     m_faceSyncStatus = true;
+    m_updateFace.remove(id);
 }
 
 void UserIdRequest::onUpdateUsers(const QJsonObject &jsonObj)
@@ -354,6 +355,7 @@ void UserIdRequest::onAlluserId(const QJsonArray &jsonArr)
             {
                 QString newTime = jsonObj["updateDate"].toString();
                 QString updateTime = sqlDatabase->sqlSelectAllUserTime(id);
+                qt_debug() << newTime << updateTime;
                 if(updateTime.compare(newTime) != 0)
                 {
                     sqlDatabase->sqlDelete(id);

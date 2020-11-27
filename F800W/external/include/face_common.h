@@ -26,8 +26,8 @@ typedef enum Log_Level {
 } Log_Level ;
 
 typedef enum FaceImageType {
-    NV21 = 0,
-    BGR = 1,
+//    NV21 = 0,
+//    BGR = 1,
 } FaceImageType;
 
 typedef struct FaceModels {

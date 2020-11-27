@@ -47,6 +47,7 @@ public:
 
     void countdown_ms(int ms)
     {
+        end_ms = ms;
         struct timeval now;
         gettimeofday(&now, NULL);
         struct timeval interval = {ms / 1000, (ms % 1000) * 1000};
@@ -73,9 +74,15 @@ public:
         return (res.tv_sec < 0) ? 0 : res.tv_sec * 1000 + res.tv_usec / 1000;
     }
 
+    int right_ms()
+    {
+        return end_ms - left_ms();
+    }
+
 private:
 
     struct timeval end_time;
+    int end_ms;
 };
 
 #endif // COUNTDOWN_H

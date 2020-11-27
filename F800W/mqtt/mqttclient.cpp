@@ -138,59 +138,59 @@ void messageArrived(MQTT::MessageData& md)
 
 void myconnect(IPStack& ipstack, MQTT::Client<IPStack, Countdown, 1000>& client, MQTTPacket_connectData& data, const char* host)
 {
-    int rc = ipstack.connect(host, PORT);
-    if (rc != 0)
-    {
-        qDebug() << "rc from TCP connect is" << rc;
-    }
-    rc = client.connect(data);
-    if (rc != 0)
-    {
-        qDebug() << "Failed to connect, return code" << rc;
-        return ;
-    }
+//    int rc = ipstack.connect(host, PORT);
+//    if (rc != 0)
+//    {
+//        qDebug() << "rc from TCP connect is" << rc;
+//    }
+//    rc = client.connect(data);
+//    if (rc != 0)
+//    {
+//        qDebug() << "Failed to connect, return code" << rc;
+//        return ;
+//    }
 
-    rc = client.subscribe(g_topic, MQTT::QOS0, messageArrived);
-    qDebug() << "Subscribed" << rc << g_topic;
+//    rc = client.subscribe(g_topic, MQTT::QOS0, messageArrived);
+//    qDebug() << "Subscribed" << rc << g_topic;
 }
 
 void MqttClient::init()
 {
-    const char* host = HOST;
-    g_topic = "device/" + switchCtl->m_sn.toUtf8();
+//    const char* host = HOST;
+//    g_topic = "device/" + switchCtl->m_sn.toUtf8();
 
-    IPStack ipstack = IPStack();
-    MQTT::Client<IPStack, Countdown, 1000> client = MQTT::Client<IPStack, Countdown, 1000>(ipstack);
+//    IPStack ipstack = IPStack();
+//    MQTT::Client<IPStack, Countdown, 1000> client = MQTT::Client<IPStack, Countdown, 1000>(ipstack);
 
-    MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
-    data.clientID.cstring = g_topic.data();
-    data.username.cstring = (char *)"admin";
-    data.password.cstring = (char *)"ofzl";
+//    MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
+//    data.clientID.cstring = g_topic.data();
+//    data.username.cstring = (char *)"admin";
+//    data.password.cstring = (char *)"ofzl";
 
-    qDebug() << data.username.cstring << data.password.cstring;
-    data.keepAliveInterval = 10;
-    printf("will flag %d\n", data.willFlag);
+//    qDebug() << data.username.cstring << data.password.cstring;
+//    data.keepAliveInterval = 10;
+//    printf("will flag %d\n", data.willFlag);
 
-    myconnect(ipstack, client, data, host);
+//    myconnect(ipstack, client, data, host);
 
-    while (true)
-    {
-        client.yield(1000);
+//    while (true)
+//    {
+//        client.yield(1000);
 
-        if (!g_payload.isEmpty())
-        {
-            FacePacketNode_t *packet = new FacePacketNode_t;
-            packet->datas = g_payload.dequeue();
-            m_packet->PushLogPacket(packet);
-        }
-        if (!client.isConnected())
-        {
-            qDebug() << "client.isConnected:" << client.isConnected();
-            qDebug() << client.disconnect();
-            qDebug() << ipstack.disconnect();
-            myconnect(ipstack, client, data, host);
-        }
-    }
+//        if (!g_payload.isEmpty())
+//        {
+//            FacePacketNode_t *packet = new FacePacketNode_t;
+//            packet->datas = g_payload.dequeue();
+//            m_packet->PushLogPacket(packet);
+//        }
+//        if (!client.isConnected())
+//        {
+//            qDebug() << "client.isConnected:" << client.isConnected();
+//            qDebug() << client.disconnect();
+//            qDebug() << ipstack.disconnect();
+//            myconnect(ipstack, client, data, host);
+//        }
+//    }
 }
 
 void MqttClient::run()

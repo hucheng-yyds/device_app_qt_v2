@@ -340,10 +340,10 @@ int HttpsClient::httpsRequestImage(int id, const QString &url)
 {
     int result = -1;
     QNetworkRequest request;
-    QSslConfiguration config;
-    config.setPeerVerifyMode(QSslSocket::VerifyNone);
-    config.setProtocol(QSsl::TlsV1SslV3);
-    request.setSslConfiguration(config);
+//    QSslConfiguration config;
+//    config.setPeerVerifyMode(QSslSocket::VerifyNone);
+//    config.setProtocol(QSsl::TlsV1SslV3);
+//    request.setSslConfiguration(config);
     request.setUrl(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader , "application/json");
 

@@ -79,30 +79,31 @@ void NetManager::run()
                 QString userName = switchCtl->m_wifiName;
                 QString userPwd = switchCtl->m_wifiPwd;
                 int value = m_wpa->updateStatus();
-                if(value > 80)
-                {
-                    netWorkMode = 0;
-                }
-                else if(value > 60)
-                {
-                    netWorkMode = 1;
-                }
-                else if(value > 20){
-                    netWorkMode = 2;
-                }
-                else {
-                    dataShare->m_netStatus = false;
-                    m_wifi = false;
-                    if (WpaGui::TrayIconConnected == m_wpa->state())
-                    {
-                        m_wpa->removeNetwork();
-                    }
-                    if(WpaGui::TrayIconOffline != m_wpa->state())
-                    {
-                        m_wpa->setState(WpaGui::TrayIconOffline);
-                        m_wpa->removeNetwork();
-                    }
-                }
+                netWorkMode = 0;
+//                if(value > 80)
+//                {
+//                    netWorkMode = 0;
+//                }
+//                else if(value > 60)
+//                {
+//                    netWorkMode = 1;
+//                }
+//                else if(value > 20){
+//                    netWorkMode = 2;
+//                }
+//                else {
+//                    dataShare->m_netStatus = false;
+//                    m_wifi = false;
+//                    if (WpaGui::TrayIconConnected == m_wpa->state())
+//                    {
+//                        m_wpa->removeNetwork();
+//                    }
+//                    if(WpaGui::TrayIconOffline != m_wpa->state())
+//                    {
+//                        m_wpa->setState(WpaGui::TrayIconOffline);
+//                        m_wpa->removeNetwork();
+//                    }
+//                }
                 size++;
                 if(size > 60)
                 {

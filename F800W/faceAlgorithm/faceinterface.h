@@ -4,13 +4,16 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
-#include "hi_comm_video.h"
+//#include "hi_comm_video.h"
 #include "switch.h"
 #include "qalhardware.h"
 #include "sqldatabase.h"
+#include "Countdown.h"
 
-#define VIDEO_WIDTH     800
-#define VIDEO_HEIGHT    1280
+#define VIDEO_WIDTH     360
+#define VIDEO_HEIGHT    640
+#define SOURCE_WIDTH    480
+#define SOURCE_HEIGHT   640
 
 struct MFaceHandle{
     FaceRect rect;
@@ -18,13 +21,22 @@ struct MFaceHandle{
     int index;
 };
 
+typedef struct App_Call
+{
+    DS_FaceIDParas *ptrFaceIDParas;
+    DS_FaceIDInData *ptrFaceIDInData;
+    DS_FaceIDOutData *ptrFaceIDOutData;
+
+    void *ptrFaceHandle;
+}AppCall;
+
 // 算法人脸检测和人脸比对共用api类
 class FaceInterface
 {
 public:
     explicit FaceInterface();
-    FaceHandle *m_iFaceHandle;
-    QVector<MFaceHandle> m_faceHandle;
+    AppCall *m_iFaceHandle;
+    QVector<DS_FaceInfo> m_faceHandle;
     int m_count;
     bool m_iStop;
     bool m_quality;

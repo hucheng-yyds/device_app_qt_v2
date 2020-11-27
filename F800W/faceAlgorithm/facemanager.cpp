@@ -8,6 +8,12 @@ FaceManager::FaceManager()
     m_isIdentify = false;
 }
 
+FaceManager::~FaceManager()
+{
+    DS_ReleaseAppCall(m_ptrAppData);
+    qt_debug() << "DS_ReleaseAppCall";
+}
+
 void FaceManager::updateIdentifyValue()
 {
     int count = sqlDatabase->m_localFaceSet.size();
@@ -44,78 +50,90 @@ void FaceManager::setFaceInter(FaceInterface *inter)
 
 void FaceManager::onBreathingLight()
 {
-    hardware->ctlLed(OFF);
-    hardware->ctlBLN(ON);
-    hardware->ctlIrWhite(OFF);
+//    hardware->ctlLed(OFF);
+//    hardware->ctlBLN(ON);
+//    hardware->ctlIrWhite(OFF);
 
 }
 
 void FaceManager::run()
 {
-    bool status = false;
-    int backLightCount = 0;
-    FaceRect rect;
-    int saveLeft[5];
-    int saveTop[5];
-    int saveRight[5];
-    int saveBottom[5];
-    int offset = 10;
-
-    while(true)
-    {
+    int j = 0;
+    int m_count = 0;
+    while (1) {
+        Countdown timer(300);
+        m_bgrVideoFrame = NULL;
+        IF_GetData(&m_bgrVideoFrame, VIDEO_WIDTH, VIDEO_HEIGHT);
+        if(m_bgrVideoFrame == NULL) {
+            qt_debug() << ("bgrVideoFrame error\n");
+            sleep(4);
+            continue;
+        }
+        if (switchCtl->m_ir) {
+            m_irVideoFrame = NULL;
+            IF_GetIRData(&m_irVideoFrame, SOURCE_WIDTH, SOURCE_HEIGHT);
+            if (m_irVideoFrame == NULL) {
+                qt_debug() << ("irVideoFrame error\n");
+                sleep(4);
+                continue;
+            }
+        }
         if(dataShare->m_sync)
         {
             status = true;
-            hardware->ctlWDG();
+//            hardware->ctlWDG();
             emit faceTb(tr("正在同步中..."));
-            hardware->ctlLed(OFF);
-            if(!dataShare->m_netStatus)
-            {
-                dataShare->m_sync = false;
-            }
-            hardware->checkOpenDoor();
-            hardware->ctlWDG();
+//            hardware->ctlLed(OFF);
+//            if(!dataShare->m_netStatus)
+//            {
+//                dataShare->m_sync = false;
+//            }
+            qt_debug() << "dataShare->m_sync:" << dataShare->m_sync;
+//            hardware->checkOpenDoor();
+//            hardware->ctlWDG();
             msleep(500);
             continue;
+        } else {
+            m_ptrAppData->ptrFaceIDInData->FuncFlag = CTRL_RECOGNITION;
         }
         if(status)
         {
             status = false;
             emit faceTb("");
         }
-        bool ir = switchCtl->m_ir;
-        m_bgrVideoFrame = nullptr;
-        IF_GetData(&m_bgrVideoFrame, VIDEO_WIDTH, VIDEO_HEIGHT);
-        if(m_bgrVideoFrame == nullptr) {
-//            qt_debug() << ("bgrVideoFrame error\n");
-            sleep(4);
-            continue;
+        m_ptrAppData->ptrFaceIDInData->ptrYUVSubStream[0] = (uchar*)m_bgrVideoFrame->VFrame.mpVirAddr[0];
+        m_ptrAppData->ptrFaceIDInData->ptrYUVSubStream[1] = (uchar*)m_bgrVideoFrame->VFrame.mpVirAddr[1];
+        if (switchCtl->m_ir)
+        {
+            m_ptrAppData->ptrFaceIDInData->ptrIRSubStream = (uchar*)m_irVideoFrame->VFrame.mpVirAddr[0];
         }
-        if (ir) {
-            m_irVideoFrame = nullptr;
-            IF_GetIRData(&m_irVideoFrame, VIDEO_WIDTH, VIDEO_HEIGHT);
-            if (m_irVideoFrame == nullptr) {
-//                qt_debug() << ("irVideoFrame error\n");
-                sleep(4);
-                continue;
-            }
-        }
-        FaceHandle *bgrHandle;
-        int bgrLength;
-        m_interFace->m_mutex.lock();
-        detect((const char *)m_bgrVideoFrame->stVFrame.u64VirAddr[0], m_bgrVideoFrame->stVFrame.u32Stride[0],
-                m_bgrVideoFrame->stVFrame.u32Height, NV21, 0.75, &bgrHandle, &bgrLength);
-        m_interFace->m_mutex.unlock();
-        m_trackId.clear();
-        m_trackId.resize(bgrLength);
-        track(bgrHandle, bgrLength, m_trackId.data());
-        sort(bgrHandle, bgrLength);
-        if (bgrLength > 0) {
-            backLightCount = 0;
-            hardware->ctlIrWhite(IR_WHITE);
-            for(int i = 0; i < m_sMFaceHandle.size(); i++) {
-                rect = m_sMFaceHandle[i].rect;
-                offset = (rect.right - rect.left) / 20 ;
+        m_ptrAppData->ptrFaceIDInData->colorVideoType = NV12;
+        m_ptrAppData->ptrFaceIDInData->irVideoType = GRAY;
+        m_ptrAppData->ptrFaceIDInData->ptrBGRImage = nullptr;
+        m_ptrAppData->ptrFaceIDInData->bgrImageWidth = 0;
+        m_ptrAppData->ptrFaceIDInData->bgrImageHeight = 0;
+        DS_SetGetAppCall(m_ptrAppData);
+    //    qt_debug() << "Get People Num " << m_ptrAppData->ptrFaceIDOutData->curFaceNum << m_ptrAppData->ptrFaceIDOutData->curStatus;
+    //    FaceRect rect0 ,rect1;
+    //    QByteArray faceByte;
+        if (m_ptrAppData->ptrFaceIDOutData->curFaceNum > 0) {
+            sort(NULL, 0);
+            m_ptrAppData->ptrFaceIDOutData->curFaceNum = 1;
+            for (int i = 0; i < m_ptrAppData->ptrFaceIDOutData->curFaceNum; ++i)
+            {
+                DS_FaceInfo &ptrFaceInfo = m_ptrAppData->ptrFaceIDOutData->faceInfo[i];
+        //        faceByte = QByteArray((const char*)ptrFaceInfo.ID, 16).toHex();
+        //        int trID = ptrFaceInfo.trackID[0] + ptrFaceInfo.trackID[1];
+//                qt_debug() << "ptrFaceInfo.trackID:" << ptrFaceInfo.trackID;
+//                qt_debug() << "totalRegPersonsNum" << m_ptrAppData->ptrFaceIDOutData->totalRegPersonsNum;
+
+                int offset = 10;
+                FaceRect rect;
+                rect.left = ptrFaceInfo.XMin;
+                rect.right = ptrFaceInfo.XMax;
+                rect.top = ptrFaceInfo.YMin;
+                rect.bottom = ptrFaceInfo.YMax;
+                offset = (rect.right - rect.left) / 20;
                 if (((qAbs(saveLeft[i] - rect.left) > offset) ||
                      (qAbs(saveTop[i] - rect.top) > offset)) &&
                         ((qAbs(saveRight[i] - rect.right) > offset) ||
@@ -125,30 +143,28 @@ void FaceManager::run()
                     saveRight[i] = rect.right /*- (rect.right % offset)*/;
                     saveBottom[i] = rect.bottom /*- (rect.bottom % offset)*/;
                 }
-                emit showFaceFocuse(saveLeft[i], saveTop[i], saveRight[i], saveBottom[i], i, m_sMFaceHandle[i].track_id);
-            }
-            if (!m_interFace->m_iFaceHandle && m_isIdentify)
-            {
-                dataShare->m_offlineFlag = false;
-                m_interFace->m_iFaceHandle = bgrHandle;
-                m_interFace->m_faceHandle = m_sMFaceHandle;
-                m_interFace->m_count = bgrLength;
-                m_interFace->m_iStop = false;
-                memcpy(m_interFace->m_bgrImage, (const char *)m_bgrVideoFrame->stVFrame.u64VirAddr[0], VIDEO_WIDTH * VIDEO_HEIGHT * 3 / 2);
-                if (ir)
-                {
-                    memcpy(m_interFace->m_irImage, (const char *)m_irVideoFrame->stVFrame.u64VirAddr[0], VIDEO_WIDTH * VIDEO_HEIGHT * 3 / 2);
+                emit showFaceFocuse(saveLeft[i] * 1.66, saveTop[i] * 1.6, saveRight[i] * 1.66, saveBottom[i] * 1.6, i, ptrFaceInfo.trackID);
+        //        qDebug() << "======================================" << qAbs(saveLeft[i] - rect.left) << offset;
+    //            if (ptrFaceInfo.trackID != track_id.value(i)) {
+    //                c_timer->countdown_ms(500);
+    //            }
+                if (m_interFace->m_iStop) {
+                    m_interFace->m_iStop = false;
+                    m_interFace->m_faceHandle << ptrFaceInfo;
+                    g_usedSpace.release();
                 }
-                g_usedSpace.release();
             }
-            else
+            if (m_ptrAppData->ptrFaceIDOutData->curStatus == RETURN_SAVE_REGINFO_SUCCESS || m_ptrAppData->ptrFaceIDOutData->curStatus == RETURN_SAVE_HAVE_REGISTERED)
             {
-                releaseAllFace(bgrHandle, bgrLength);
+                m_ptrAppData->ptrFaceIDInData->FuncFlag = CTRL_RECOGNITION;
             }
-        }
-        else
-        {
-            m_interFace->m_iStop = true;
+
+            if (m_ptrAppData->ptrFaceIDOutData->curStatus == RETURN_UPDATE_REGFEATURE_SUCCESS) m_ptrAppData->ptrFaceIDInData->FuncFlag = CTRL_RECOGNITION;
+            if (m_ptrAppData->ptrFaceIDOutData->curStatus == RETURN_CANCEL_SUCCESS) m_ptrAppData->ptrFaceIDInData->FuncFlag = CTRL_RECOGNITION;
+            if (m_ptrAppData->ptrFaceIDOutData->curStatus == RETURN_DELETE_SUCCESS) m_ptrAppData->ptrFaceIDInData->FuncFlag = CTRL_RECOGNITION;
+            if (m_ptrAppData->ptrFaceIDOutData->curStatus == RETURN_CLEAR_RECOGNITION_SUCCESS) m_ptrAppData->ptrFaceIDInData->FuncFlag = CTRL_RECOGNITION;
+        } else {
+//            m_interFace->m_iStop = true;
             emit hideFaceFocuse();
             if(switchCtl->m_tempCtl)
             {
@@ -161,16 +177,74 @@ void FaceManager::run()
                 backLightCount = 0;
                 onBreathingLight();
             }
-            releaseAllFace(bgrHandle, bgrLength);
         }
-        hardware->checkCloseDoor();
-        hardware->ctlWDG();
-        if (ir)
+//        hardware->checkCloseDoor();
+//        hardware->ctlWDG();
+        if (switchCtl->m_ir)
         {
             IF_ReleaseIRData(m_irVideoFrame);
         }
         IF_ReleaseData(m_bgrVideoFrame);
+        if (j >= 100) {
+            double d_ms = m_count / 100.00;
+            qt_debug() << "m_count:" << m_count << d_ms;
+            j = 0;
+            m_count = 0;
+        }
+        j ++;
+        m_count += timer.right_ms();
     }
+//    bool status = false;
+//    int backLightCount = 0;
+//    FaceRect rect;
+//    int saveLeft[5];
+//    int saveTop[5];
+//    int saveRight[5];
+//    int saveBottom[5];
+//    int offset = 10;
+
+//    while(true)
+//    {
+//        m_trackId.clear();
+//        m_trackId.resize(bgrLength);
+//        sort(bgrHandle, bgrLength);
+//        if (bgrLength > 0) {
+//            backLightCount = 0;
+//            hardware->ctlIrWhite(IR_WHITE);
+//            for(int i = 0; i < m_sMFaceHandle.size(); i++) {
+//                rect = m_sMFaceHandle[i].rect;
+//                offset = (rect.right - rect.left) / 20 ;
+//                if (((qAbs(saveLeft[i] - rect.left) > offset) ||
+//                     (qAbs(saveTop[i] - rect.top) > offset)) &&
+//                        ((qAbs(saveRight[i] - rect.right) > offset) ||
+//                         (qAbs(saveBottom[i] - rect.bottom) > offset))) {
+//                    saveLeft[i] = rect.left /*- (rect.left % offset)*/;
+//                    saveTop[i] = rect.top /*- (rect.top % offset)*/;
+//                    saveRight[i] = rect.right /*- (rect.right % offset)*/;
+//                    saveBottom[i] = rect.bottom /*- (rect.bottom % offset)*/;
+//                }
+//                emit showFaceFocuse(saveLeft[i], saveTop[i], saveRight[i], saveBottom[i], i, m_sMFaceHandle[i].track_id);
+//            }
+//            if (!m_interFace->m_iFaceHandle && m_isIdentify)
+//            {
+//                dataShare->m_offlineFlag = false;
+//                m_interFace->m_iFaceHandle = bgrHandle;
+//                m_interFace->m_faceHandle = m_sMFaceHandle;
+//                m_interFace->m_count = bgrLength;
+//                m_interFace->m_iStop = false;
+//                memcpy(m_interFace->m_bgrImage, (const char *)m_bgrVideoFrame->stVFrame.u64VirAddr[0], VIDEO_WIDTH * VIDEO_HEIGHT * 3 / 2);
+//                if (ir)
+//                {
+//                    memcpy(m_interFace->m_irImage, (const char *)m_irVideoFrame->stVFrame.u64VirAddr[0], VIDEO_WIDTH * VIDEO_HEIGHT * 3 / 2);
+//                }
+//                g_usedSpace.release();
+//            }
+//            else
+//            {
+//                releaseAllFace(bgrHandle, bgrLength);
+//            }
+//        }
+//    }
 }
 
 bool FaceManager::filter(const FaceRect &rect)
@@ -217,69 +291,70 @@ bool FaceManager::filter(const FaceRect &rect)
 
 void FaceManager::sort(FaceHandle *faceHandle, int count)
 {
-    int i, j;
-    int waitTime = switchCtl->m_identifyWaitTime;
-    MFaceHandle buf;
-    FaceRect rect0 ,rect1;
-    m_sMFaceHandle.clear();
-    m_isIdentify = true;
-    for (i = 0; i < count; i ++)
+    for (int i=0; i<m_ptrAppData->ptrFaceIDOutData->curFaceNum-1; ++i)  //比较n-1轮
     {
-        getFaceRect(faceHandle[i], &rect0);
-        if (filter(rect0))
+        for (int j=0; j<m_ptrAppData->ptrFaceIDOutData->curFaceNum-1-i; ++j)  //每轮比较n-1-i次,
         {
-            buf.rect = rect0;
-            buf.track_id = m_trackId[i];
-            buf.index = i;
-            m_sMFaceHandle << buf;
-        }
-    }
-    for (i=0; i<m_sMFaceHandle.size()-1; ++i)  //比较n-1轮
-    {
-        for (j=0; j<m_sMFaceHandle.size()-1-i; ++j)  //每轮比较n-1-i次,
-        {
-            rect0 = m_sMFaceHandle[j].rect;
-            rect1 = m_sMFaceHandle[j+1].rect;
-            int width0 = rect0.right - rect0.left;
-            int width1 = rect1.right - rect1.left;
+            DS_FaceInfo &info0 = m_ptrAppData->ptrFaceIDOutData->faceInfo[j];
+            DS_FaceInfo &info1 = m_ptrAppData->ptrFaceIDOutData->faceInfo[j+1];
+            int width0 = info0.XMax - info0.XMin;
+            int width1 = info1.XMax - info1.XMin;
             if (width0 < width1)
             {
-                buf = m_sMFaceHandle[j];
-                m_sMFaceHandle[j] = m_sMFaceHandle[j+1];
-                m_sMFaceHandle[j+1] = buf;
+                DS_FaceInfo buf;
+                buf = info0;
+                info0 = info1;
+                info1 = buf;
             }
         }
     }
-    if (m_sMFaceHandle.isEmpty())
-    {
-        m_isIdentify = false;
-    }
-    m_sMFaceHandle.resize(1);
+//    int i, j;
+//    int waitTime = switchCtl->m_identifyWaitTime;
+//    MFaceHandle buf;
+//    FaceRect rect0 ,rect1;
+//    m_sMFaceHandle.clear();
+//    m_isIdentify = true;
+//    for (i = 0; i < count; i ++)
+//    {
+//        getFaceRect(faceHandle[i], &rect0);
+//        if (filter(rect0))
+//        {
+//            buf.rect = rect0;
+//            buf.track_id = m_trackId[i];
+//            buf.index = i;
+//            m_sMFaceHandle << buf;
+//        }
+//    }
+//    if (m_sMFaceHandle.isEmpty())
+//    {
+//        m_isIdentify = false;
+//    }
+//    m_sMFaceHandle.resize(1);
 
-    if (m_sMFaceHandle.at(0).track_id && !m_interFace->m_iFaceHandle)
-    {
-        if (m_sMFaceHandle.at(0).track_id == m_interFace->m_faceHandle.at(0).track_id)
-        {
-            if (!faceExpired())
-            {
-                if (m_interFace->m_quality && !m_interFace->m_iStop)
-                {
-                    if(!(dataShare->m_idCardFlag && switchCtl->m_vi))
-                    {
-                        m_isIdentify = false;
-                    }
-                }
-            }
-            else
-            {
-                faceCountdown_ms(waitTime*1000);
-            }
-        }
-        else
-        {
-            faceCountdown_ms(waitTime*1000);
-        }
-    }
+//    if (m_sMFaceHandle.at(0).track_id && !m_interFace->m_iFaceHandle)
+//    {
+//        if (m_sMFaceHandle.at(0).track_id == m_interFace->m_faceHandle.at(0).track_id)
+//        {
+//            if (!faceExpired())
+//            {
+//                if (m_interFace->m_quality && !m_interFace->m_iStop)
+//                {
+//                    if(!(dataShare->m_idCardFlag && switchCtl->m_vi))
+//                    {
+//                        m_isIdentify = false;
+//                    }
+//                }
+//            }
+//            else
+//            {
+//                faceCountdown_ms(waitTime*1000);
+//            }
+//        }
+//        else
+//        {
+//            faceCountdown_ms(waitTime*1000);
+//        }
+//    }
 }
 
 void FaceManager::ctlOpenDoor(int id)
@@ -294,9 +369,9 @@ void FaceManager::ctlOpenDoor(int id)
 
 void FaceManager::insertFaceGroups(int id, const QString &username, const QString &time, const QString &photoname, const QString &iphone)
 {
-    int count;
+//    int count;
+//    return ;
     QString file = QString::number(id) + ".jpg";
-    FaceHandle *faceHandle = nullptr;
     auto image = cv::imread(file.toStdString());
     if (image.empty() || (image.cols > 1920) || (image.rows > 1920))
     {
@@ -310,107 +385,259 @@ void FaceManager::insertFaceGroups(int id, const QString &username, const QStrin
     }
     else
     {
-        FacePoseBlur pose_blur;
-        m_interFace->m_mutex.lock();
-        detect((const char *)image.data, image.cols, image.rows, BGR, 0.75, &faceHandle, &count);
-        m_interFace->m_mutex.unlock();
-        if (0 == count)
+        if (NULL == m_ptrAppData) {
+            return ;
+        }
+        int tmpW = image.cols;
+        int tmpH = image.rows;
+        AppCall *ptrAppData = m_ptrAppData;
+        ptrAppData->ptrFaceIDInData->FuncFlag = CTRL_REGISTER_BY_PIC;
+        ptrAppData->ptrFaceIDInData->ptrBGRImage = image.data;
+        ptrAppData->ptrFaceIDInData->bgrImageWidth = tmpW;
+        ptrAppData->ptrFaceIDInData->bgrImageHeight = tmpH;
+        ptrAppData->ptrFaceIDInData->importFaceID = id;
+
+        DS_SetGetAppCall(m_ptrAppData);
+        qt_debug();
+
+        //处理注册结果
+        if (ptrAppData->ptrFaceIDOutData->curStatus == RETURN_REGISTER_SUCCESS)
         {
-            sqlDatabase->sqlInsertFail(id,  2);
-            qt_debug() << "faceHandle is null !" << id << "2";
+            ptrAppData->ptrFaceIDInData->FuncFlag = CTRL_SAVE_REGINFO;
+            int saveTime = 0;
+            //相当于阻塞
+            while (ptrAppData->ptrFaceIDOutData->curStatus != RETURN_SAVE_REGINFO_SUCCESS && saveTime < 100)
+            {
+                saveTime += 1;
+                DS_SetGetAppCall(m_ptrAppData);
+            }
         }
         else
         {
-            getPoseBlurAttribute(faceHandle[0], &pose_blur);
-            if ((qAbs(pose_blur.pitch) < 20 || qAbs(pose_blur.roll) < 20 || qAbs(pose_blur.yaw) < 20)
-                               && (qAbs(pose_blur.blur) < 0.5))
-            {
-                char *feature_result;
-                int size;
-                m_interFace->m_mutex.lock();
-                extract(faceHandle[0], &feature_result, &size);
-                m_interFace->m_mutex.unlock();
-                QStringList feature;
-                for (int i = 0; i < size; i ++)
-                {
-                    feature << QString::number(feature_result[i]);
-                }
-//                qt_debug() << id << username << time << photoname << iphone;
-                sqlDatabase->sqlInsert(id, username, time, feature.join(","), photoname, iphone);
-                insertFaceGroup(sqlDatabase->m_groupHandle, feature_result, size, id);
-                sqlDatabase->sqlDeleteFail(id);
-                releaseFeature(feature_result);
-            }
-            else
-            {
-                qt_debug() << "failInsert" << 3;
-                sqlDatabase->sqlInsertFail(id, 3);
-            }
+//            if (0 == count)
+//            {
+//                sqlDatabase->sqlInsertFail(id,  2);
+//                qt_debug() << "faceHandle is null !" << id << "2";
+//            }
+//            else
+//            {
+//                qt_debug() << "failInsert" << 3;
+//                sqlDatabase->sqlInsertFail(id, 3);
+//            }
+            printf("===Pic Reg out_Flag:%x(REGISTERing)===\n", ptrAppData->ptrFaceIDOutData->curStatus);
         }
-        releaseAllFace(faceHandle, count);
+
+        //get outPutData
+        DS_FaceIDOutData* tmp = ptrAppData->ptrFaceIDOutData;
+        if (tmp->curStatus != RETURN_SAVE_REGINFO_SUCCESS)
+        {
+            printf("pic reg fail\n");
+            ptrAppData->ptrFaceIDInData->FuncFlag = CTRL_REGISTER_CANCEL;
+            DS_SetGetAppCall(m_ptrAppData);
+        }
+        else
+        {
+            tmp->regProgress = 100.0f;
+            ptrAppData->ptrFaceIDInData->ptrBGRImage = NULL;
+            qt_debug() << ptrAppData->ptrFaceIDOutData->faceID;
+            sqlDatabase->sqlInsert(id, username, time, "", photoname, iphone);
+            sqlDatabase->sqlDeleteFail(id);
+        }
     }
     QFile::remove(file);
 }
 
+AppCall *FaceManager::DS_CreateAppCall(const char *ptrRegFilePath, const char *ptrModelFileAbsDir, const char *ptrFaceImgFilePath)
+{
+    AppCall *ptrAppData = (AppCall *)malloc(sizeof(AppCall));
+
+    if(!ptrAppData)
+    {
+        qDebug("ptrAppData init NULL\n");
+        return NULL;
+    }
+
+    qDebug("*****RegFilePath:%s  ModelFileAbsDir:%s  FaceImgFilePath:%s *******\n", ptrRegFilePath, ptrModelFileAbsDir, ptrFaceImgFilePath);
+
+    ptrAppData->ptrFaceIDParas = (DS_FaceIDParas *)malloc(sizeof(DS_FaceIDParas));
+    ptrAppData->ptrFaceIDInData = (DS_FaceIDInData *)malloc(sizeof(DS_FaceIDInData));
+    ptrAppData->ptrFaceIDOutData = (DS_FaceIDOutData *)malloc(sizeof(DS_FaceIDOutData));
+    if (!ptrAppData->ptrFaceIDParas || !ptrAppData->ptrFaceIDInData || !ptrAppData->ptrFaceIDOutData)
+    {
+        qDebug("AppData param NULL\n");
+//        DS_ReleaseAppCall(ptrAppData);
+        return NULL;
+    }
+
+    memset(ptrAppData->ptrFaceIDInData, 0, sizeof(DS_FaceIDInData));
+    memset(ptrAppData->ptrFaceIDOutData, 0, sizeof(DS_FaceIDOutData));
+
+    //初始化结构体
+    DS_FaceIDParas *ptrFaceIDParas = ptrAppData->ptrFaceIDParas;
+
+    //初始化图像宽高
+    ptrFaceIDParas->imgWidth[0] = VIDEO_WIDTH;
+    ptrFaceIDParas->imgHeight[0] = VIDEO_HEIGHT;
+    ptrFaceIDParas->imgWidth[1] = SOURCE_WIDTH;
+    ptrFaceIDParas->imgHeight[1] = SOURCE_HEIGHT;
+    ptrFaceIDParas->irMode = IR_ENABLE;
+
+    ptrAppData->ptrFaceIDInData->faceThresh[0] = -0.83f;
+    ptrAppData->ptrFaceIDInData->faceThresh[1] = -0.83f;
+    ptrAppData->ptrFaceIDInData->faceThresh[2] = -0.81f;
+    ptrAppData->ptrFaceIDInData->faceThresh[3] = -0.83f;
+
+    memcpy(ptrFaceIDParas->ptrRegFilePath, ptrRegFilePath, strlen(ptrRegFilePath)+1);
+    memcpy(ptrFaceIDParas->ptrModelFileAbsDir, ptrModelFileAbsDir, strlen(ptrModelFileAbsDir) + 1);
+    memcpy(ptrFaceIDParas->ptrFaceImgFilePath, ptrFaceImgFilePath, strlen(ptrFaceImgFilePath) + 1);
+
+    ptrAppData->ptrFaceHandle = DS_CreateFaceIDContext(ptrAppData->ptrFaceIDParas);
+    if(!ptrAppData->ptrFaceHandle)
+    {
+        qDebug("FaceIDContext init Fail\n");
+        DS_ReleaseAppCall(ptrAppData);
+        return NULL;
+    }
+
+    const char *ptrVersionID = DS_GetFaceIDVersion(ptrAppData->ptrFaceHandle);
+    qDebug("GetCurrentVersionID %s\n", ptrVersionID);
+//    DS_SetPrintLevel(ptrAppData->ptrFaceHandle, SET_LOG_DEBUG);
+
+//    struct sched_param detect_param, identify_param;
+
+//    pthread_attr_init(&detect_attr);
+//    detect_param.sched_priority = 1; //越大优先级越高
+//    pthread_attr_setinheritsched(&detect_attr, PTHREAD_EXPLICIT_SCHED);
+//    pthread_attr_setschedpolicy(&detect_attr, SCHED_RR);
+//    pthread_attr_setschedparam(&detect_attr, &detect_param);
+
+//    pthread_attr_init(&identify_attr);
+//    identify_param.sched_priority = 2; //越大优先级越高
+//    pthread_attr_setinheritsched(&identify_attr, PTHREAD_EXPLICIT_SCHED);
+//    pthread_attr_setschedpolicy(&identify_attr, SCHED_RR);
+//    pthread_attr_setschedparam(&identify_attr, &identify_param);
+
+//    int ret = 0;
+//    ret = pthread_create(&detect_pid, &detect_attr, DS_FaceDetition, ptrAppData->ptrFaceHandle);
+//    if (ret != 0)
+//    {
+//        printf("DS_FaceDetition thread error\n");
+//    }
+//    ret = pthread_create(&identify_pid, &identify_attr, DS_FaceRecognition, ptrAppData->ptrFaceHandle);
+//    if (ret != 0)
+//    {
+//        printf("DS_FaceRecognition thread error\n");
+//    }
+//    qt_debug() << detect_pid << "detect_pid";
+
+    return ptrAppData;
+}
+
+int FaceManager::DS_ReleaseAppCall(AppCall *ptrAppData)
+{
+    if (!ptrAppData)
+    {
+        qDebug("ptrAppData NULL\n");
+        return 0;
+    }
+
+    int ret = DS_ReleaseFaceIDContext(ptrAppData->ptrFaceHandle);
+
+    if (ptrAppData->ptrFaceIDParas)
+    {
+        free(ptrAppData->ptrFaceIDParas);
+        ptrAppData->ptrFaceIDParas = NULL;
+    }
+    if (ptrAppData->ptrFaceIDInData)
+    {
+        free(ptrAppData->ptrFaceIDInData);
+        ptrAppData->ptrFaceIDInData = NULL;
+    }
+    if (ptrAppData->ptrFaceIDOutData)
+    {
+        ptrAppData->ptrFaceIDOutData->faceInfo.clear();
+        free(ptrAppData->ptrFaceIDOutData);
+        ptrAppData->ptrFaceIDOutData = NULL;
+    }
+
+    pthread_join(detect_pid, NULL);
+    pthread_attr_destroy(&detect_attr);
+    pthread_join(identify_pid, NULL);
+    pthread_attr_destroy(&identify_attr);
+
+    free(ptrAppData);
+    ptrAppData = NULL;
+
+    return ret;
+}
+
+int FaceManager::DS_SetGetAppCall(AppCall *ptrAppData)
+{
+    if (!ptrAppData)
+    {
+        qDebug("ptrAppData NULL\n");
+        return 0;
+    }
+
+    int reVal = DS_FaceIDProcess(ptrAppData->ptrFaceHandle, ptrAppData->ptrFaceIDInData, ptrAppData->ptrFaceIDOutData);
+
+    return reVal;
+}
+
 bool FaceManager::init()
 {
-    FaceModels models;
-    memset(&models, 0 , sizeof(FaceModels));
-    models.group_model_path = "model/3516_search_A_encrypt.bin";
-    models.detect_model = "model/3516_detect_F_encrypt.bin";
-    models.postfilter_model = "model/3516_postfilter_F_encrypt.bin";
-    models.refine_model = "model/3516_landmark_A_encrypt.bin";
-    models.anchor_path = "model/3516_anchor_A_encrypt.bin";
-    models.pose_blur_model = "model/3516_poseblur_A_encrypt.bin";
-    models.liveness_bgr_model = "model/3516_live_rgb_E_encrypt.bin";
-    models.liveness_bgrir_model = "model/3516_live_rgbir_E_encrypt.bin";
-    models.liveness_ir_model = "";
-    models.age_gender_model = "model/3516_age_gender_A_encrypt.bin";
-    models.rc_model = "model/3516_rc_attr_A_encrypt.bin";
-    models.occl_model = "model/3516_occlusion_A_encrypt.bin";
-    models.stn_model = "model/3516_preFeat_Manta_encrypt.bin";
-    models.feature_model = "model/3516_feat_Manta_encrypt.bin";
-
-    setLogLevel(LOG_LEVEL_ERROR);
-    int ret = ::init(models);
-    if (ret != RET_OK)
-    {
-//        qt_debug() << "init failed !";
+    QDir dir("/mnt/UDISK/regInfo/");
+    if (!dir.exists()) {
+        qt_debug() << dir.mkpath("/mnt/UDISK/regInfo/");
+    }
+//    m_ptrAppData = m_interFace->m_iFaceHandle;
+    const char ptrRegFilePath[256] = "/mnt/UDISK/regInfo/";
+    const char ptrFaceImgFilePath[256] = "/mnt/UDISK/regInfo/";
+    const char ptrModelFileAbsDir[256] = "./models/";
+    m_ptrAppData = DS_CreateAppCall(ptrRegFilePath, ptrModelFileAbsDir, ptrFaceImgFilePath);
+    if (!m_ptrAppData) {
         return false;
     }
-    set_detect_config(0.3, 0.5);
-    set_match_config(0.99, -35.61, 0.99, 4.26, 0.4);
-    createFaceGroup(&sqlDatabase->m_groupHandle);
-    localFaceInsert();
+    m_ptrAppData->ptrFaceIDInData->FuncFlag = CTRL_RECOGNITION;
+    m_ptrAppData->ptrFaceIDInData->faceThresh[0] = -0.83;
+    m_ptrAppData->ptrFaceIDInData->faceThresh[1] = -0.83;
+    m_ptrAppData->ptrFaceIDInData->faceThresh[2] = -0.75;
+    m_ptrAppData->ptrFaceIDInData->faceThresh[3] = -0.81;
+//    m_ptrAppData->ptrFaceIDInData->recFaceMode = REC_ALL_FACE;
+    m_ptrAppData->ptrFaceIDInData->recFaceMode = REC_MAX_FACE;
+    m_ptrAppData->ptrFaceIDInData->minRecFaceW = 70;
+    m_ptrAppData->ptrFaceIDInData->maxRecFaceW = std::min(VIDEO_WIDTH, VIDEO_HEIGHT) - 30;
+    sqlDatabase->sqlSelectAllUserId();
     return true;
+//    localFaceInsert();
 }
 
-void FaceManager::localFaceInsert()
-{
-    QSet<int> ids = sqlDatabase->sqlSelectAllUserId();
-    foreach (int id, ids)
-    {
-        emit faceTb(tr("加载人员中..."));
-        QString value = sqlDatabase->sqlSelectAllUserFeature(id);
-        if ("0" != value && !value.isEmpty())
-        {
-            QStringList result = value.split(",");
-            QVector<char> ret;
-            int size = result.size();
-            ret.resize(size);
-            for (int i = 0; i < size; i ++)
-            {
-                ret[i] = result.at(i).toFloat();
-            }
-            insertFaceGroup(sqlDatabase->m_groupHandle, ret.data(), 512, id);
-        }
-        else {
-            qt_debug() << "value 0" << value;
-        }
-    }
-    emit faceTb(tr(""));
-    updateIdentifyValue();
-}
+//void FaceManager::localFaceInsert()
+//{
+//    QSet<int> ids = sqlDatabase->sqlSelectAllUserId();
+//    foreach (int id, ids)
+//    {
+//        emit faceTb(tr("加载人员中..."));
+//        QString value = sqlDatabase->sqlSelectAllUserFeature(id);
+//        if ("0" != value && !value.isEmpty())
+//        {
+//            QStringList result = value.split(",");
+//            QVector<char> ret;
+//            int size = result.size();
+//            ret.resize(size);
+//            for (int i = 0; i < size; i ++)
+//            {
+//                ret[i] = result.at(i).toFloat();
+//            }
+//            insertFaceGroup(sqlDatabase->m_groupHandle, ret.data(), 512, id);
+//        }
+//        else {
+//            qt_debug() << "value 0" << value;
+//        }
+//    }
+//    emit faceTb(tr(""));
+//    updateIdentifyValue();
+//}
 
 bool FaceManager::faceExpired()
 {

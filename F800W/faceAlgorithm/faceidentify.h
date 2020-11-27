@@ -25,6 +25,7 @@ private:
     bool identifyExpired();
     // 设置定时时长。 从当前时间开始的定时时长，单位ms
     void identifyCountdown_ms(int ms);
+    void judgeDate();
 
 signals:
     // 韦根输出
@@ -48,7 +49,7 @@ private:
     FaceInterface *m_interFace;
     unsigned char *m_irImage;
     unsigned char *m_bgrImage;
-    QVector<MFaceHandle> m_iMFaceHandle;
+//    QVector<DS_FaceInfo> m_iMFaceHandle;
     bool m_tempFlag;
     QString m_tempVal;
     QString m_faceInfo;
@@ -56,5 +57,6 @@ private:
     QString m_cardNo;
     bool m_cardWork;
     qint64 m_endTimerMs;
+
 };
 #endif // FACEIDENTIFY_H

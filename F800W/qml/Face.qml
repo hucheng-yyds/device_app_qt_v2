@@ -2,8 +2,8 @@ import QtQuick 2.0
 
 Item {
     id: item1
-    width: root.width
-    height: root.height
+    width: 600
+    height: 1024
     property var focusingList: [focusing];
     property bool isEg;
     property bool isTemp;
@@ -35,7 +35,7 @@ Item {
 
     Image {
         id: netStatus
-        x: 739
+        x: 539
         y: 11
         source: "image/eth0_nosig.png";
     }
@@ -55,7 +55,7 @@ Item {
         color: "#000000"
         opacity: 0.5
         width: parent.width
-        height: 1060
+        height: 960
     }
 
     Text {
@@ -72,8 +72,10 @@ Item {
 
     Image {
         id: image_head
-        x: 0
+        x: 1
         y: 2
+        width: 600
+        height: 844
         source: "image/head_temp.png"
         visible: false
     }
@@ -207,7 +209,8 @@ Item {
         x: 325
         y: 517
         source: "./gifs/cewen.gif"
-        playing: true
+//        playing: true
+        playing: false
     }
 
 
@@ -289,7 +292,8 @@ Item {
         x: 325
         y: 517
         source: "./gifs/reading.gif"
-        playing: true
+        //        playing: true
+                playing: false
     }
 
     // 人证失败
@@ -345,7 +349,8 @@ Item {
         x: 325
         y: 517
         source: "./gifs/kansxt.gif"
-        playing: true
+        //        playing: true
+                playing: false
     }
 
     // 看摄像头信息
@@ -426,7 +431,7 @@ Item {
         id: pngShow
         visible: true
         x: 0
-        y: 1072
+        y: 852
         width: 168
         height: 170
         source: "image/show.png"
@@ -435,17 +440,18 @@ Item {
         id: gifShow
         visible: pngShow.visible
         x: 0
-        y: 1072
+        y: 852
         width: 168
         height: 170
         source: "./gifs/show.gif"
-        playing: true
+                playing: true
+//                playing: false
     }
     Image {
         id: pngRun
         visible: false
         x: 0
-        y: 1072
+        y: 852
         width: 168
         height: 170
         source: "image/run.png"
@@ -454,18 +460,19 @@ Item {
         id: gifRun
         visible: pngRun.visible
         x: 0
-        y: 1072
+        y: 852
         width: 168
         height: 170
         source: "./gifs/run.gif"
-        playing: true
+        //        playing: true
+                playing: false
     }
 
     // 显示设备名称
     Text {
         id: corporateName
-        x: 176
-        y: 1132
+        x: 175
+        y: 898
         color: "#fffffe"
         font {
 //            bold: "Medium"
@@ -479,9 +486,9 @@ Item {
     Rectangle {
         id: devIndoBg
         x: 0
-        y: 1233
-        width: 800
-        height: 47
+        y: 997
+        width: 600
+        height: 27
         opacity: 0.5
         color: "#000000"
     }
@@ -490,7 +497,7 @@ Item {
     Text {
         id: sn;
         x: 13
-        y: 1236
+        y: 993
         font {
             pixelSize: 24;
             family: "multi-language"
@@ -503,8 +510,8 @@ Item {
     // 显示ip
     Text {
         id: ip;
-        x: 376
-        y: 1236
+        x: 257
+        y: 993
         font {
             pixelSize: 24;
             family: "multi-language"
@@ -518,8 +525,8 @@ Item {
 
     Text {
         id: version;
-        x: 631
-        y: 1236
+        x: 518
+        y: 993
         font {
             pixelSize: 24;
             family: "multi-language"
@@ -561,20 +568,20 @@ Item {
     Rectangle {
         id: resultTextBg
         x: 145
-        y: 1011
+        y: 807
         visible: resultText.text.length
         color: "#000000"
         radius: 20
         opacity: 0.5
         anchors.horizontalCenter: parent.horizontalCenter
-        width: 511
-        height: 98
+        width: 333
+        height: 77
     }
 
     Text {
         id: resultText
-        x: 176
-        y: 1016
+        x: 172
+        y: 806
         font {
             pixelSize: 54
             family: "multi-language"
@@ -597,6 +604,7 @@ Item {
             }
             image_head.visible = isTemp
             sleep.restart();
+            console.log("onSyncSuccess");
         }
         onFaceTb: {
             for (var i = 0; i < focusingList.length; i ++) {
@@ -653,31 +661,31 @@ Item {
             sleep.restart()
         }
         onShowFaceFocuse:{
-            var flag = false;
-            for (var i = 0; i < focusingList.length; i ++) {
-                if (focusingList[i].trackId === trackId && !isTemp) {
-                    focusingList[i].focusingX = left - 20;
-                    focusingList[i].focusingY = top - 30;
-                    focusingList[i].focusingWidth = right - left + 50;
-                    focusingList[i].focusingHeight = bottom - top + 30;
-                    focusingList[i].focusingVisible = true;
-                    flag = true;
-                    break;
-                }
-                else
-                {
-                    focusingList[i].focusingVisible = false;
-                    focusingList[i].trackId = 0;
-                }
-            }
-            if (!flag && !isTemp) {
-                focusingList[index].focusingX = left - 20;
-                focusingList[index].focusingY = top - 30;
-                focusingList[index].focusingWidth = right - left + 50;
-                focusingList[index].focusingHeight = bottom - top + 30;
-                focusingList[index].focusingVisible = true;
-                focusingList[index].trackId = trackId;
-            }
+//            var flag = false;
+//            for (var i = 0; i < focusingList.length; i ++) {
+//                if (focusingList[i].trackId === trackId && !isTemp) {
+//                    focusingList[i].focusingX = left - 20;
+//                    focusingList[i].focusingY = top - 30;
+//                    focusingList[i].focusingWidth = right - left + 50;
+//                    focusingList[i].focusingHeight = bottom - top + 30;
+//                    focusingList[i].focusingVisible = true;
+//                    flag = true;
+//                    break;
+//                }
+//                else
+//                {
+//                    focusingList[i].focusingVisible = false;
+//                    focusingList[i].trackId = 0;
+//                }
+//            }
+//            if (!flag && !isTemp) {
+//                focusingList[index].focusingX = left - 20;
+//                focusingList[index].focusingY = top - 30;
+//                focusingList[index].focusingWidth = right - left + 50;
+//                focusingList[index].focusingHeight = bottom - top + 30;
+//                focusingList[index].focusingVisible = true;
+//                focusingList[index].trackId = trackId;
+//            }
             standby.visible = false;
             face.visible = true;
             sleep.restart();

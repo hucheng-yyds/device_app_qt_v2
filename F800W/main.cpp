@@ -11,6 +11,7 @@ int main(int argc, char *argv[])
         QThread::msleep(1000);
     }
     QGuiApplication app(argc, argv);
+//    QThread::currentThread()->setPriority(QThread::TimeCriticalPriority);
     QTranslator *m_translator = new QTranslator();
     switch (switchCtl->m_language) {
     case 0:

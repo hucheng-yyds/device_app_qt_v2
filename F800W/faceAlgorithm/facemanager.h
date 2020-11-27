@@ -10,6 +10,7 @@ class FaceManager : public QThread
     Q_OBJECT
 public:
     FaceManager();
+    ~FaceManager();
     // 初始化人脸识别算法
     bool init();
     // 人脸检测和比对共享资源接口
@@ -24,6 +25,9 @@ public slots:
     void insertFaceGroups(int id, const QString &username, const QString &time, const QString &photoname, const QString &iphone);
 
 private:
+    AppCall* DS_CreateAppCall(const char* ptrRegFilePath, const char* ptrModelFileAbsDir, const char* ptrFaceImgFilePath);
+    int DS_ReleaseAppCall(AppCall *ptrAppData);
+    int DS_SetGetAppCall(AppCall *ptrAppData);
     // 根据人脸框的大小过滤每帧图片的人脸
     bool filter(const FaceRect &rect);
     // 取出每帧图片的最大人脸，并判断下轮比对是否开始
@@ -55,8 +59,17 @@ private:
     QVector<int> m_trackId;
     QVector<MFaceHandle> m_sMFaceHandle;
     FaceInterface *m_interFace;
+    AppCall *m_ptrAppData;
+    pthread_t detect_pid, identify_pid;
+    pthread_attr_t detect_attr, identify_attr;
     bool m_isIdentify;
     QMutex m_mutex;
     qint64 m_endTimerMs;
+    int saveLeft[5];
+    int saveTop[5];
+    int saveRight[5];
+    int saveBottom[5];
+    int backLightCount = 0;
+    bool status = false;
 };
 #endif // FACEMANAGER_H
