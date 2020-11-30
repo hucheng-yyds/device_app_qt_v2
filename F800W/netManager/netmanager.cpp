@@ -147,7 +147,8 @@ void NetManager::run()
                 {
                     netWorkMode = 1;
                 }
-                else if(value > 20){
+                else if(value > 20)
+                {
                     netWorkMode = 2;
                 }
                 else {
@@ -382,14 +383,21 @@ QString NetManager::getIP()
                         ipAddr = entryList.value(0).ip().toString();
                         addressEntryList.clear();
                     }
-                    break;
+                    return ipAddr;
                 }
-                else {
+                else
+                {
                     if(m_wifi && interface.name() == "wlan0")
                     {
                         QList<QNetworkAddressEntry>entryList=interface.addressEntries();
                         ipAddr = entryList.value(0).ip().toString();
-                        break;
+                        if(ipAddr.isEmpty())
+                        {
+                            break;
+                        }
+                        else {
+                            return ipAddr;
+                        }
                     }
                     else if(interface.name() == "wwan0")
                     {
@@ -398,7 +406,10 @@ QString NetManager::getIP()
                         if (ipAddr.isEmpty() || entryList.value(0).prefixLength() > 32) {
                             break;
                         }
-                        m_fourG = true;
+                        else {
+                            m_fourG = true;
+                            return ipAddr;
+                        }
                     }
                 }
             }

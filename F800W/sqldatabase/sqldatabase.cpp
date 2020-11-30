@@ -4,6 +4,9 @@ SqlDatabase* SqlDatabase::m_Instance = nullptr;
 
 SqlDatabase::SqlDatabase()
 {
+    m_timeoutFaceFail.clear();
+    m_localFaceSet.clear();
+    m_localFaceFail.clear();
     if (QSqlDatabase::contains("qt_sql_default_connection"))
     {
         qt_debug() << "contains qt_sql_default_connection";

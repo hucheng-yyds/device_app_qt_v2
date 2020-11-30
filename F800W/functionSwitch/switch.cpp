@@ -36,7 +36,7 @@ SwitchCtl::SwitchCtl()
         m_manualNetmask = netObj.value("manualNetmask").toString();
         m_manualDns = netObj.value("manualDns").toString();
 
-        m_protocol = serverObj.value("protocol").toBool();
+        m_protocol = serverObj.value("protocol").toInt();
         m_tcpAddr = serverObj.value("tcpAddr").toString();
         m_tcpPort = serverObj.value("tcpPort").toInt();
         m_httpAddr = serverObj.value("httpAddr").toString();
@@ -201,7 +201,7 @@ void SwitchCtl::setSwitchDefault()
     m_manualNetmask = "255.255.255.0";
     m_manualDns = "114.114.114.0";
 
-    m_protocol = true;
+    m_protocol = 1;
     m_tcpAddr = "";
     m_tcpPort = 8777;
     m_httpAddr = "http://120.79.147.36:8086/starr-web";

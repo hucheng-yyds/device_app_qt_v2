@@ -736,8 +736,8 @@ Item {
             version.text = qsTr("T" + ver);
             corporateName.text = qsTr(name);
             people.text = qsTr(number);
-            ip.text = qsTr("ip: " + devIp);
-            sn.text = qsTr("sn: " + devSn);
+            ip.text = qsTr("IP: " + devIp);
+            sn.text = qsTr("SN: " + devSn);
         }
         onIcResultShow: {
             pngRun.visible = true

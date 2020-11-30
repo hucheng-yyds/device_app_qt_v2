@@ -469,7 +469,6 @@ Item {
                 textName.text = qsTr("未注册")
                 tips.text = qsTr("读卡失败")
             }
-            pose_blur_Timer.restart();
             standby.visible = false;
             face.visible = true;
             sleep.restart();

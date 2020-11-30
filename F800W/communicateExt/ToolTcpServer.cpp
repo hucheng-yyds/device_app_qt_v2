@@ -240,8 +240,8 @@ void ToolTcpServer::setParameters(QJsonObject & data,QString msgType,QString cmd
     // 后台通信协议开关 true:tcp协议，false:http协议
     if(data.contains(key_protocol))
     {
-        switchCtl->m_protocol = data.value(key_protocol).toBool();
-        if(switchCtl->m_protocol )//tcp
+        switchCtl->m_protocol = data.value(key_protocol).toInt();
+        if(switchCtl->m_protocol < 3 && switchCtl->m_protocol > 0 )//tcp
         {
             //Tcp ip
             if(data.contains(key_server_ip))
@@ -411,7 +411,14 @@ void ToolTcpServer::setParameters(QJsonObject & data,QString msgType,QString cmd
     {
         switchCtl->m_ic = data.value(key_ic).toBool();
     }
-
+    if(data.contains(key_wifi_name))
+    {
+        switchCtl->m_wifiName = data.value(key_wifi_name).toString();
+    }
+    if(data.contains(key_wifi_pwd))
+    {
+        switchCtl->m_wifiPwd = data.value(key_wifi_pwd).toString();
+    }
 
 
     switchCtl->saveSwitchParam();

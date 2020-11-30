@@ -26,6 +26,8 @@ public:
     }
     // 人脸入库接口
     FaceGroupHandle m_groupHandle;
+    // 超时人脸
+    QSet<int> m_timeoutFaceFail;
     // 失败入库id
     QSet<int> m_localFaceFail;
     // 当前所有人脸id

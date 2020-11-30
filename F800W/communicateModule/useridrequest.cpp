@@ -42,8 +42,13 @@ void UserIdRequest::run()
     int count = 0;
     while(true)
     {
-        if(m_startFaceDownload)
+        if(m_startFaceDownload && dataShare->m_netStatus)
         {
+            if(!dataShare->m_netStatus)
+            {
+                m_startFaceDownload = false;
+                continue;
+            }
             int size = m_updateFace.size();
             if(size > 0)
             {
@@ -60,7 +65,7 @@ void UserIdRequest::run()
             }
             else
             {
-                if(switchCtl->m_protocol)
+                if(1 == switchCtl->m_protocol)
                 {
                     emit allUserIc();
                 }
@@ -79,6 +84,7 @@ void UserIdRequest::run()
                 {
                     if(m_updateFace.size() > 0)
                     {
+                        sqlDatabase->m_timeoutFaceFail.insert(m_curFaceId);
                         sqlDatabase->sqlInsertFail(m_curFaceId, 9);
                     }
                     count = 0;
@@ -112,7 +118,6 @@ void UserIdRequest::httpsUpdateUsers(const QJsonObject &jsonObj)
     text.clear();
     int passNum = -1, isBlack = -1;
     int id = jsonObj["mid"].toInt();
-    m_updateFace.remove(id);
     QString name = jsonObj["username"].toString();
     QString photo = jsonObj["photo"].toString();
     QString edittime = jsonObj["updateDate"].toString();
@@ -173,6 +178,7 @@ void UserIdRequest::httpsUpdateUsers(const QJsonObject &jsonObj)
     file.write(QByteArray::fromBase64(photo.toUtf8()));
     file.close();
     m_faceSyncStatus = true;
+    m_updateFace.remove(id);
     emit insertFaceGroups(id, name, edittime, photoName, mobile);
 }
 
@@ -348,11 +354,11 @@ void UserIdRequest::onUpdateUsers(const QJsonObject &jsonObj)
     }
     else
     {
-        if(switchCtl->m_protocol)
+        if(1 == switchCtl->m_protocol)
         {
             tcpUpdateUsers(jsonObj);
         }
-        else
+        else if(3 == switchCtl->m_protocol)
         {
             httpsUpdateUsers(jsonObj);
         }
@@ -363,7 +369,12 @@ void UserIdRequest::onAlluserId(const QJsonArray &jsonArr)
 {
     m_mutex.lock();
     QJsonArray faceJson = jsonArr;
-    QSet<int> localFaceSet = sqlDatabase->m_localFaceSet;
+    QSet<int> localFaceSet;
+    localFaceSet.size();
+    foreach(int id , sqlDatabase->m_localFaceSet)
+    {
+        localFaceSet.insert(id);
+    }
     int size = faceJson.count();
     qDebug() << "OnAllUserId count:" << size << localFaceSet.size();
     m_updateFace.clear();

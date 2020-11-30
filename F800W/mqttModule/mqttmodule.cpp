@@ -46,6 +46,7 @@ void MqttModule::run()
     MQTTClient_connectOptions opts = MQTTClient_connectOptions_initializer;
     MQTTClient_willOptions wopts =  MQTTClient_willOptions_initializer;
     opts.keepAliveInterval = 20;
+    opts.connectTimeout = 30;
     opts.cleansession = 1;
     opts.username = "admin";//name.toUtf8();
     opts.password = "ofzl";//psd.toUtf8();
@@ -57,25 +58,23 @@ void MqttModule::run()
     opts.will->retained = 0;
     opts.will->topicName = "willtopic";
     opts.will = nullptr;
+    int rc = MQTTClient_create(&m_mqttClient, m_serverUrl.toUtf8(), switchCtl->m_sn.toUtf8(), MQTTCLIENT_PERSISTENCE_DEFAULT, nullptr);
+    if (rc != MQTTCLIENT_SUCCESS)
+    {
+        MQTTClient_destroy(&m_mqttClient);
+        return;
+    }
+    rc = MQTTClient_setCallbacks(m_mqttClient, nullptr, nullptr, messageArrived, deliveryComplete);
+    if(rc != MQTTCLIENT_SUCCESS)
+    {
+        qt_debug() << "MQTTClient_setCallbacks fail";
+        return;
+    }
     while(true)
     {
         if(!status)
         {
-            int rc = MQTTClient_create(&m_mqttClient, m_serverUrl.toUtf8(), switchCtl->m_sn.toUtf8(), MQTTCLIENT_PERSISTENCE_DEFAULT, nullptr);
-            if (rc != MQTTCLIENT_SUCCESS)
-            {
-                MQTTClient_destroy(&m_mqttClient);
-                sleep(2);
-                continue;
-            }
-            rc = MQTTClient_setCallbacks(m_mqttClient, nullptr, nullptr, messageArrived, deliveryComplete);
-            if(rc != MQTTCLIENT_SUCCESS)
-            {
-                qt_debug() << "MQTTClient_setCallbacks fail";
-                sleep(2);
-                continue;
-            }
-            rc = MQTTClient_connect(m_mqttClient, &opts);
+            int rc = MQTTClient_connect(m_mqttClient, &opts);
             if(rc != MQTTCLIENT_SUCCESS)
             {
                 qt_debug() << "MQTTClient_connect fail";

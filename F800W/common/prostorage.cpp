@@ -114,13 +114,11 @@ void ProStorage::init()
         switchCtl->m_openMode = "Face";
         switchCtl->saveSwitchParam();
     }
-    face->start();
-    identify->start();
     userRequest->start();
     OfflineRecord *offlineRecord = new OfflineRecord;
     ServerDataDeal *dataDeal = new ServerDataDeal;
     dataDeal->setPacket(serverList);
-    if(switchCtl->m_protocol)
+    if(1 == switchCtl->m_protocol)
     {
         connect(dataDeal, &ServerDataDeal::insertFaceGroups, face, &FaceManager::insertFaceGroups);
         TcpClient *tcpClient = new TcpClient;
@@ -141,7 +139,12 @@ void ProStorage::init()
         connect(userRequest, &UserIdRequest::allUserIc, tcpClient, &TcpClient::requestGetAllUserIC);
         tcpClient->start();
     }
-    else {
+    else if(2 == switchCtl->m_protocol)
+    {
+
+    }
+    else if(3 == switchCtl->m_protocol)
+    {
         dataDeal->setHttp(httpClient);
         connect(identify, &FaceIdentify::uploadopenlog, httpClient, &HttpsClient::httpsUploadopenlog);
         connect(offlineRecord, &OfflineRecord::uploadopenlog, httpClient, &HttpsClient::httpsUploadopenlog);
@@ -154,6 +157,8 @@ void ProStorage::init()
     offlineRecord->start();
     dataDeal->start();
     mqttClient->start();
+    face->start();
+    identify->start();
     emit syncSuccess(switchCtl->m_faceDoorCtl, switchCtl->m_tempCtl);
 }
 

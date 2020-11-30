@@ -8,7 +8,7 @@
 
 #define switchCtl SwitchCtl::getInstance()
 
-#define VERSION     "2.0.5"
+#define VERSION     "2.0.6"
 #define DEVICE_TYPE "F800W"
 
 class SwitchCtl
@@ -74,8 +74,8 @@ public:
     // 定时息屏时间 单位秒最小3秒钟
     int m_closeScreenTime;
 
-    // 后台通信协议开关 true:tcp协议，false:http协议
-    bool m_protocol;
+    // 后台通信协议开关 1:tcp协议，2：中间件协议，3:http协议
+    int m_protocol;
     // tcp后台地址
     QString m_tcpAddr;
     // tcp后台端口号

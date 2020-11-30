@@ -19,6 +19,8 @@ protected:
 public slots:
     void dealIcData(int mid, const QString &cardNo);
 private:
+    // 判断早中晚
+    void judgeDate();
     // 人证比对
     bool idCardFaceComparison(char *feature_result);
     // 处理开门权限

@@ -49,7 +49,7 @@
 
 
 
-//#define key_wifi_ssid                       "wifi/ssid"
-//#define key_wifi_psk                        "wifi/psk"
+#define key_wifi_name                       "wifiName"
+#define key_wifi_pwd                        "wifiPwd"
 
 #endif // CMDSKEY_H

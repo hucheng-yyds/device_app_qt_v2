@@ -59,6 +59,28 @@ bool FaceIdentify::idCardFaceComparison(char *feature_result)
     return idPass;
 }
 
+void FaceIdentify::judgeDate()
+{
+    if(switchCtl->m_language)
+    {
+        m_faceInfo = "";
+        return;
+    }
+    QString curTime = QDateTime::currentDateTime().addSecs(28800).toString("HH:mm:ss");
+    if(curTime.compare("01:00:00") > 0 && curTime.compare("12:00:00") < 0)
+    {
+        m_faceInfo = tr("早上好，");
+    }
+    else if(curTime.compare("12:00:00") > 0 && curTime.compare("18:30:00") < 0)
+    {
+        m_faceInfo = tr("下午好，");
+    }
+    else
+    {
+        m_faceInfo = tr("晚上好，");
+    }
+}
+
 void FaceIdentify::run()
 {
     while (true)
@@ -113,6 +135,7 @@ void FaceIdentify::run()
         BGR_IR_match(bgrHandle, bgrLength, irHandle, irLength, matchPair.data());
         if (faceDoor && !m_cardWork)
         {
+            judgeDate();
             int i = 0;
             if (matchPair[m_iMFaceHandle[i].index] == irLength && ir)
             {
@@ -186,7 +209,7 @@ void FaceIdentify::run()
                     extract(bgrHandle[m_iMFaceHandle[i].index], &feature_result, &size);
                     identifyFromFaceGroup(sqlDatabase->m_groupHandle, feature_result, size, &result, &face_id);
                     m_interFace->m_mutex.unlock();
-                    qt_debug() << "-------------------------------------------------" << result << face_id;
+//                    qt_debug() << "-------------------------------------------------" << result << face_id;
                     if ((result > dataShare->m_faceThreshold) && (face_id > 0))
                     {
                         QStringList value = dealOpencondition(face_id);
@@ -263,7 +286,7 @@ void FaceIdentify::run()
                     goto endIdentify;
                 }
             }
-            if (!tempCtl && !vi)
+            if (!tempCtl && (!vi || egPass))
             {
                 if(!authority)
                 {
@@ -308,12 +331,20 @@ void FaceIdentify::run()
                     }
                 }
             }
-            qt_debug() << "holding temp" << dataShare->m_tempFlag;
+            qt_debug() << "holding temp" << m_tempFlag;
+            int tempCount = 0;
             while (1)
             {
                 msleep(10);
                 if(m_tempFlag)
                 {
+                    break;
+                }
+                tempCount++;
+                if(tempCount > 250)
+                {
+                    m_tempResult = -2;
+                    tempCount = 0;
                     break;
                 }
             }
@@ -502,6 +533,7 @@ void FaceIdentify::dealIcData(int mid, const QString &cardNo)
     QString isStranger = "0";
     if(mid > 0)
     {
+        judgeDate();
         QStringList value = dealOpencondition(mid);
         QString name = value.at(0);
         QString remark = value.at(1);

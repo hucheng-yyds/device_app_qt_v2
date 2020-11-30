@@ -378,7 +378,11 @@ void FaceManager::insertFaceGroups(int id, const QString &username, const QStrin
 //                qt_debug() << id << username << time << photoname << iphone;
                 sqlDatabase->sqlInsert(id, username, time, feature.join(","), photoname, iphone);
                 insertFaceGroup(sqlDatabase->m_groupHandle, feature_result, size, id);
-                sqlDatabase->sqlDeleteFail(id);
+                if(sqlDatabase->m_timeoutFaceFail.contains(id))
+                {
+                    sqlDatabase->m_timeoutFaceFail.remove(id);
+                    sqlDatabase->sqlDeleteFail(id);
+                }
                 releaseFeature(feature_result);
             }
             else

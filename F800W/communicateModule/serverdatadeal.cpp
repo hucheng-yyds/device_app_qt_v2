@@ -184,13 +184,7 @@ void ServerDataDeal::saveSetting(const QJsonObject &jsonData)
     }
     if(jsonData.contains("hardHatRecognition"))
     {
-        if(jsonData.value("hardHatRecognition").toInt())
-        {
-            switchCtl->m_helet = true;
-        }
-        else {
-            switchCtl->m_helet = false;
-        }
+        switchCtl->m_helet = jsonData.value("hardHatRecognition").toInt();
     }
     if (jsonData.contains("identifyWaitTime"))
     {
@@ -491,12 +485,12 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
     {
     case MqttModule::UserData:
     {
-        if(switchCtl->m_protocol)
+        if(1 == switchCtl->m_protocol)
         {
             QJsonObject jsonData = jsonObj["data"].toObject();
             dealFaceNewData(jsonData);
         }
-        else {
+        else if(3 == switchCtl->m_protocol) {
             dealHttpData(jsonObj);
         }
         break;
@@ -525,7 +519,10 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
     }
     case MqttModule::Bind:
     {
-        system("rm *.db");
+        sqlDatabase->sqlDeleteAll();
+        sqlDatabase->sqlDeleteAllAuth();
+        sqlDatabase->sqlDeleteAllFail();
+        sqlDatabase->sqlDeleteAllOffline();
         emit allUserId();
         break;
     }
@@ -540,7 +537,7 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
     }
     case MqttModule::Unbind:
     {
-        system("rm *.db");
+        system("rm *.db && sync");
         system("reboot");
         break;
     }
@@ -602,7 +599,7 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
     default:
         break;
     }
-    if(switchCtl->m_protocol)
+    if(1 == switchCtl->m_protocol)
     {
         QString type = jsonObj.value("message").toString();
         QString messageId = jsonObj.value("messageId").toString();
