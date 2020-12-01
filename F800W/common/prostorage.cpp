@@ -67,6 +67,8 @@ void ProStorage::init()
         IcCardModule *iccard = new IcCardModule;
         connect(iccard, &IcCardModule::sigIcInfo, identify, &FaceIdentify::dealIcData);
         connect(iccard, &IcCardModule::readIcStatus, this, &ProStorage::readIcStatus);
+        connect(identify, &FaceIdentify::readIcStatus, this, &ProStorage::readIcStatus);
+        connect(face, &FaceManager::readIcStatus, this, &ProStorage::readIcStatus);
         iccard->start();
     }
 

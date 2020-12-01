@@ -33,6 +33,7 @@ void IcCardModule::run()
                 {
                     if(switchCtl->m_vi && icExpired())
                     {
+                        dataShare->setReadingStatus(true);
                         emit readIcStatus(1);
                         //读身份证全信息
                         status = ReadIDCard("szofzn", "WYAxFsOeLTIeWlj4", nullptr, nullptr, 8885, &IdInfo);
@@ -50,9 +51,11 @@ void IcCardModule::run()
                             dataShare->m_idCardDatas << IdInfo.name << IdInfo.IdNumber << IdInfo.nation << IdInfo.Address << IdInfo.Birthday << IdInfo.sex;
                             dataShare->m_idCardFlag = true;
                             emit readIcStatus(2);
+                            dataShare->setReadingStatus(false);
                         }
                         else
                         {
+                            dataShare->setReadingStatus(false);
                             emit readIcStatus(0);
                             dataShare->m_idCardFlag = false;
                             hardware->playSound(tr("读卡失败").toUtf8(), "rkshibai.aac");

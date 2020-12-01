@@ -72,7 +72,7 @@ void ServerDataDeal::upgradeFile(const QJsonObject &obj)
             }
             if(QFile::exists("updateAlgorithm"))
             {
-                system("rm updateAlgorithm ofzl.db ofzluser.db userdata.db ofzldata.db");
+                system("rm updateAlgorithm *.db");
             }
             system("reboot");
         }

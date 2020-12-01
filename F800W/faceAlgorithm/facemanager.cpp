@@ -61,6 +61,7 @@ void FaceManager::run()
     int saveRight[5];
     int saveBottom[5];
     int offset = 10;
+    bool kansxt = false;
     unsigned char *rcodeImage = new unsigned char[VIDEO_WIDTH*VIDEO_HEIGHT* 3 / 2];
     onBreathingLight();
     while(true)

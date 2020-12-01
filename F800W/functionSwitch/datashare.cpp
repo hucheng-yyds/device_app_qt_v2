@@ -13,4 +13,15 @@ DataShare::DataShare()
     m_netStatus = false;
     m_offlineFlag = false;
     m_log = true;
+    m_readingCard = false;
+}
+
+bool DataShare::getReadingStatus()
+{
+    return m_readingCard;
+}
+
+void DataShare::setReadingStatus(bool status)
+{
+    m_readingCard = status;
 }

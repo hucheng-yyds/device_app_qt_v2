@@ -573,7 +573,7 @@ Item {
     // 定时器自动隐藏ui弹窗
     Timer {
         id: hideName;
-        interval: 3000; running: false;
+        interval: 2500; running: false;
         onTriggered: {
             resultText.text = "";
         }
@@ -809,9 +809,9 @@ Item {
             resultText.text = "";
             cardSuccess.visible = false;
             tempResult.visible = false;
-            tempBg.visible = true;
             if(1 === flag)
             {
+                tempBg.visible = true;
                 kansxt.visible = false;
                 tempResult.visible = false;
                 cardFail.visible = false;
@@ -819,16 +819,26 @@ Item {
             }
             else if(2 === flag)
             {
+                readingInfo.visible = false;
+                readingGif.visible = false;
+                tempBg.visible = true;
                 reading.visible = false;
                 kansxt.visible = true;
             }
             else if(0 === flag)
             {
+                tempBg.visible = true;
                 kansxt.visible = false;
                 reading.visible = false;
                 cardFail.visible = true;
                 tempResult.text = qsTr("请重新刷卡");
                 tempResult.visible = true;
+            }
+            else if(3 === flag)
+            {
+                reading.visible = false;
+                tempBg.visible = false;
+                kansxt.visible = false;
             }
             standby.visible = false;
             face.visible = true;
@@ -855,12 +865,14 @@ Item {
             gifChange.restart()
             temping.visible = false
             pose_blur_Timer.restart();
+            hideName.restart();
             if (result === 0) {
                 isResultz = false;
                 tempInfoLow.visible = false;
                 tempInfoError.visible = false;
                 tempResult.text = tempVal;
                 tempResult.visible = true;
+                resultText.text = qsTr("体温异常")
                 isResulty = true;
             } else if (result === 1) {
                 isResulty = false;
@@ -868,6 +880,7 @@ Item {
                 tempInfoError.visible = false;
                 tempResult.text = tempVal;
                 tempResult.visible = true;
+                resultText.text = qsTr("体温正常")
                 isResultz = true;
             } else if(result === -1)
             {
@@ -876,10 +889,12 @@ Item {
                 tempInfoError.visible = false;
                 tempResult.visible = false;
                 tempInfoLow.visible = true;
+                resultText.text = qsTr("体温偏低")
             }
             else {
                 isResultz = false;
                 isResulty = false;
+                resultText.text = qsTr("测温失败")
                 tempInfoLow.visible = false;
                 tempResult.visible = false;
                 tempInfoError.visible = true;

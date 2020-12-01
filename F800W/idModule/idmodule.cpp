@@ -78,11 +78,14 @@ void IdCardModule::run()
         }
         else if(expired() && switchCtl->m_vi)
         {
+            dataShare->setReadingStatus(true);
             emit readIdStatus(1);
             //读卡
             iRet = CVR_Read_Content(2);
             if(iRet != 1)
             {
+                emit readIdStatus(0);
+                dataShare->setReadingStatus(false);
                 qt_debug() << "CVR_Read_FPContent failed, Ret = " << iRet;
                 continue;
             }
@@ -94,6 +97,7 @@ void IdCardModule::run()
             if(iRet != 1)
             {
                 emit readIdStatus(0);
+                dataShare->setReadingStatus(false);
                 qt_debug() << "GetCertType failed, Ret = " << iRet;
                 continue;
             }
@@ -104,6 +108,7 @@ void IdCardModule::run()
             if(iRet != 1)
             {
                 emit readIdStatus(0);
+                dataShare->setReadingStatus(false);
                 qt_debug() << "GetPeopleName failed, Ret =" << iRet;
                 continue;
             }
@@ -115,6 +120,7 @@ void IdCardModule::run()
             if(iRet != 1)
             {
                 emit readIdStatus(0);
+                dataShare->setReadingStatus(false);
                 qt_debug() << "GetPeopleSex failed, Ret =" << iRet;
                 continue;
             }
@@ -127,6 +133,7 @@ void IdCardModule::run()
             if(iRet != 1)
             {
                 emit readIdStatus(0);
+                dataShare->setReadingStatus(false);
                 qt_debug() << "GetPeopleNation failed, Ret =" << iRet;
                 continue;
             }
@@ -138,6 +145,7 @@ void IdCardModule::run()
             if(iRet != 1)
             {
                 emit readIdStatus(0);
+                dataShare->setReadingStatus(false);
                 qt_debug() << "GetPeopleIDCode failed, Ret =" << iRet;
                 continue;
             }
@@ -149,6 +157,7 @@ void IdCardModule::run()
             if(iRet != 1)
             {
                 emit readIdStatus(0);
+                dataShare->setReadingStatus(false);
                 qt_debug() << "GetPeopleBirthday failed, Ret =" << iRet;
                 continue;
             }
@@ -160,6 +169,7 @@ void IdCardModule::run()
             if(iRet != 1)
             {
                 emit readIdStatus(0);
+                dataShare->setReadingStatus(false);
                 qt_debug() << "GetPeopleAddress failed, Ret =" << iRet;
                 continue;
             }
@@ -172,6 +182,7 @@ void IdCardModule::run()
             if(iRet != 1)
             {
                 emit readIdStatus(0);
+                dataShare->setReadingStatus(false);
                 qt_debug() << "GetBMPData failed, Ret =" << iRet;
                 continue;
             }
@@ -193,6 +204,7 @@ void IdCardModule::run()
             dataShare->m_idCardDatas << name << id << nation << addr << birth << sex;
             dataShare->m_idCardFlag = true;
             emit readIdStatus(2);
+            dataShare->setReadingStatus(false);
             qt_debug() << dataShare->m_idCardFlag << dataShare->m_idCardDatas;
         }
         else {

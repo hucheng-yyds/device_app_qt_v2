@@ -31,6 +31,8 @@ private:
     void identifyCountdown_ms(int ms);
 
 signals:
+    // 读卡状态
+    void readIcStatus(int flag);
     // 韦根输出
     void wgOut(const QByteArray &number);
     // 口罩和安全帽显示

@@ -135,6 +135,10 @@ void FaceIdentify::run()
         BGR_IR_match(bgrHandle, bgrLength, irHandle, irLength, matchPair.data());
         if (faceDoor && !m_cardWork)
         {
+            if(dataShare->getReadingStatus() && dataShare->m_idCardFlag)
+            {
+                emit readIcStatus(3);
+            }
             judgeDate();
             int i = 0;
             if (matchPair[m_iMFaceHandle[i].index] == irLength && ir)
@@ -254,22 +258,28 @@ void FaceIdentify::run()
                     {
                         if(vi)
                         {
-                            if(dataShare->m_idCardFlag)
+                            if(!dataShare->getReadingStatus())
                             {
-                                openDoorType = 4;
-                                realName = dataShare->m_idCardDatas.at(0);
-                                cardNum = dataShare->m_idCardDatas.at(1);
-                                nation = dataShare->m_idCardDatas.at(2);
-                                addr = dataShare->m_idCardDatas.at(3);
-                                birth = dataShare->m_idCardDatas.at(4);
-                                sex = dataShare->m_idCardDatas.at(5).compare("男") == 0 ? 1 : 2;
-                                idCardResult = idCardFaceComparison(feature_result);
-                                dataShare->m_idCardFlag = false;
+                                if(dataShare->m_idCardFlag)
+                                {
+                                    openDoorType = 4;
+                                    realName = dataShare->m_idCardDatas.at(0);
+                                    cardNum = dataShare->m_idCardDatas.at(1);
+                                    nation = dataShare->m_idCardDatas.at(2);
+                                    addr = dataShare->m_idCardDatas.at(3);
+                                    birth = dataShare->m_idCardDatas.at(4);
+                                    sex = dataShare->m_idCardDatas.at(5).compare("男") == 0 ? 1 : 2;
+                                    idCardResult = idCardFaceComparison(feature_result);
+                                    dataShare->m_idCardFlag = false;
+                                }
+                                else {
+                                    emit idCardResultShow(0, tr("未注册"), tr("请刷身份证"), tr("请刷身份证"));
+                                    hardware->playSound(tr("请刷身份证").toUtf8(), "shenfenzh.aac");
+                                    msleep(500);
+                                    goto endIdentify;
+                                }
                             }
                             else {
-                                emit idCardResultShow(0, tr("未注册"), tr("请刷身份证"), tr("请刷身份证"));
-                                hardware->playSound(tr("请刷身份证").toUtf8(), "shenfenzh.aac");
-                                msleep(500);
                                 goto endIdentify;
                             }
                         }

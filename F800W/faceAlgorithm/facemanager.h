@@ -40,6 +40,8 @@ private:
     void faceCountdown_ms(int ms);
 
 signals:
+    // 读卡状态
+    void readIcStatus(int flag);
     // 显示人脸框 ui界面显示
     void showFaceFocuse(int left, int top, int right, int bottom, int index, int trackId);
     // 隐藏人脸框 控制ui界面消失人脸框
