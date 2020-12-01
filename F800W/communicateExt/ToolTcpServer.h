@@ -5,6 +5,7 @@
 #include <QtNetwork>
 #include <QTcpServer>
 #include "UdpServer.h"
+#include "sample_vio.h"
 
 #define ZK_SFZ_OFFLINE
 

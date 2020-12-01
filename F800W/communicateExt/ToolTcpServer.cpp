@@ -460,7 +460,16 @@ void ToolTcpServer::setParameters(QJsonObject & data,QString msgType,QString cmd
     }
     if(data.contains(key_volume))
     {
-        switchCtl->m_volume = data.value(key_volume).toInt();
+        int volume = data.value(key_volume).toInt();
+        switchCtl->m_volume = volume;
+        if(0 == volume)
+        {
+            volume = -106;
+        }
+        else {
+            volume = volume / 5 - 14;
+        }
+        IF_Vol_Set(volume);
     }
     if(data.contains(key_faceDoorCtl))
     {
