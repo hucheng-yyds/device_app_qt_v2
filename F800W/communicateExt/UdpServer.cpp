@@ -1,3 +1,14 @@
+/**************************************************************************
+  * @brief           : 广播设备信息模块
+  * @author        : 李俊辉
+  * @copyright    : 版权信息
+  * @version       : 版本
+  * @note            : 注意事项
+  * @history        : v0.0.1
+  *
+  *
+***************************************************************************/
+
 #include "UdpServer.h"
 #include <QJsonParseError>
 #include <QJsonObject>
@@ -40,7 +51,7 @@ void UdpServer::sendData()
         json.insert("version",VERSION);
         json.insert("ip", dataShare->m_ipAddr);
         json.insert("uuid", strId);
-        json.insert("v2",true);
+        json.insert("v3",true);
         json.insert("mac", "");
         json.insert("ss_sn",switchCtl->m_sn);
         document.setObject(json);

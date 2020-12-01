@@ -57,28 +57,33 @@ Log::Log(QObject *parent) : QObject(parent)
 }
 
 void Log::onToolTcpStateChange(bool state)//true:链接上了，false:链接断开
-{
+{    qt_debug() << state;
     if(!state)//
     {
-//        qt_debug() << state;
-//        timer->stop();
-//        dataShare->m_log = true;
-//        qInstallMessageHandler(outputMessage);
+        timer->stop();
+        dataShare->m_log = true;
+        qInstallMessageHandler(outputMessage);
     }
 }
 
-
+//true 输出到文件
 void Log::onLogFun(bool on)
 {
-//    if(on)
-//    {
-//        dataShare->m_log = true;
-//        timer->stop();
-//        qInstallMessageHandler(outputMessage);
+    if(on)
+    {
+        dataShare->m_log = true;
+        timer->stop();
+        qInstallMessageHandler(outputMessage);
 
-//    }else {
-//        dataShare->m_log = false;
-//        timer->start();
-//        qInstallMessageHandler(outputMessageOnLine);
-//    }
+    }else {
+        dataShare->m_log = false;
+        //立刻发送数据
+        foreach(auto item,Log::logList)
+        {
+            emit sigLogMsg(item);
+            logList.removeOne(item);
+        }
+        timer->start();
+      qInstallMessageHandler(outputMessageOnLine);
+    }
 }
