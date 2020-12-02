@@ -686,7 +686,7 @@ void ToolTcpServer::parseData(QByteArray &new_cmd)
                             }
                         }else if(msgType == "1")//升级固件
                         {
-                             if(cmdStr == "0")
+                            if(cmdStr == "0")
                             {
                                 if(rootObj.contains("versionUpdate"))
                                 {
@@ -716,25 +716,30 @@ void ToolTcpServer::parseData(QByteArray &new_cmd)
                             }
                             else if(cmdStr == "2")//测温固件升级
                             {
-                                 if(rootObj.contains("versionTempUpdate"))
-                                 {
-                                     system("rm temp.bin");
-                                     QString verStr;
-                                     verStr = rootObj.value("versionTempUpdate").toString();
-                                     QByteArray verdata = QByteArray::fromBase64(verStr.toUtf8());
-                                     QFile file("temp.bin");
-                                     if (!file.open(QFile::ReadWrite)) {
-                                         qt_debug() << "open failed!";
-                                         return ;
-                                     }
-                                     file.write(verdata);
-                                     file.close();
-                                     QJsonObject response;
-                                     response.insert("msgType",msgType);
-                                     response.insert("cmd",cmdStr);
-                                     ResponseDataToTool(Dev_FirmwareUpgrade_request,response);
+                                if(rootObj.contains("versionTempUpdate"))
+                                {
+                                    system("rm temp.bin");
+                                    QString verStr;
+                                    verStr = rootObj.value("versionTempUpdate").toString();
+                                    QByteArray verdata = QByteArray::fromBase64(verStr.toUtf8());
+                                    QFile file("temp.bin");
+                                    if (!file.open(QFile::ReadWrite)) {
+                                        qt_debug() << "open failed!";
+                                        return ;
+                                    }
+                                    file.write(verdata);
+                                    file.close();
+                                    QJsonObject response;
+                                    response.insert("msgType",msgType);
+                                    response.insert("cmd",cmdStr);
+                                    ResponseDataToTool(Dev_FirmwareUpgrade_request,response);
                                     // emit sigSendUpdateTemp();
-                                 }
+                                }
+                            }
+                            else if(cmdStr == "3"){
+
+                                system("rm base64SaveFile.txt");
+                                system("rm update.tar.xz");
                             }
                         }
                     }else if(m_cmd == Dev_Debugging_request)
