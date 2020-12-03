@@ -74,6 +74,13 @@ void FaceIdentify::judgeDate()
     }
 }
 
+void FaceIdentify::setTempResult(const QString &tempVal, int result)
+{
+    m_tempFlag = true;
+    m_tempVal = tempVal;
+    m_tempResult = result;
+}
+
 void FaceIdentify::run()
 {
 //    int j = 0, m_count = 0;
@@ -110,10 +117,15 @@ void FaceIdentify::run()
         uint64_t face_id = (uint64_t)m_iMFaceHandle[i].ID;
         QString uploadTime = "";
         int offlineNmae = 0;
+        QString tempVal = "0";
+        int tempResult = 0;
         QString cardNo = "";
         int isOver = 0;
         QString snapshot = "";
-
+        if(tempCtl)
+        {
+            emit startTemp();
+        }
         qt_debug() << "ptrFaceInfo.pose:" << m_iMFaceHandle[i].pose;
         qt_debug() << "ptrFaceInfo.recStatus:" << m_iMFaceHandle[i].recStatus;
         qt_debug() << "ptrFaceInfo.recScoreVal:" << m_iMFaceHandle[i].recScoreVal;
@@ -176,46 +188,58 @@ void FaceIdentify::run()
                 hardware->playSound("chengong.wav");
             }
             if(tempCtl) {
-                m_tempFlag = false;
-                emit startTemp();
                 emit showStartTemp();
-                qt_debug() << "============" << dataShare->m_tempFlag;
-                while (!dataShare->m_tempFlag) {
-                    msleep(100);
+                qt_debug() << "holding temp" << m_tempFlag;
+                int tempCount = 0;
+                while (1)
+                {
+                    msleep(10);
+                    if(m_tempFlag)
+                    {
+                        break;
+                    }
+                    tempCount++;
+                    if(tempCount > 250)
+                    {
+                        m_tempResult = -2;
+                        tempCount = 0;
+                        break;
+                    }
                 }
-                m_tempVal = dataShare->m_tempVal;
-                m_tempResult = dataShare->m_tempResult;
+                m_tempFlag = false;
+                tempVal = m_tempVal;
+                tempResult = m_tempResult;
                 if(switchCtl->m_fahrenheit)
                 {
-                    emit tempShow(QString("%1℉").arg(m_tempVal), m_tempResult);
+                    emit tempShow(QString("%1℉").arg(tempVal), tempResult);
                 }
                 else
                 {
-                    emit tempShow(QString("%1℃").arg(m_tempVal), m_tempResult);
+                    emit tempShow(QString("%1℃").arg(tempVal), tempResult);
                 }
                 dataShare->m_tempFlag = false;
 //                emit tempShow(m_tempVal, m_tempResult);
                 msleep(150);
-                qt_debug() << m_tempVal << m_tempResult;
+                qt_debug() << tempVal << tempResult;
                 float warnValue = switchCtl->m_warnValue;
                 if(switchCtl->m_fahrenheit)
                 {
                     warnValue = (warnValue)*1.8 + 32.0;
                 }
-                if (m_tempVal.toFloat() >= warnValue)
+                if (tempVal.toFloat() >= warnValue)
                 {
                     tempPass = false;
                 }
-                else if(m_tempResult > 0)
+                else if(tempResult > 0)
                 {
                     tempPass = true;
                 }
-                if(-1 == m_tempResult)
+                if(-1 == tempResult)
                 {
                     tempPass = false;
                     hardware->playSound("tiwenlow.wav");
                 }
-                else if(-2 == m_tempResult)
+                else if(-2 == tempResult)
                 {
                     tempPass = false;
                     hardware->playSound("cwshibai.wav");

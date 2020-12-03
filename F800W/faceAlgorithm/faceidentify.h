@@ -2,8 +2,9 @@
 #define FACEIDENTIFY_H
 #include <QThread>
 #include "faceinterface.h"
+#include "tempcallback.h"
 
-class FaceIdentify : public QThread
+class FaceIdentify : public QThread, public TempCallBack
 {
     Q_OBJECT
 public:
@@ -13,6 +14,7 @@ public:
 
 protected:
     virtual void run();
+    void setTempResult(const QString &tempVal, int result);
 
 public slots:
     void dealIcData(int mid, const QString &cardNo);

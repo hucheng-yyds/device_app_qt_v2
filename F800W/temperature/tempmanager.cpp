@@ -239,16 +239,33 @@ void TempManager::startTemp()
 {
     if(expired())
     {
-        if(!m_startTemp)
-        {
-            dataShare->m_tempFlag = false;
-            int count = 1500;
-            if(switchCtl->m_loose)
+        int lens = 0;
+        while (true) {
+            uchar buf[4095];
+            int len = read(m_fd, buf, 4095);
+            if (len <= 0)
             {
-                count = 500;
+                if(len < 0)
+                {
+                    close(m_fd);
+                    checkUART();
+                }
+                qt_debug() << "get temp data end" << len << m_fd;
+                break;
             }
-            countdown_ms(count);
+            lens += len;
+            if(lens > 20000)
+            {
+                qt_debug() << "start temp size > 20000";
+                break;
+            }
         }
+        int count = 1500;
+        if(switchCtl->m_loose)
+        {
+            count = 500;
+        }
+        countdown_ms(count);
         m_tempStatus = false;
         m_startTemp = true;
         tcflush(m_fd, TCIOFLUSH);
@@ -266,13 +283,15 @@ void TempManager::timeckeck()
     {
         if(expired())
         {
-            m_startTemp = false;
+
             m_tempCount = 0;
             QString tempVal = getTemperature();
             int result = compareTemp(tempVal);
-            dataShare->m_tempFlag = true;
-            dataShare->m_tempVal = tempVal;
-            dataShare->m_tempResult = result;
+            m_tempCallBack->setTempResult(tempVal, result);
+//            dataShare->m_tempFlag = true;
+//            dataShare->m_tempVal = tempVal;
+//            dataShare->m_tempResult = result;
+            m_startTemp = false;
         }
     }
 }
