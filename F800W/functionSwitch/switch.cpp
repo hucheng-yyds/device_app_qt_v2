@@ -36,7 +36,7 @@ SwitchCtl::SwitchCtl()
         m_manualNetmask = netObj.value("manualNetmask").toString();
         m_manualDns = netObj.value("manualDns").toString();
 
-        m_protocol = serverObj.value("protocol").toBool();
+        m_protocol = serverObj.value("protocol").toInt();
         m_tcpAddr = serverObj.value("tcpAddr").toString();
         m_tcpPort = serverObj.value("tcpPort").toInt();
         m_httpAddr = serverObj.value("httpAddr").toString();
@@ -50,7 +50,7 @@ SwitchCtl::SwitchCtl()
         m_openMode = userObj.value("openMode").toString();
         m_identifyDistance = userObj.value("identifyDistance").toInt();
         m_doorDelayTime = userObj.value("doorDelayTime").toInt();
-        m_helet = userObj.value("helet").toBool();
+        m_helet = userObj.value("helet").toInt();
         m_mask = userObj.value("mask").toInt();
         m_showIc = userObj.value("showIc").toBool();
         m_fahrenheit = userObj.value("fahrenheit").toBool();
@@ -63,9 +63,12 @@ SwitchCtl::SwitchCtl()
         m_nameMask = userObj.value("nameMask").toInt();
         m_tts = userObj.value("tts").toBool();
         m_tempValueBroadcast = userObj.value("tempValueBroadcast").toBool();
-        m_rcode = userObj.value("rcode").toBool();
+        m_rcode = userObj.value("rcode").toInt();
         m_ic = userObj.value("ic").toBool();
         m_volume = userObj.value("volume").toInt();
+        m_screenCtl = userObj.value("screenCtl").toBool();
+        m_closeScreenTime = userObj.value("closeScreenTime").toInt();
+
         m_wifiName = wifiObj.value("wifiName").toString();
         m_wifiPwd = wifiObj.value("wifiPwd").toString();
     }
@@ -83,6 +86,10 @@ SwitchCtl::SwitchCtl()
         m_sn = obj.value("sn").toString();
         qt_debug() << m_angle << m_camera << m_screen << m_sn;
     }
+}
+
+SwitchCtl::~SwitchCtl()
+{
 }
 
 void SwitchCtl::saveSwitchParam()
@@ -138,6 +145,8 @@ void SwitchCtl::saveSwitchParam()
     userObj.insert("rcode", m_rcode);
     userObj.insert("volume", m_volume);
     userObj.insert("ic", m_ic);
+    userObj.insert("screenCtl", m_screenCtl);
+    userObj.insert("closeScreenTime", m_closeScreenTime);
 
     wifiObj.insert("wifiName", m_wifiName);
     wifiObj.insert("wifiPwd", m_wifiPwd);
@@ -192,7 +201,7 @@ void SwitchCtl::setSwitchDefault()
     m_manualNetmask = "255.255.255.0";
     m_manualDns = "114.114.114.0";
 
-    m_protocol = true;
+    m_protocol = 1;
     m_tcpAddr = "";
     m_tcpPort = 8777;
     m_httpAddr = "http://120.79.147.36:8086/starr-web";
@@ -206,7 +215,7 @@ void SwitchCtl::setSwitchDefault()
     m_openMode = "FaceTemp";
     m_identifyDistance = 1;
     m_doorDelayTime = 3;
-    m_helet = false;
+    m_helet = 0;
     m_mask = 0;
     m_showIc = false;
     m_fahrenheit = false;
@@ -219,9 +228,11 @@ void SwitchCtl::setSwitchDefault()
     m_nameMask = 0;
     m_tts = false;
     m_tempValueBroadcast = false;
-    m_rcode = false;
+    m_rcode = 0;
     m_volume = 100;
     m_ic = false;
+    m_screenCtl = false;
+    m_closeScreenTime = 5;
 
     m_wifiName = "";
     m_wifiPwd = "";
@@ -270,6 +281,8 @@ void SwitchCtl::setSwitchDefault()
     userObj.insert("rcode", m_rcode);
     userObj.insert("volume", m_volume);
     userObj.insert("ic", m_ic);
+    userObj.insert("screenCtl", m_screenCtl);
+    userObj.insert("closeScreenTime", m_closeScreenTime);
 
     wifiObj.insert("wifiName", m_wifiName);
     wifiObj.insert("wifiPwd", m_wifiPwd);

@@ -54,7 +54,7 @@ public:
     void sqlUpdate(int id, const QString &username, const QString &time, const QString &photoname, const QString &iphone);
 
     // 离线记录数据插入
-    void sqlInsertOffline(int id, int userid, int type, int isOver, int isTemp, const QStringList &datas);
+   void sqlInsertOffline(int id, int userid, int type, int isOver, int isTemp, int sex, const QStringList &datas);
     // 查询所有离线记录id
     QList<int> sqlSelectAllOffLine();
     // 离线记录查询

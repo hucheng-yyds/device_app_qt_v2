@@ -29,7 +29,7 @@ INCLUDEPATH     += $$PWD/external/include/utils
 
 LIBS += -L$$PWD/external/lib
 LIBS += -L$$PWD/external/lib/qz
-#LIBS += -L$$PWD/external/lib/opencv
+LIBS += -L$$PWD/external/lib/opencv
 
 #LIBS += $$PWD/external/lib/libvio.a
 #LIBS += $$PWD/external/lib/libqrcodegen.a
@@ -88,7 +88,7 @@ LIBS += -Wl,-Bdynamic \
 INCLUDEPATH     += $$PWD/hardware
 INCLUDEPATH     += $$PWD/common
 INCLUDEPATH     += $$PWD/functionSwitch
-INCLUDEPATH     += $$PWD/mqtt
+INCLUDEPATH     += $$PWD/mqttModule
 INCLUDEPATH     += $$PWD/faceAlgorithm
 INCLUDEPATH     += $$PWD/sqldatabase
 INCLUDEPATH     += $$PWD/netManager
@@ -105,7 +105,7 @@ INCLUDEPATH     += $$PWD/wpa
 include         ($$PWD/hardware/hardware.pri)
 include         ($$PWD/common/common.pri)
 include         ($$PWD/functionSwitch/functionswitch.pri)
-include         ($$PWD/mqtt/mqtt.pri)
+include         ($$PWD/mqttModule/mqttModule.pri)
 include         ($$PWD/faceAlgorithm/facealgorithm.pri)
 include         ($$PWD/sqldatabase/sqldatabase.pri)
 include         ($$PWD/netManager/netmanager.pri)

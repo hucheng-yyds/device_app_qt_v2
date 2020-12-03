@@ -178,7 +178,7 @@ void NetManager::run()
         int hour = dateTime.toString("HH").toInt();
         int min = dateTime.toString("mm").toInt();
         QString date = curDate.split(" ").at(1);
-        emit timeSync(curDate, dateTime.toString("HH:mm"), hour, min, date + " " + dateTime.toString("yy.MM.dd"));
+        emit timeSync(switchCtl->m_closeScreenTime * 1000, switchCtl->m_screenCtl, curDate, dateTime.toString("HH:mm"), hour, min, date + " " + dateTime.toString("yy.MM.dd"));
         msleep(500);
         seq++;
     }

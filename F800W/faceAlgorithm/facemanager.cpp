@@ -365,8 +365,8 @@ void FaceManager::ctlOpenDoor(int id)
     hardware->checkOpenDoor();
     QStringList datas;
     datas.clear();
-    datas << QDateTime::currentDateTime().addSecs(28800).toString("yyyy-MM-dd HH:mm:ss") << "" << "1" << "" << "0" << "";
-    sqlDatabase->sqlInsertOffline(0, id, 1, 0, 0, datas);
+    datas << QDateTime::currentDateTime().addSecs(28800).toString("yyyy-MM-dd HH:mm:ss") << "" << "1" << "" << "0" << "" << "" << "" << "" << "" << "";
+    sqlDatabase->sqlInsertOffline(0, id, 1, 0, 0, 0, datas);
 }
 
 void FaceManager::insertFaceGroups(int id, const QString &username, const QString &time, const QString &photoname, const QString &iphone)

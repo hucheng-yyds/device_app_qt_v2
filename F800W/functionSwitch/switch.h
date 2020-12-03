@@ -8,13 +8,14 @@
 
 #define switchCtl SwitchCtl::getInstance()
 
-#define VERSION     "2.0.2"
+#define VERSION     "2.0.7"
 #define DEVICE_TYPE "F800W"
 
 class SwitchCtl
 {
 public:
     explicit SwitchCtl();
+    ~SwitchCtl();
     static SwitchCtl *getInstance()
     {
         if (!m_Instance) {
@@ -73,8 +74,8 @@ public:
     // 定时息屏时间 单位秒最小3秒钟
     int m_closeScreenTime;
 
-    // 后台通信协议开关 true:tcp协议，false:http协议
-    bool m_protocol;
+    // 后台通信协议开关 1:tcp协议，2：中间件协议，3:http协议
+    int m_protocol;
     // tcp后台地址
     QString m_tcpAddr;
     // tcp后台端口号
@@ -100,7 +101,7 @@ public:
     // 开门等待时间 单位秒
     int m_doorDelayTime;
     // 安全帽开关
-    bool m_helet;
+    int m_helet;
     // 口罩开关 0:表示关闭 1:提醒 2:检测
     int m_mask;
     // 显示ic卡号 开关
@@ -125,8 +126,8 @@ public:
     bool m_tts;
     // 温度值播报数字开关，只有当tts打开才有效
     bool m_tempValueBroadcast;
-    // 二维码开关 true:打开 false:关闭
-    bool m_rcode;
+    // 二维码开关 0:关闭 1:摄像头识别 2：读头识别
+    int m_rcode;
     // 音量控制 0 - 100 0是静音
     int m_volume;
     // ic卡开关

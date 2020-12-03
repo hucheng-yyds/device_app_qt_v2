@@ -289,18 +289,213 @@ void ServerDataDeal::saveSetting(const QJsonObject &jsonData)
     system("sync");
 }
 
+void ServerDataDeal::dealHttpData(const QJsonObject &jsonObj)
+{
+    qt_debug() << jsonObj;
+    int cmd = jsonObj.value("operater").toInt();
+    QJsonObject dataObj = jsonObj.value("data").toObject();
+    int mid = dataObj.value("mid").toInt();
+    QString edittime = "", remark = "", startTime = "", expireTime = "", passTimeSection = "", passPeriod = "", mobile = "", photoName = "";
+    int passNum = -1, isBlack = -1;
+    dataShare->m_sync = true;
+    if(3 == cmd)
+    {
+        sqlDatabase->sqlDelete(mid);
+        sqlDatabase->sqlDeleteIc(mid);
+        sqlDatabase->sqlDeleteAuth(mid);
+    }
+    else
+    {
+        QString name = "";
+        QString photoUrl = dataObj["photoUrl"].toString();
+        bool status = false;
+        QVariantList value;
+        value.clear();
+        value = sqlDatabase->sqlSelect(mid);
+        if(value.size() > 0)
+        {
+            status = true;
+        }
+        if(dataObj.contains("updateDate"))
+        {
+            edittime = dataObj["updateDate"].toString();
+        }
+        else {
+            if(status)
+            {
+                edittime = value.at(2).toString();
+            }
+        }
+        if(dataObj.contains("username"))
+        {
+            name = dataObj["username"].toString();
+        }
+        else {
+            if(status)
+            {
+                name = value.at(1).toString();
+            }
+        }
+        if(dataObj.contains("mobile"))
+        {
+            mobile = dataObj["mobile"].toString();
+        }
+        else {
+            if(status)
+            {
+                mobile = value.at(5).toString();
+            }
+        }
+        if(dataObj.contains("photoName"))
+        {
+            photoName = dataObj["photoName"].toString();
+        }
+        else {
+            if(status)
+            {
+                photoName = value.at(4).toString();
+            }
+        }
+        if(!photoUrl.isEmpty())
+        {
+            m_httpsClient->httpsUserReq(mid, photoUrl);
+        }
+        if(value.size() > 0)
+        {
+            sqlDatabase->sqlUpdate(mid, name, edittime, photoName, mobile);
+        }
+        else {
+            emit insertFaceGroups(mid, name, edittime, photoName, mobile);
+        }
+        if(dataObj.contains("mjkh"))
+        {
+            QString cardNo = dataObj["mjkh"].toString();
+            QString card = sqlDatabase->sqlSelectIc(mid);
+            if(card.isEmpty())
+            {
+                if(!cardNo.isEmpty() && cardNo.size() >= 6)
+                {
+                    cardNo = cardNo.toLower();
+                    sqlDatabase->sqlInsertIc(mid, cardNo);
+                }
+            }
+            else {
+                if(!cardNo.isEmpty() && cardNo.size() >= 6)
+                {
+                    cardNo = cardNo.toLower();
+                    sqlDatabase->sqlUpdateIc(mid, cardNo);
+                }
+            }
+        }
+        status = false;
+        value.clear();
+        value = sqlDatabase->sqlSelectAuth(mid);
+        if(dataObj.contains("passNum"))
+        {
+            passNum = dataObj["passNum"].toInt();
+        }
+        else {
+            if(status)
+            {
+                passNum = value.at(1).toInt();
+            }
+        }
+        if(dataObj.contains("startTime"))
+        {
+            startTime = dataObj["startTime"].toString();
+        }
+        else {
+            if(status)
+            {
+                startTime = value.at(2).toString();
+            }
+        }
+        if(dataObj.contains("expireTime"))
+        {
+            expireTime = dataObj["expireTime"].toString();
+        }
+        else {
+            if(status)
+            {
+                expireTime = value.at(3).toString();
+            }
+        }
+        if(dataObj.contains("isBlack"))
+        {
+            isBlack = dataObj["isBlack"].toInt();
+        }
+        else {
+            if(status)
+            {
+                isBlack = value.at(4).toInt();
+            }
+        }
+        if(dataObj.contains("passPeriod"))
+        {
+            passPeriod = dataObj["passPeriod"].toString();
+        }
+        else {
+            if(status)
+            {
+                passPeriod = value.at(5).toString();
+            }
+        }
+        if(dataObj.contains("passTimeSection"))
+        {
+            passTimeSection = dataObj["passTimeSection"].toString();
+        }
+        else {
+            if(status)
+            {
+                passTimeSection = value.at(6).toString();
+            }
+        }
+        if(dataObj.contains("remark"))
+        {
+            remark = dataObj["remark"].toString();
+        }
+        else {
+            if(status)
+            {
+                remark = value.at(7).toString();
+            }
+        }
+        QStringList datas;
+        datas.clear();
+        datas << startTime << expireTime << passPeriod << passTimeSection << remark;
+        if(value.size() > 0)
+        {
+            sqlDatabase->sqlUpdateAuth(mid, passNum, isBlack, datas);
+        }
+        else {
+            sqlDatabase->sqlInsertAuth(mid, passNum, isBlack, datas);
+        }
+    }
+    dataShare->m_sync = false;
+}
+
 void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
 {
     QJsonObject jsonData;
-    qt_debug() << (MqttClient::MqttCmd)jsonObj["cmd"].toInt() << jsonObj.size();
+    qt_debug() << (MqttModule::MqttCmd)jsonObj["cmd"].toInt() << jsonObj.size();
     switch (jsonObj["cmd"].toInt())
     {
-    case MqttClient::UserData: {
-        QJsonObject jsonData = jsonObj["data"].toObject();
-        dealFaceNewData(jsonData);
+    case MqttModule::UserData: {
+        if(1 == switchCtl->m_protocol)
+        {
+            QJsonObject jsonData = jsonObj["data"].toObject();
+            dealFaceNewData(jsonData);
+        }
+        else if(2 == switchCtl->m_protocol)
+        {
+//            dealMiddwareFaceData(jsonObj);
+        }
+        else if(3 == switchCtl->m_protocol) {
+            dealHttpData(jsonObj);
+        }
         break;
     }
-    case MqttClient::OpenDoor:
+    case MqttModule::OpenDoor:
     {
         if(jsonObj.contains("data"))
         {
@@ -308,63 +503,64 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
             if(jsonData.contains("id"))
             {
                 dataShare->m_offlineFlag = false;
-//                hardware->ctlLed(GREEN);
+                hardware->ctlLed(GREEN);
                 hardware->checkOpenDoor();
                 QStringList datas;
                 datas.clear();
                 int offlineNmae = QDateTime::currentDateTime().toTime_t();
                 int id = jsonData.value("id").toInt();
-                datas << QDateTime::currentDateTime().addSecs(28800).toString("yyyy-MM-dd HH:mm:ss") << "" << "1" << "" << "0" << "" ;
-                emit uploadopenlog(offlineNmae, id, "", 0, 2, 1, datas);
-                sqlDatabase->sqlInsertOffline(offlineNmae, id, 2, 0, 0, datas);
+                datas << QDateTime::currentDateTime().addSecs(28800).toString("yyyy-MM-dd HH:mm:ss") << "" << "1" << "" << "0"
+                      << "" << "" << "" << "" << "" << "";
+                emit uploadopenlog(offlineNmae, id, "", 0, 2, 1, 0, datas);
+                sqlDatabase->sqlInsertOffline(offlineNmae, id, 2, 0, 0, 0, datas);
             }
         }
         break;
     }
-    case MqttClient::Bind:
+    case MqttModule::Bind:
     {
         system("rm *.db");
         emit allUserId();
         break;
     }
-    case MqttClient::DeviceUpdate:
+    case MqttModule::DeviceUpdate:
     {
         break;
     }
-    case MqttClient::UploadLog:
+    case MqttModule::UploadLog:
     {
 
         break;
     }
-    case MqttClient::Unbind:
+    case MqttModule::Unbind:
     {
         system("rm *.db");
         system("reboot");
         break;
     }
-    case MqttClient::ChangeSetting:
+    case MqttModule::ChangeSetting:
     {
         QJsonObject obj = jsonObj["data"].toObject();
         saveSetting(obj);
         break;
     }
-    case MqttClient::UpgradeBase64:
+    case MqttModule::UpgradeBase64:
     {
         QJsonObject obj = jsonObj["data"].toObject();
         upgradeFile(obj);
         break;
     }
-    case MqttClient::Reboot:
+    case MqttModule::Reboot:
     {
         system("reboot");
         break;
     }
-    case MqttClient::SetTcpServer:
+    case MqttModule::SetTcpServer:
     {
 
         break;
     }
-    case MqttClient::ServerTime:
+    case MqttModule::ServerTime:
     {
         QJsonObject jsonData = jsonObj["data"].toObject();
         QString timeZone = jsonData["timeZone"].toString();
@@ -372,13 +568,13 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
         switchCtl->saveSwitchParam();
         break;
     }
-    case MqttClient::IC:
+    case MqttModule::IC:
     {
         QJsonObject obj = jsonObj["data"].toObject();
         dealIcNewData(obj);
         break;
     }
-    case MqttClient::FactorySetup:
+    case MqttModule::FactorySetup:
     {
         switchCtl->setSwitchDefault();
         system("rm *.db");
@@ -387,12 +583,12 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
         system("reboot");
         break;
     }
-    case MqttClient::ClearOfflineData:
+    case MqttModule::ClearOfflineData:
     {
         sqlDatabase->sqlDeleteAllOffline();
         break;
     }
-    case MqttClient::ClearFailFace:
+    case MqttModule::ClearFailFace:
     {
         sqlDatabase->sqlDeleteAllFail();
         break;

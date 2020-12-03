@@ -15,8 +15,14 @@ public:
         }
         return m_Instance;
     }
+    // 获取读卡状态
+    bool getReadingStatus();
+    // 设置读卡状态
+    void setReadingStatus(bool status);
     // 刷身份证成功标志
     bool m_idCardFlag;
+    // 正在读卡操作
+    bool m_readingCard;
     // 身份证数据
     QStringList m_idCardDatas;
     // 测温结束标志
@@ -39,6 +45,13 @@ public:
     QString m_ipAddr;
     //当前日志模块的输出方向，true:输出到文件,false:输出到配置工具
     bool m_log;
+
+    //测温模块的信息
+    int         m_offset;
+    QString     m_tempType;
+    QString     m_tempVer;
+    int         m_offdata;
+    QString     m_tempDevice;
 
 private:
     static DataShare *m_Instance;

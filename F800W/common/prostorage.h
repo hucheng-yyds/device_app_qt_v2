@@ -10,7 +10,7 @@
 #include "tempmanager.h"
 #include "httpsclient.h"
 #include "useridrequest.h"
-#include "mqttclient.h"
+#include "mqttmodule.h"
 #include "serverdatadeal.h"
 #include "serverdatalist.h"
 #include "ToolTcpServer.h"
@@ -33,7 +33,7 @@ protected:
 
 signals:
     // ui界面更新时间
-    void timeSync(const QString &dataCur, const QString &digitalClock, int hour, int min, const QString &dataTime);
+    void timeSync(int sleeptime, bool sleepctl, const QString &dataCur, const QString &digitalClock, int hour, int min, const QString &dataTime);
     // 人脸检测结果显示 ui显示
     void faceResultShow(const QString &name, int index, int trackId, const QString &result, const QString &showInfo);
     // 显示人脸框 ui界面显示
@@ -60,6 +60,8 @@ signals:
     void idCardResultShow(int flag, const QString &name, const QString &result, const QString &showInfo);
     // 读卡状态
     void readIcStatus(int flag);
+    // 口罩和安全帽显示
+    void maskHelmet(int flag);
 
 private:
     // 功能模块初始化

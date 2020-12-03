@@ -1,3 +1,15 @@
+/**************************************************************************
+  * @brief           : 通信拓展模块
+  * @author        : 李俊辉
+  * @copyright    : 版权信息
+  * @version       : 版本
+  * @note            : 注意事项
+  * @history        : v0.0.1
+  *                 v0.0.1说明：1.增加了心跳，保证通信是否是正常链接，通信断开及时通知到其他模块
+  *
+***************************************************************************/
+
+
 #include "ToolTcpServer.h"
 #include "CmdsKey.h"
 #include <QDebug>
@@ -14,31 +26,28 @@ ToolTcpServer::ToolTcpServer()
         qt_debug()<<"wait connected ";
     }
 
-    dataSize = 0;
-    dataArray.clear();
+    mTool_msgLen    = 0;
+    mTool_msgBody.clear();
+
+//    dataSize = 0;
+//    dataArray.clear();
+
     void onGetDevIp(const QString &ver, const QString &name, const QString &number, const QString &devIp, const QString &devSn);
 
     m_udpServer.start();
     system("rm base64SaveFile.txt");
     system("rm update.tar.xz");
+
+    system("rm voiceBase64SaveFile.txt");
+    system("rm Voiceupdate.tar.xz");
 }
-
-//void ToolTcpServer::onToolCmdResponse(ToolCmds cmd ,QByteArray dat)
-//{
-//    if(cmd == CameraGetPicture)//
-//    {
-
-
-//    }else if(cmd == DevLogMsg)
-//    {
-
-//    }
-//}
 
 void ToolTcpServer::onGetTempResponse(QByteArray dat)
 {
     QJsonObject jaSonObject;
-    jaSonObject.insert("data",QString(dat));
+    qt_debug() << dat.toHex();
+    jaSonObject.insert("msgType","2");
+    jaSonObject.insert("data",QString(dat.toHex()));
     ResponseDataToTool(Dev_TemCalibration_response,jaSonObject);
 }
 
@@ -91,6 +100,8 @@ static QByteArray intToByte(int num)
     return abyte0;
 }
 
+
+
 void ToolTcpServer::onNewConnect(void)
 {
     m_tcpSocket = m_tcpServer->nextPendingConnection();
@@ -100,12 +111,37 @@ void ToolTcpServer::onNewConnect(void)
     connect(m_tcpSocket,SIGNAL(readyRead()),this,SLOT(onTcpRead()));
     connect(m_tcpSocket,&QTcpSocket::stateChanged,this,&ToolTcpServer::OnStateChanged);
     sendSNtoClient();
+
+    if(!m_heartBeat)
+    {
+        m_heartBeat = new QTimer(this);
+        m_heartBeat->setInterval(HEART_BEART_TIME);
+        m_heartBeat->setSingleShot(true);
+        connect(m_heartBeat,&QTimer::timeout,[=]()
+        {
+            qt_debug() << "time out ";
+            if(m_tcpSocket && !m_isSendingLostsOfData)
+            {
+                m_tcpSocket->disconnectFromHost();
+                if (m_tcpSocket->state() == QAbstractSocket::UnconnectedState || m_tcpSocket->waitForDisconnected())
+                {
+                    qt_debug()<<"Disconnected!";
+                    emit sigToolTcpStateChange(false);
+                    delete m_tcpSocket;
+                    m_tcpSocket = nullptr;
+                }
+            }
+
+           m_heartBeat->stop();
+        });
+
+    }
 }
 
 void ToolTcpServer::OnStateChanged(QAbstractSocket::SocketState state)
 {
     QString stateStr = "";
-//    qt_debug()<< "xxxxxxxxxxxxxxxxxxxxxxxxxxxx" << state;
+    qt_debug() << state;
     switch(state)
     {
         case QAbstractSocket::HostLookupState:{
@@ -124,7 +160,8 @@ void ToolTcpServer::OnStateChanged(QAbstractSocket::SocketState state)
          case QAbstractSocket::ConnectedState:
         {
             stateStr = tr("已连接");
-            //m_bConnected = 3;
+
+
             emit sigToolTcpStateChange(true);
         }
             break;
@@ -132,13 +169,14 @@ void ToolTcpServer::OnStateChanged(QAbstractSocket::SocketState state)
         {
             stateStr = tr("已关闭");
             // m_bConnected = 0;
+             m_heartBeat->stop();
             emit sigToolTcpStateChange(false);
         }
             break;
         case QAbstractSocket::UnconnectedState:
         {
             stateStr = tr("连接断开");
-            // m_bConnected = 0;
+            m_heartBeat->stop();
           emit sigToolTcpStateChange(false);
         }
             break;
@@ -146,45 +184,84 @@ void ToolTcpServer::OnStateChanged(QAbstractSocket::SocketState state)
         default:
             break;
     }
+
+
 }
 
 void ToolTcpServer::onTcpRead(void)
 {
-    QByteArray recData = m_tcpSocket->readAll();
-    if (!(recData.left(4)=="OFLN") && !dataSize) {
-        qt_debug() << "data format error !";
-        return ;
-    }
-    int recSize = recData.size() - 11;
-    if(!dataSize) {
-        dataSize = bytesToInt(recData.mid(7,4));
-        if (dataSize == recSize) {
-            qt_debug() << recSize << dataSize;
-            parseData(recData);
-        } else {
-            qt_debug() << dataSize;
-            dataSize -= recSize;
-            dataArray.append(recData);
-        }
-    } else {
-        recSize = recData.size();
-        if (dataSize < recSize) {
-            QByteArray end = recData.left(dataSize);
-            recData.remove(0, dataSize);
-            qt_debug() << dataSize /*<< end*/ << recData.left(20);
-            dataArray.append(end);
-            parseData(dataArray);
-            dataArray.append(recData);
-        } else if (dataSize > recSize){
-            qt_debug() << dataSize << recSize;
-            dataSize -= recSize;
-            dataArray.append(recData);
-        } else {
-            //qt_debug() << "===========";
-            dataArray.append(recData);
-            parseData(dataArray);
-        }
-    }
+//    QByteArray recData = m_tcpSocket->readAll();
+//    if (!(recData.left(4)=="OFLN") && !dataSize) {
+//        qt_debug() << "data format error !";
+//        return ;
+//    }
+//    int recSize = recData.size() - 11;
+//    if(!dataSize) {
+//        dataSize = bytesToInt(recData.mid(7,4));
+//        if (dataSize == recSize) {
+//            //qt_debug() << recSize << dataSize;
+//            parseData(recData);
+//        } else {
+//           // qt_debug() << dataSize;
+//            dataSize -= recSize;
+//            dataArray.append(recData);
+//        }
+//    } else {
+//        recSize = recData.size();
+//        if (dataSize < recSize) {
+//            QByteArray end = recData.left(dataSize);
+//            recData.remove(0, dataSize);
+//         //   qt_debug() << dataSize /*<< end*/ << recData.left(20);
+//            dataArray.append(end);
+//            parseData(dataArray);
+//            dataArray.append(recData);
+//        } else if (dataSize > recSize){
+//        //    qt_debug() << dataSize << recSize;
+//            dataSize -= recSize;
+//            dataArray.append(recData);
+//        } else {
+//            //qt_debug() << "===========";
+//            dataArray.append(recData);
+//            parseData(dataArray);
+//        }
+//    }
+
+//---------------------------------
+    QByteArray recData(m_tcpSocket->readAll());
+
+       if(recData.mid(0,4) == QString("OFLN"))
+       {
+           /*OFLN + version(1 byte) + type(1 byte) + cmd(1byte) + msgLen(4byte) + msgBody*/
+           mTool_msgBody.clear();
+           mTool_msgLen =  bytesToInt(recData.mid(7,4))+11;//
+           mTool_msgBody.append(recData);
+     }
+       else
+       {
+           mTool_msgBody.append(recData);
+       }
+
+       if(mTool_msgLen <= mTool_msgBody.length())
+       {
+           if(mTool_msgLen == mTool_msgBody.length())
+           {   parseData(mTool_msgBody);
+                 mTool_msgLen = 0;
+                 mTool_msgBody.clear();
+           }else {
+              QByteArray  new_cmd = mTool_msgBody.mid(0,mTool_msgLen);
+                parseData(new_cmd);
+                QByteArray  others_cmd  =  mTool_msgBody.mid(mTool_msgLen,mTool_msgBody.length()-mTool_msgLen);
+              if(others_cmd.mid(0,4)==QString("OFLN"))
+                {
+                  mTool_msgBody.clear();
+                   mTool_msgBody.append(others_cmd);
+                   mTool_msgLen =  bytesToInt(others_cmd.mid(7,4))+11;//
+                }else {
+                  mTool_msgBody.clear();
+                   mTool_msgLen = 0;
+               }
+           }
+       }
 }
 
 void ToolTcpServer::onTempInfo(QByteArray tempInfo)
@@ -198,8 +275,11 @@ void ToolTcpServer::onTempInfo(QByteArray tempInfo)
         sendData.append(uchar(2));
         sendData.append(intToByte(tempInfo.length()));
         sendData.append(tempInfo);
-        m_tcpSocket->write(sendData);
-        m_tcpSocket->flush();
+        if(m_tcpSocket)
+        {
+            m_tcpSocket->write(sendData);
+            m_tcpSocket->flush();
+        }
     }
 }
 
@@ -240,13 +320,15 @@ void ToolTcpServer::setParameters(QJsonObject & data,QString msgType,QString cmd
     {
         switchCtl->m_closeScreenTime = data.value(key_closeScreenTime).toInt();
         if(switchCtl->m_closeScreenTime<3)
+        {
             switchCtl->m_closeScreenTime = 3;//s
+        }
     }
     // 后台通信协议开关 true:tcp协议，false:http协议
     if(data.contains(key_protocol))
     {
-        switchCtl->m_protocol = data.value(key_protocol).toBool();
-        if(switchCtl->m_protocol )//tcp
+        switchCtl->m_protocol = data.value(key_protocol).toInt();
+        if(switchCtl->m_protocol !=2 )//tcp
         {
             //Tcp ip
             if(data.contains(key_server_ip))
@@ -302,13 +384,20 @@ void ToolTcpServer::setParameters(QJsonObject & data,QString msgType,QString cmd
     }
     // 识别距离
     if(data.contains(key_identifyDistance))
-    {
-        switchCtl->m_identifyDistance = data.value(key_identifyDistance).toInt();
+    {   int tmp = data.value(key_identifyDistance).toInt();
+        switch (tmp) {
+            case 1: tmp = 125;break;
+            case 2: tmp = 80;break;
+            case 3: tmp = 45;break;
+        default: tmp = 0;break;
+        }
+        switchCtl->m_identifyDistance = tmp;
     }
     // 开门等待时间 单位秒
     if(data.contains(key_doorDelayTime))
     {
-        switchCtl->m_identifyDistance = data.value(key_doorDelayTime).toInt();
+        int doorTime = data.value(key_doorDelayTime).toInt();
+        switchCtl->m_doorDelayTime = (doorTime < 2 ? 2 : doorTime);
     }
     // 安全帽开关
     if(data.contains(key_helet))
@@ -367,11 +456,20 @@ void ToolTcpServer::setParameters(QJsonObject & data,QString msgType,QString cmd
     }
     if(data.contains(key_rcode))
     {
-        switchCtl->m_rcode = data.value(key_rcode).toBool();
+        switchCtl->m_rcode = data.value(key_rcode).toInt();
     }
     if(data.contains(key_volume))
     {
-        switchCtl->m_showIc = data.value(key_volume).toBool();
+        int volume = data.value(key_volume).toInt();
+        switchCtl->m_volume = volume;
+        if(0 == volume)
+        {
+            volume = -106;
+        }
+        else {
+            volume = volume / 5 - 14;
+        }
+        IF_Vol_Set(volume);
     }
     if(data.contains(key_faceDoorCtl))
     {
@@ -395,7 +493,8 @@ void ToolTcpServer::setParameters(QJsonObject & data,QString msgType,QString cmd
     }
     if(data.contains(key_identifyWaitTime))
     {
-        switchCtl->m_identifyWaitTime = data.value(key_identifyWaitTime).toInt();
+        int waitTime = data.value(key_identifyWaitTime).toInt();
+        switchCtl->m_identifyWaitTime = (waitTime < 3 ? 3 : waitTime);
     }
     if(data.contains(key_idcardValue))
     {
@@ -410,34 +509,79 @@ void ToolTcpServer::setParameters(QJsonObject & data,QString msgType,QString cmd
     {
         dataShare->m_log = data.value(key_log).toBool();
     }
+    if(data.contains(key_ic))
+    {
+        switchCtl->m_ic = data.value(key_ic).toBool();
+    }
+    if(data.contains(key_wifi_name))
+    {
+        switchCtl->m_wifiName = data.value(key_wifi_name).toString();
+    }
+    if(data.contains(key_wifi_pwd))
+    {
+        switchCtl->m_wifiPwd = data.value(key_wifi_pwd).toString();
+    }
+
 
     switchCtl->saveSwitchParam();
     sendSNtoClient();
 }
 
-void ToolTcpServer::parseData(QByteArray &recData)
-{
-    if (!(recData.left(4)=="OFLN")) {
-        return ;
-    }
-    QByteArray cmd;
-    cmd = recData.mid(6,1);
-    int m_cmd = 0;
-    m_cmd = cmd[0] & 0xFF;
-  //  qt_debug() << m_cmd<<recData;
 
-    if(m_cmd == Dev_TemCalibration_request)
+void ToolTcpServer::sendHeartBeat(void)
+{
+    QByteArray sendData = "";
+    QJsonObject jsonObj;
+    jsonObj.insert("msgType", "0");
+    jsonObj.insert("cmd", "0");
+    jsonObj.insert("data", "hearBeat");
+    QJsonDocument document;
+    document.setObject(jsonObj);
+    QByteArray stateData = document.toJson(QJsonDocument::Compact);
+    sendData.append("OFLN");
+    sendData.append(uchar(1));
+    sendData.append(uchar(1));
+    sendData.append(uchar(Dev_HeartBeat_response));
+    sendData.append(intToByte(stateData.length()));
+    sendData.append(stateData);
+    //qt_debug() << sendData ;
+    if(m_tcpSocket)
     {
-         QByteArray msgTemp = recData.remove(0,11);
-         emit sigGetTempInfo(msgTemp);
+        m_tcpSocket->write(sendData);
+        m_tcpSocket->flush();
     }
-    else if(m_cmd == Dev_CameraCalibration_request)
+
+}
+
+void ToolTcpServer::parseData(QByteArray &new_cmd)
+{
+//    if (!(recData.left(4)=="OFLN")) {
+//        return ;
+//    }
+//    QByteArray cmd;
+//    cmd = recData.mid(6,1);
+//    int m_cmd = 0;
+//    m_cmd = cmd[0] & 0xFF;
+   // setSendingLostsOfData(true);
+    QByteArray cmd = new_cmd.mid(6,1);
+    QByteArray msgBody = new_cmd.mid(11,new_cmd.length()-11);
+    //for temp
+    int m_cmd = cmd[0] & 0xFF;
+
+
+//    qt_debug() << m_cmd<<recData;
+
+     if(m_cmd == Dev_CameraCalibration_request)
     {
          emit sigCamCalibration();
+    }else  if(m_cmd == Dev_HeartBeat_request)
+    {
+         setSendingLostsOfData(false);
+         sendHeartBeat();
     }
     else
     {
-        QByteArray msgBody = recData.remove(0,11);
+//        QByteArray msgBody = recData.remove(0,11);
         QJsonParseError jsonError;
         QJsonObject rootObj;
         QString msgType("");
@@ -449,24 +593,18 @@ void ToolTcpServer::parseData(QByteArray &recData)
             if(json.isObject())
             {
                 rootObj = json.object();
-                if(rootObj.contains("msgType")&&rootObj.contains("cmd"))
+                if(rootObj.contains("msgType"))
                 {
                      msgType = rootObj["msgType"].toString();
                      cmdStr = rootObj["cmd"].toString();
-                      qt_debug()<< msgType << cmdStr;
+                     qt_debug()<< msgType << cmdStr;
                     if(m_cmd == Dev_Information_request)
                     {
                        if(msgType == "0") //设备配置信息
                        {
                             if(cmdStr == "0") //获取设备配置信息
                             {
-                                QJsonObject switchDat = switchCtl->readSwitchParam();
-                                QString && dat = QString(QJsonDocument(switchDat).toJson(QJsonDocument::Compact));
-                                QJsonObject jaSonObject;
-                                jaSonObject.insert("msgType",msgType);
-                                jaSonObject.insert("cmd",cmdStr);
-                                ResponseDataToTool(Dev_Information_response,jaSonObject);
-
+                                sendSNtoClient();
                             }else if(cmdStr == "1") //修改设备配置信息
                             {
 
@@ -672,63 +810,143 @@ void ToolTcpServer::parseData(QByteArray &recData)
                         {
                             if(cmdStr == "0")//下发单个语音文件
                             {
+                                setSendingLostsOfData(true);
                                 QString FileName = "";
                                 if(rootObj.contains("language")&&rootObj.contains("name")&& rootObj.contains("data"))
                                 {
-                                    FileName+= "./aac/aac"+rootObj.value("language").toString()+rootObj.value("name").toString();
-                                }else return;
+                                    FileName+= "./aac"+QString::number(rootObj.value("language").toInt())+"/"+rootObj.value("name").toString();
+                                    qt_debug() << FileName;
 
-                                QString verStr;
-                                verStr =rootObj.value("data").toString();
-                                QByteArray verdata = QByteArray::fromBase64(verStr.toUtf8());
 
-                                QFile file(FileName);
-                                if (!file.open(QFile::ReadWrite)) {
-                                    qt_debug() << "open failed!";
-                                    return ;
-                                }
-                                file.write(verdata);
-                                file.close();
+                                    QString fullPath;//文件夹全路径
+                                    fullPath = "./aac"+QString::number(rootObj.value("language").toInt());
+                                    qt_debug() <<fullPath;
+                                    QDir dir(fullPath);
+                                    if(!dir.exists())
+                                    {
+                                        if(dir.mkpath(fullPath))
+                                        {
+                                            qt_debug() << "creat ok:" << fullPath;
+                                        }else {
+                                              qt_debug() << "creat path error:" << fullPath;
+                                        }
+                                    }
 
-                                QJsonObject dat;
-                                dat.insert("msgType",msgType);
-                                dat.insert("cmd",cmdStr);
-                                ResponseDataToTool(Dev_Voice_File_request,dat);
+                                    QString verStr;
+                                    verStr =rootObj.value("data").toString();
+                                    QByteArray verdata = QByteArray::fromBase64(verStr.toUtf8());
+
+                                    QFile file(FileName);
+                                    if (file.open(QFile::ReadWrite))
+                                    {
+                                        QJsonObject dat;
+                                        dat.insert("msgType",msgType);
+                                        dat.insert("cmd",cmdStr);
+                                        dat.insert("name",rootObj.value("name").toString());
+
+                                       if(file.write(verdata)>0)
+                                       {
+                                           qt_debug() << "ok";
+                                           dat.insert("state","ok");
+                                        }else {
+                                           qt_debug() << "error";
+                                           dat.insert("state","error");
+                                        }
+                                        file.close();
+
+                                        ResponseDataToTool(Dev_Voice_File_response,dat);
+                                   }else {
+                                        qt_debug() << "open failed!";
+                                    }
+                              }
+
                             }
                             else if(cmdStr == "1")//下发整个语言包
                             {
-                              if(rootObj.contains("data"))
-                              {
-                                  QJsonObject dat;
-                                  dat.insert("msgType",msgType);
-                                  dat.insert("cmd",cmdStr);//state
-                                  dat.insert("state","isDecompressing");
-                                  ResponseDataToTool(Dev_Voice_File_request,dat);
+                               setSendingLostsOfData(true);
+                                VoicUpdate(rootObj);
 
-                                  QString filePath = "./aac/aac"+rootObj.value("language").toString()+"update_voice.tar.xz";
-                                  qt_debug() << filePath;
-                                  QByteArray fileDat = rootObj.value("data").toString().toUtf8();
-                                  QFile file(filePath);
-                                  if(file.open(QIODevice::ReadWrite))
-                                  {
-                                      file.write(QByteArray::fromBase64(fileDat));
-                                  }
-                                  file.close();
-
-                                  QString cmd = "tar -xvf " +filePath +"&& rm "+filePath;
-                                  qt_debug() << cmd;
-                                  system(cmd.toStdString().c_str());
-
-                                  dat.insert("state","isDecompresseEnd");
-                                  ResponseDataToTool(Dev_Voice_File_request,dat);
-                              }
                             }
 
                         }
-
+                        else if(msgType == "1")
+                        {
+                            if(rootObj.contains("language"))
+                            {
+                                int language = rootObj.value("language").toInt();
+                                switchCtl->m_language = language;
+                                switchCtl->saveSwitchParam();
+                                sendSNtoClient();
+                            }
+                        }
+                        else if(msgType == "2")
+                        {
+                            if(rootObj.contains("tts"))
+                            {
+                                int tts = rootObj.value("tts").toBool();
+                                switchCtl->m_tts = tts;
+                                switchCtl->saveSwitchParam();
+                                sendSNtoClient();
+                            }
+                        }
                     }else if(m_cmd == Dev_Msg_request)
                     {
                       //ResponseDataToTool(Dev_Msg_request,msgType,cmd,"","200","");
+                    }
+                    else if(m_cmd == Dev_TemCalibration_request)
+                    {
+                        if(msgType == "2")
+                        {
+                            if(rootObj.contains("data"))
+                            {   QString data = rootObj.value("data").toString();
+                                qt_debug() << data.toUtf8();
+                                  emit sigGetTempInfo(data.toUtf8());
+                            }
+
+                        }
+                        else if(msgType == "1")
+                        {
+                            emit  sigSetAllScreenOn(true);
+                        }
+                        else if(msgType == "0")
+                        {
+                             emit  sigSetAllScreenOn(false);
+                        }
+                        else if(msgType == "3")//获取测温模块的信息
+                        {
+                            qt_debug() << "sigGetTempHardwareInfo";
+                             emit  sigGetTempHardwareInfo();
+                            msleep(200);
+
+                            QByteArray sendData = "";
+                            QJsonObject dat ;
+                            QJsonObject result ;
+
+                            dat.insert("tempOffset",QString::number(dataShare->m_offset));
+                            dat.insert("tempType",dataShare->m_tempType);
+                            dat.insert("tempVer",dataShare->m_tempVer);
+                            dat.insert("tempOffdata",QString::number(dataShare->m_offdata));
+                            dat.insert("tempDevice",dataShare->m_tempDevice);
+                            result.insert("msgType","3");
+                            result.insert("data",dat);
+
+                            QJsonDocument document;
+
+                            document.setObject(result);
+                            QByteArray stateData = document.toJson(QJsonDocument::Compact);
+                            sendData.append("OFLN");
+                            sendData.append(uchar(1));
+                            sendData.append(uchar(1));
+                            sendData.append(uchar(Dev_TemCalibration_response));
+                            sendData.append(intToByte(stateData.length()));
+                            sendData.append(stateData);
+                            qt_debug() << sendData ;
+                            if(m_tcpSocket)
+                            {
+                                m_tcpSocket->write(sendData);
+                                m_tcpSocket->flush();
+                            }
+                        }
                     }
 
                 }
@@ -736,8 +954,11 @@ void ToolTcpServer::parseData(QByteArray &recData)
         }
     }
     system("sync");
-    dataSize = 0;
-    dataArray.clear();    
+//    dataSize = 0;
+//    dataArray.clear();
+
+    mTool_msgLen    = 0;
+    mTool_msgBody.clear();
 }
 
 void ToolTcpServer::sendSaveEnd()
@@ -755,8 +976,12 @@ void ToolTcpServer::sendSaveEnd()
     sendData.append(uchar(1));
     sendData.append(intToByte(stateData.length()));
     sendData.append(stateData);
-    m_tcpSocket->write(sendData);
-    m_tcpSocket->flush();
+    if(m_tcpSocket)
+    {
+        m_tcpSocket->write(sendData);
+        m_tcpSocket->flush();
+    }
+
 }
 
 void ToolTcpServer::sendSaveFileClient(QList<QStringList> fileList)
@@ -794,8 +1019,11 @@ void ToolTcpServer::sendSaveFileClient(QList<QStringList> fileList)
         sendData.append(uchar(Dev_OfflineDatExport_response));
         sendData.append(intToByte(stateData.length()));
         sendData.append(stateData);
-        m_tcpSocket->write(sendData);
-        m_tcpSocket->flush();
+        if(m_tcpSocket)
+        {
+            m_tcpSocket->write(sendData);
+            m_tcpSocket->flush();
+        }
     }
 }
 
@@ -815,22 +1043,27 @@ void ToolTcpServer::responseClient(QString state)
     sendData.append(uchar(1));
     sendData.append(intToByte(stateData.length()));
     sendData.append(stateData);
-    m_tcpSocket->write(sendData);
-    m_tcpSocket->flush();
+    if(m_tcpSocket)
+    {
+        m_tcpSocket->write(sendData);
+        m_tcpSocket->flush();
+    }
+
 }
 
 void ToolTcpServer::sendSNtoClient()
 {
     QByteArray sendData = "";
-    QJsonObject dat = switchCtl->readSwitchParam();
+    QJsonObject dat,datSetting = switchCtl->readSwitchParam();
     dat.insert("log",dataShare->m_log);
+    dat.insert("sn",switchCtl->m_sn);
+    dat.insert("screenCtl",switchCtl->m_screenCtl);
+
     dat.insert("msgType","0");
     dat.insert("cmd","0");
-    dat.insert("data",dat);
-//    QJsonObject sendObj;
-//    sendObj.insert("sn_Num", switchCtl->m_tcpPort);
-//    sendObj.insert("serverIp",switchCtl->m_tcpAddr);
-//    sendObj.insert("serverPort",switchCtl->m_tcpPort);
+
+    dat.insert("data",datSetting);
+    qt_debug() << dat;
     QJsonDocument document;
     document.setObject(dat);
     QByteArray stateData = document.toJson(QJsonDocument::Compact);
@@ -840,20 +1073,18 @@ void ToolTcpServer::sendSNtoClient()
     sendData.append(uchar(Dev_Information_response));
     sendData.append(intToByte(stateData.length()));
     sendData.append(stateData);
-    qt_debug() << sendData ;
-    m_tcpSocket->write(sendData);
-    m_tcpSocket->flush();
+//    qt_debug() << sendData ;
+    if(m_tcpSocket)
+    {
+        m_tcpSocket->write(sendData);
+        m_tcpSocket->flush();
+    }
+
 }
 
 void ToolTcpServer::ResponseDataToTool(ToolCmdHead headCmd,QJsonObject & sendObj)
 {
     QByteArray sendData = "";
-//    QJsonObject sendObj;
-//    sendObj.insert("msgType", msgType);
-//    sendObj.insert("cmd",cmd);
-//    sendObj.insert("data",dat);
-//    sendObj.insert("result",result);
-//    sendObj.insert("desc",desc);
     QJsonDocument document;
     document.setObject(sendObj);
     QByteArray stateData = document.toJson(QJsonDocument::Compact);
@@ -863,16 +1094,21 @@ void ToolTcpServer::ResponseDataToTool(ToolCmdHead headCmd,QJsonObject & sendObj
     sendData.append(uchar(headCmd));
     sendData.append(intToByte(stateData.length()));
     sendData.append(stateData);
-    m_tcpSocket->write(sendData);
-    m_tcpSocket->flush();
+    if(m_tcpSocket)
+    {
+        m_tcpSocket->write(sendData);
+        m_tcpSocket->flush();
+    }
 }
 
 void ToolTcpServer::DevUpdate(QJsonObject rootObj)
 {
+   setSendingLostsOfData(true);
     QJsonObject dataObj;
     dataObj = rootObj.value("hardUpdate").toObject();
     if(dataObj.contains("hardUpdate"))
     {
+        dataShare->m_upgrade = true;
         QString verStr;
         if(dataObj.contains("number"))
         {
@@ -888,7 +1124,7 @@ void ToolTcpServer::DevUpdate(QJsonObject rootObj)
 //                                real_verStr = "";
                 }
                 saveFile.close();
-                responseHardUpdate("Success");
+                responseHardUpdate(Dev_FirmwareUpgrade_response,"Success");
             }
             else
             {
@@ -918,7 +1154,7 @@ void ToolTcpServer::DevUpdate(QJsonObject rootObj)
                 file.close();
                 if(dataObj.contains("md5"))
                 {
-                    responseHardUpdate("Success");
+                    responseHardUpdate(Dev_FirmwareUpgrade_response,"Success");
                     qt_debug();
                     QFile tarfile("update.tar.xz");
                     QByteArray data;
@@ -932,7 +1168,15 @@ void ToolTcpServer::DevUpdate(QJsonObject rootObj)
                     qt_debug() << md5 << dataObj.value("md5").toString();
                     if(md5 == dataObj.value("md5").toString())
                     {
-                        responseHardUpdate("tarxz");
+
+
+                        responseHardUpdate(Dev_FirmwareUpgrade_response,"tarxz");
+
+                        //清空，其他数据进来
+                        mTool_msgLen    = 0;
+                        mTool_msgBody.clear();
+                        qt_debug() << "start tarxz";
+
                         system("tar -xvf update.tar.xz && rm update.tar.xz");
                         system("rm base64SaveFile.txt");
                         if (QFile::exists("hi3516dv300_smp_image")) {
@@ -954,7 +1198,7 @@ void ToolTcpServer::DevUpdate(QJsonObject rootObj)
                                    "sync");
                         }
 
-                        responseHardUpdate("reboot");
+                        responseHardUpdate(Dev_FirmwareUpgrade_response,"reboot");
                         msleep(1000);
                         qt_debug() << "system reboot";
                         system("reboot");
@@ -962,7 +1206,104 @@ void ToolTcpServer::DevUpdate(QJsonObject rootObj)
                     else {
                         system("rm base64SaveFile.txt");
                         system("rm update.tar.xz");
-                        responseHardUpdate("error");
+                        responseHardUpdate(Dev_FirmwareUpgrade_response,"error");
+                    }
+                    dataShare->m_upgrade = false;
+                }
+            }
+        }
+
+    }
+
+}
+
+
+void ToolTcpServer::VoicUpdate(QJsonObject rootObj)
+{
+    QJsonObject dataObj;
+    dataObj = rootObj.value("hardUpdate").toObject();
+    if(dataObj.contains("hardUpdate"))
+    {
+        QString verStr;
+        if(dataObj.contains("number"))
+        {
+            verStr = dataObj.value("hardUpdate").toString();
+            if(dataObj.value("number").toInt() != 1)
+            {
+                QFile saveFile("voiceBase64SaveFile.txt");
+                if(saveFile.open(QIODevice::ReadWrite | QIODevice::Append))
+                {
+                    qt_debug() << verStr.length();
+                    saveFile.write(verStr.toUtf8());
+                }
+                saveFile.close();
+               // responseHardUpdate(Dev_Voice_File_response,"Success");
+            }
+            else
+            {
+                QFile saveFile("voiceBase64SaveFile.txt");
+                if(saveFile.open(QIODevice::ReadWrite | QIODevice::Append))
+                {
+                    qt_debug();
+                    saveFile.write(verStr.toUtf8());
+                }
+                saveFile.close();
+
+                QFile readFile("voiceBase64SaveFile.txt");
+                QByteArray m_save;
+                if(readFile.open(QIODevice::ReadWrite))
+                {
+                    qt_debug();
+                    m_save = readFile.readAll();
+                }
+                readFile.close();
+
+                QFile file("Voiceupdate.tar.xz");
+                if(file.open(QIODevice::ReadWrite))
+                {
+                    file.write(QByteArray::fromBase64(m_save));
+                }
+                file.close();
+                if(dataObj.contains("md5"))
+                {
+
+                    QJsonObject sendObj;
+                    sendObj.insert("msgType","0");
+                    sendObj.insert("cmd","1");
+
+                    sendObj.insert("state","saveFile");
+                    responseDataToService(Dev_Voice_File_response,sendObj);
+
+                    qt_debug();
+                    QFile tarfile("Voiceupdate.tar.xz");
+                    QByteArray data;
+                    if(tarfile.open(QIODevice::ReadWrite))
+                    {
+                        data = tarfile.readAll();
+                    }
+                    tarfile.close();
+                    QString md5 = QCryptographicHash::hash(data, QCryptographicHash::Md5).toHex();
+                    qt_debug() << md5 << dataObj.value("md5").toString();
+                    if(md5 == dataObj.value("md5").toString())
+                    {
+                        sendObj.insert("state","tarxz");
+                        responseDataToService(Dev_Voice_File_response,sendObj);
+
+                        system("tar -xvf Voiceupdate.tar.xz && rm Voiceupdate.tar.xz");
+                        system("rm voiceBase64SaveFile.txt");
+
+                        sendObj.insert("state","ok");
+                        responseDataToService(Dev_Voice_File_response,sendObj);
+                        msleep(1000);
+                        qt_debug() << "total voice file ok";
+
+                    }
+                    else {
+                        system("rm voiceBase64SaveFile.txt");
+                        system("rm Voiceupdate.tar.xz");
+
+                        sendObj.insert("state","error");
+                        responseDataToService(Dev_Voice_File_response,sendObj);
                     }
                 }
             }
@@ -972,9 +1313,28 @@ void ToolTcpServer::DevUpdate(QJsonObject rootObj)
 
 }
 
-void ToolTcpServer::responseHardUpdate(QString state)
+void ToolTcpServer::responseDataToService(ToolCmdHead cmd, QJsonObject & sendObj)
 {
-    qt_debug()<<state;
+    QByteArray sendData = "";
+    QJsonDocument document;
+    document.setObject(sendObj);
+    QByteArray stateData = document.toJson(QJsonDocument::Compact);
+    sendData.append("OFLN");
+    sendData.append(uchar(1));
+    sendData.append(uchar(1));
+    sendData.append(uchar(cmd));
+    sendData.append(intToByte(stateData.length()));
+    sendData.append(stateData);
+    if(m_tcpSocket)
+    {
+        m_tcpSocket->write(sendData);
+        m_tcpSocket->flush();
+    }
+}
+
+void ToolTcpServer::responseHardUpdate(ToolCmdHead cmd,QString state)
+{
+
     QByteArray sendData = "";
     QJsonObject sendObj;
     sendObj.insert("result","200");
@@ -988,10 +1348,29 @@ void ToolTcpServer::responseHardUpdate(QString state)
     sendData.append("OFLN");
     sendData.append(uchar(1));
     sendData.append(uchar(1));
-    sendData.append(uchar(Dev_FirmwareUpgrade_response));
+    sendData.append(uchar(cmd));
     sendData.append(intToByte(stateData.length()));
     sendData.append(stateData);
-    m_tcpSocket->write(sendData);
-    m_tcpSocket->flush();
+    if(m_tcpSocket)
+    {
+        m_tcpSocket->write(sendData);
+        m_tcpSocket->flush();
+    }
+
 }
 
+/*
+    *@des:进入处理大批量数据的模式 true,
+    *@flag:
+*/
+void ToolTcpServer::setSendingLostsOfData(bool flag)
+{
+    if(flag)
+    {
+        m_isSendingLostsOfData = true;
+        m_heartBeat->stop();
+    }else {
+        m_isSendingLostsOfData = false;
+        m_heartBeat->start();
+    }
+}

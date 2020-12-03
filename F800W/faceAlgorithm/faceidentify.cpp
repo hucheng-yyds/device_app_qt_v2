@@ -324,7 +324,7 @@ void FaceIdentify::run()
         isOver = tempPass ? 1 : 0;
         datas.clear();
         uploadTime = QDateTime::currentDateTime().addSecs(28800).toString("yyyy-MM-dd HH:mm:ss");
-        datas << uploadTime << m_tempVal << isSuccess << invalidReason << isStranger << m_cardNo;
+        datas << uploadTime << m_tempVal << isSuccess << invalidReason << isStranger << m_cardNo << "" << "" << "" << "" << "";
         if((switchCtl->m_uploadStrangerCtl || egPass) && !vi)
         {
             if(m_cardWork && !tempCtl)
@@ -333,9 +333,9 @@ void FaceIdentify::run()
             else {
                 if(dataShare->m_netStatus)
                 {
-                    emit uploadopenlog(offlineNmae, face_id, snapshot, isOver, 1, tempCtl, datas);
+                    emit uploadopenlog(offlineNmae, face_id, snapshot, isOver, 1, tempCtl, 0, datas);
                 }
-                sqlDatabase->sqlInsertOffline(offlineNmae, face_id, 1, isOver, tempCtl, datas);
+                sqlDatabase->sqlInsertOffline(offlineNmae, face_id, 1, isOver, tempCtl, 0, datas);
             }
         }
 exit:

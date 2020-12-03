@@ -57,7 +57,7 @@ public slots:
     // 向后台请求单个人员数据
     void requestGetUsers(int id);
     // 上传记录
-    void uploadopenlog(int id, int userId, const QString &photo, int isOver,int type, int isTemp, const QStringList &datas);
+    void uploadopenlog(int id, int userId, const QString &photo, int isOver,int type, int isTemp, int sex, const QStringList &datas);
 
 private:
     // 获取时区分钟

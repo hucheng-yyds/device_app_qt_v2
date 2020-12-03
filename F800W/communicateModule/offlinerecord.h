@@ -15,7 +15,7 @@ protected:
 
 signals:
     // 实时上传记录
-    void uploadopenlog(int id, int userId, const QString &photo, int isOver,int type, int isTemp, const QStringList &datas);
+    void uploadopenlog(int id, int userId, const QString &photo, int isOver,int type, int isTemp, int sex, const QStringList &datas);
 
 private:
 

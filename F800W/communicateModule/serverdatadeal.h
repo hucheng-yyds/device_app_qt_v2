@@ -3,7 +3,7 @@
 #include <QThread>
 #include <QJsonArray>
 #include <QJsonObject>
-#include "mqttclient.h"
+#include "mqttmodule.h"
 #include "sqldatabase.h"
 #include "httpsclient.h"
 #include "sample_vio.h"
@@ -27,7 +27,7 @@ signals:
     // 拉取全量
     void allUserId();
     // 实时上传记录
-    void uploadopenlog(int id, int userId, const QString &photo, int isOver,int type, int isTemp, const QStringList &datas);
+    void uploadopenlog(int id, int userId, const QString &photo, int isOver,int type, int isTemp, int sex, const QStringList &datas);
     // 服务器应答
     void responseServer(const QString &type, const QString &messageId, const QJsonObject &jsonData);
     // 处理增量users
@@ -44,6 +44,7 @@ private:
     void upgradeFile(const QJsonObject &obj);
     // 配置修改
     void saveSetting(const QJsonObject &jsonData);
+    void dealHttpData(const QJsonObject &jsonObj);
     // 处理后台数据
     void dealJsonData(QJsonObject jsonObj);
     // 处理人脸变动数据

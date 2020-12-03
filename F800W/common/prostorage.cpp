@@ -77,11 +77,11 @@ void ProStorage::init()
     connect( log,&Log::sigLogMsg,toolTcpServer,&ToolTcpServer::onGetRealTimeLog );
     toolTcpServer->start();
 
-//    MqttClient *mqttClient = new MqttClient;
+    MqttModule *mqttClient = new MqttModule;
     UserIdRequest *userRequest = new UserIdRequest;
 
     ServerDataList *serverList = new ServerDataList;
-//    mqttClient->setPacket(serverList);
+    mqttClient->setPacket(serverList);
     bool status = face->init();
     qt_debug() << "---------------init status:" << status;
     while(!status)
@@ -100,12 +100,12 @@ void ProStorage::init()
     identify->start();
     userRequest->start();
     OfflineRecord *offlineRecord = new OfflineRecord;
-    if(switchCtl->m_protocol)
+    ServerDataDeal *dataDeal = new ServerDataDeal;
+    dataDeal->setPacket(serverList);
+    if(1 == switchCtl->m_protocol)
     {
-        ServerDataDeal *dataDeal = new ServerDataDeal;
         connect(dataDeal, &ServerDataDeal::insertFaceGroups, face, &FaceManager::insertFaceGroups);
         dataDeal->setHttp(httpClient);
-        dataDeal->setPacket(serverList);
         TcpClient *tcpClient = new TcpClient;
         tcpClient->setPacket(serverList);
         connect(tcpClient, &TcpClient::allUserId, userRequest, &UserIdRequest::onAlluserId);
@@ -125,8 +125,14 @@ void ProStorage::init()
         tcpClient->start();
         dataDeal->start();
     }
-    else {
+    else if(2 == switchCtl->m_protocol)
+    {
+
+    }
+    else if(3 == switchCtl->m_protocol) {
+        dataDeal->setHttp(httpClient);
         connect(identify, &FaceIdentify::uploadopenlog, httpClient, &HttpsClient::httpsUploadopenlog);
+        connect(offlineRecord, &OfflineRecord::uploadopenlog, httpClient, &HttpsClient::httpsUploadopenlog);
         connect(httpClient, &HttpsClient::allUserId, userRequest, &UserIdRequest::onAlluserId);
         connect(userRequest, &UserIdRequest::getUsers, httpClient, &HttpsClient::HttpsGetUsers);
         connect(httpClient, &HttpsClient::updateUsers, userRequest, &UserIdRequest::onUpdateUsers);
@@ -134,7 +140,7 @@ void ProStorage::init()
         httpClient->start();
     }
     offlineRecord->start();
-//    mqttClient->start();
+    mqttClient->start();
     emit syncSuccess(switchCtl->m_faceDoorCtl, switchCtl->m_tempCtl);
 }
 

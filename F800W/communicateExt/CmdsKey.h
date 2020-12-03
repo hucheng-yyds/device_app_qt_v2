@@ -35,6 +35,7 @@
 #define key_temp_warnValue                  "warnValue"             // 测温告警值
 #define key_temp_comp                       "tempComp"              // 温度补偿值
 #define key_log                             "log"              // 温度补偿值
+#define key_ic                              "ic"                    // ic卡
 
 #define key_faceDoorCtl                     "faceDoorCtl"           // 门禁开关
 #define key_tempCtl                         "tempCtl"               // 测温开关
@@ -48,7 +49,7 @@
 
 
 
-//#define key_wifi_ssid                       "wifi/ssid"
-//#define key_wifi_psk                        "wifi/psk"
+#define key_wifi_name                       "wifiName"
+#define key_wifi_pwd                        "wifiPwd"
 
 #endif // CMDSKEY_H
