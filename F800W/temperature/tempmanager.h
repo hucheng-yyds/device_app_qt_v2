@@ -43,8 +43,6 @@ public slots:
     void startTemp();
     // 串口缓存清空
     void tcflsh();
-    // 停止测温 测温不足1.5 测温数据置0认定测温失败
-    void endTemp();
 
 private:
     // 定时器 200毫秒运行依次 检测是否开始取温度数据
@@ -78,7 +76,6 @@ private:
     bool sendOk = false;
     bool m_recTempDataOK;
     qint64 m_timeTemp;
-    bool m_tempStatus;
     QTimer *m_timer;
     int m_tempCount;
     bool m_startTemp;

@@ -217,8 +217,6 @@ void FaceIdentify::run()
                 {
                     emit tempShow(QString("%1℃").arg(tempVal), tempResult);
                 }
-                dataShare->m_tempFlag = false;
-//                emit tempShow(m_tempVal, m_tempResult);
                 msleep(150);
                 qt_debug() << tempVal << tempResult;
                 float warnValue = switchCtl->m_warnValue;

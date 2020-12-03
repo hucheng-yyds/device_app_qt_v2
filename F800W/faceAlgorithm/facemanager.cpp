@@ -168,10 +168,6 @@ void FaceManager::run()
         } else {
 //            m_interFace->m_iStop = true;
             emit hideFaceFocuse();
-            if(switchCtl->m_tempCtl)
-            {
-                emit endTemp();
-            }
             backLightCount++;
             if(backLightCount > 100)
             {

@@ -25,8 +25,8 @@ void TempManager::run()
     m_timer->setInterval(200);
     connect(m_timer, &QTimer::timeout, this, &TempManager::timeckeck);
     m_timer->start();
-    m_tempStatus = false;
     m_startTemp = false;
+    m_endTimerMs = 0;
     exec();
 }
 
@@ -266,7 +266,6 @@ void TempManager::startTemp()
             count = 500;
         }
         countdown_ms(count);
-        m_tempStatus = false;
         m_startTemp = true;
         tcflush(m_fd, TCIOFLUSH);
     }
@@ -288,9 +287,6 @@ void TempManager::timeckeck()
             QString tempVal = getTemperature();
             int result = compareTemp(tempVal);
             m_tempCallBack->setTempResult(tempVal, result);
-//            dataShare->m_tempFlag = true;
-//            dataShare->m_tempVal = tempVal;
-//            dataShare->m_tempResult = result;
             m_startTemp = false;
         }
     }
@@ -401,17 +397,8 @@ QString TempManager::getTemperature()
         maxVal = (maxVal)*1.8 + 32.0;
     }
     tempVal = QString::number(maxVal, 'f', 1);
-    if(m_tempStatus)
-    {
-        tempVal = "0";
-    }
     qt_debug() << "end get temp" << tempVal;
     return tempVal;
-}
-
-void TempManager::endTemp()
-{
-    m_tempStatus = true;
 }
 
 int TempManager::compareTemp(const QString &tempVal)
@@ -441,10 +428,6 @@ int TempManager::compareTemp(const QString &tempVal)
         result = -1;
     }
     else {
-        result = -2;
-    }
-    if(m_tempStatus)
-    {
         result = -2;
     }
     qt_debug() << "temp check end" << result << tempVal;

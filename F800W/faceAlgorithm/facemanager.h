@@ -49,8 +49,6 @@ signals:
     void showFaceFocuse(int left, int top, int right, int bottom, int index, int trackId);
     // 隐藏人脸框 控制ui界面消失人脸框
     void hideFaceFocuse();
-    // 停止测温
-    void endTemp();
     // 人员同步和升级状态显示
     void faceTb(const QString &text);
 
