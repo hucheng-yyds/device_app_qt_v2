@@ -1,5 +1,6 @@
 #include <QNetworkInterface>
 #include <QDateTime>
+#include <QTcpSocket>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -51,6 +52,26 @@ int get_if_miireg(const char *if_name, int reg_num )
     return value;
 }
 
+void getNtp()
+{
+    qt_debug() <<"connectToHosts--------------";
+    QTcpSocket *socket = new QTcpSocket();
+    socket->connectToHost("time.nist.gov", 13);
+    qt_debug() <<"--------------connectToHosts";
+    if (socket->waitForConnected())
+    {   if (socket->waitForReadyRead())
+        {
+            QString str(socket->readAll());
+            str = str.trimmed();
+            str = str.section(" ", 1, 2);
+            str = "20"+str;
+            system("date -s '"+str.toLatin1()+"'");
+        }
+    }
+    socket->close();
+    delete socket;
+}
+
 NetManager::NetManager()
 {
     m_fourG = false;
@@ -67,6 +88,7 @@ void NetManager::run()
     int netWorkMode = 7;
     int seq = 0;
     int size = 0;
+    int netStatus = false;
     while(true)
     {
         m_eth0 = get_if_miireg("eth0", 0x01);
@@ -141,9 +163,14 @@ void NetManager::run()
             dataShare->m_netStatus = false;
             emit networkChanged(7, false);
         }
+        if (netStatus != dataShare->m_netStatus &&
+                dataShare->m_netStatus) {
+            getNtp();
+        }
+        netStatus = dataShare->m_netStatus;
         dataShare->m_ipAddr = ip;
         int count = sqlDatabase->m_localFaceSet.size();
-        emit showDeviceInfo(switchCtl->m_tempCtl, VERSION, switchCtl->m_devName, QString("%1").arg(count), ip, switchCtl->m_sn);
+        emit showDeviceInfo(switchCtl->m_tempCtl, switchCtl->m_faceDoorCtl, VERSION, switchCtl->m_devName, QString("%1").arg(count), ip, switchCtl->m_sn);
         msleep(100);
         int second = getTimeZoneMin()*60 + getTimeZone()*3600;
         QDateTime dateTime = QDateTime::currentDateTime().addSecs(second);

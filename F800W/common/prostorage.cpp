@@ -43,16 +43,17 @@ void ProStorage::init()
     connect(face, &FaceManager::showFaceFocuse, this, &ProStorage::showFaceFocuse);
     connect(face, &FaceManager::hideFaceFocuse, this, &ProStorage::hideFaceFocuse);
     connect(face, &FaceManager::faceTb, this, &ProStorage::faceTb);
+    connect(sqlDatabase, &SqlDatabase::removeFaceGroup, face, &FaceManager::removeFaceGroup, Qt::BlockingQueuedConnection);
     face->setFaceInter(interFace);
     FaceIdentify *identify = new FaceIdentify;
     identify->setFaceInter(interFace);
     connect(identify, &FaceIdentify::faceResultShow, this, &ProStorage::faceResultShow);
     TempManager *tempManager = new TempManager;
-//    connect(face, &FaceManager::endTemp, tempManager, &TempManager::endTemp);
-//    connect(identify, &FaceIdentify::startTemp, tempManager, &TempManager::startTemp);
-//    connect(identify, &FaceIdentify::showStartTemp, this, &ProStorage::showStartTemp);
-//    connect(identify, &FaceIdentify::tempShow, this, &ProStorage::tempShow);
-//    tempManager->start();
+    connect(face, &FaceManager::endTemp, tempManager, &TempManager::endTemp);
+    connect(identify, &FaceIdentify::startTemp, tempManager, &TempManager::startTemp);
+    connect(identify, &FaceIdentify::showStartTemp, this, &ProStorage::showStartTemp);
+    connect(identify, &FaceIdentify::tempShow, this, &ProStorage::tempShow);
+    tempManager->start();
     connect(identify, &FaceIdentify::icResultShow, this, &ProStorage::icResultShow);
     connect(identify, &FaceIdentify::idCardResultShow, this, &ProStorage::idCardResultShow);
 //    IdCardModule *idcard = new IdCardModule;
@@ -87,7 +88,7 @@ void ProStorage::init()
     {
         sleep(1);
     }
-    float tempFlag = /*tempManager->onIsTemp()*/0;
+    float tempFlag = tempManager->onIsTemp();
     qt_debug() << "temp modle result:" << tempFlag;
     if(0 == tempFlag)
     {

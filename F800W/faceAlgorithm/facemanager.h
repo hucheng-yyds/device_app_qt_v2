@@ -23,6 +23,7 @@ public slots:
     void ctlOpenDoor(int id);
     // 人员图片入库
     void insertFaceGroups(int id, const QString &username, const QString &time, const QString &photoname, const QString &iphone);
+    void removeFaceGroup(int id);
 
 private:
     AppCall* DS_CreateAppCall(const char* ptrRegFilePath, const char* ptrModelFileAbsDir, const char* ptrFaceImgFilePath);

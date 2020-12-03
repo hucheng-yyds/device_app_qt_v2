@@ -151,7 +151,7 @@ bool TempManager::checkCRC(QVector<uchar> buff)
 
 void TempManager::checkUART()
 {
-    m_fd = open("/dev/ttyAMA1", O_RDWR);
+    m_fd = open("/dev/ttyS3", O_RDWR);
     qt_debug() << "fd1: " << m_fd;
     if(setOpt(m_fd, 115200, 8, 'N', 1) < 0)
     {

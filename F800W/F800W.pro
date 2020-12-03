@@ -38,6 +38,7 @@ LIBS += -L$$PWD/external/lib/qz
 
 #LIBS += -lmsc -lpaho-embed-mqtt3c -lcrypto -lssl
 #LIBS += -l100UD -lusb-1.0 -lidr220s_reader
+LIBS += -lcrypto -lssl
 LIBS += -lopencv_core -lopencv_imgcodecs -lopencv_imgproc
 LIBS += -lyxface -lcnn
 LIBS += -Wl,-static \
@@ -127,6 +128,13 @@ DISTFILES += \
     qml/Focusing.qml \
     qml/QRcode.qml \
     qml/Standby.qml
+
+DISTFILES += \
+    oldqml/main.qml \
+    oldqml/Face.qml \
+    oldqml/Focusing.qml \
+    oldqml/QRcode.qml \
+    oldqml/Standby.qml
 
 
 # Additional import path used to resolve QML modules in Qt Creator's code model

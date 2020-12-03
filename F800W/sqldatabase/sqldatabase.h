@@ -16,6 +16,9 @@
 class SqlDatabase : public QObject
 {
     Q_OBJECT
+signals:
+    void removeFaceGroup(int id);
+
 public:
     explicit SqlDatabase();
     static SqlDatabase *getInstance()
@@ -26,7 +29,7 @@ public:
         return m_Instance;
     }
     // 人脸入库接口
-    FaceGroupHandle m_groupHandle;
+//    FaceGroupHandle m_groupHandle;
     // 失败入库id
     QSet<int> m_localFaceFail;
     // 当前所有人脸id

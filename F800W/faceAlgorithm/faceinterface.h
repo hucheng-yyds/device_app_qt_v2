@@ -35,7 +35,7 @@ class FaceInterface
 {
 public:
     explicit FaceInterface();
-    AppCall *m_iFaceHandle;
+    AppCall *m_ptrAppData;
     QVector<DS_FaceInfo> m_faceHandle;
     int m_count;
     bool m_iStop;

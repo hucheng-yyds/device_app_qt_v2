@@ -41,7 +41,7 @@ signals:
     // 隐藏人脸框 控制ui界面
     void hideFaceFocuse();
     // 发送信号 ui界面显示版本号 设备名称 同步人员个数 设备ip 设备sn码
-    void showDeviceInfo(bool tempCtl, const QString &ver, const QString &name, const QString &number, const QString &devIp, const QString &devSn);
+    void showDeviceInfo(bool tempCtl, bool faceCtl, const QString &ver, const QString &name, const QString &number, const QString &devIp, const QString &devSn);
     // 发送授权状态 和显示授权页面 UI界面显示
     void qrcodeChanged(const QString &rcode);
     // 刷新ui界面 初始化完成

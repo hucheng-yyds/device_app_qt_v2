@@ -52,7 +52,7 @@ void FaceManager::onBreathingLight()
 {
 //    hardware->ctlLed(OFF);
 //    hardware->ctlBLN(ON);
-//    hardware->ctlIrWhite(OFF);
+    hardware->ctlWhite(OFF);
 
 }
 
@@ -83,13 +83,13 @@ void FaceManager::run()
             status = true;
 //            hardware->ctlWDG();
             emit faceTb(tr("正在同步中..."));
-//            hardware->ctlLed(OFF);
-//            if(!dataShare->m_netStatus)
-//            {
-//                dataShare->m_sync = false;
-//            }
+            hardware->ctlWhite(OFF);
+            if(!dataShare->m_netStatus)
+            {
+                dataShare->m_sync = false;
+            }
             qt_debug() << "dataShare->m_sync:" << dataShare->m_sync;
-//            hardware->checkOpenDoor();
+            hardware->checkOpenDoor();
 //            hardware->ctlWDG();
             msleep(500);
             continue;
@@ -114,8 +114,6 @@ void FaceManager::run()
         m_ptrAppData->ptrFaceIDInData->bgrImageHeight = 0;
         DS_SetGetAppCall(m_ptrAppData);
     //    qt_debug() << "Get People Num " << m_ptrAppData->ptrFaceIDOutData->curFaceNum << m_ptrAppData->ptrFaceIDOutData->curStatus;
-    //    FaceRect rect0 ,rect1;
-    //    QByteArray faceByte;
         if (m_ptrAppData->ptrFaceIDOutData->curFaceNum > 0) {
             sort(NULL, 0);
             m_ptrAppData->ptrFaceIDOutData->curFaceNum = 1;
@@ -151,6 +149,10 @@ void FaceManager::run()
                 if (m_interFace->m_iStop) {
                     m_interFace->m_iStop = false;
                     m_interFace->m_faceHandle << ptrFaceInfo;
+                    Countdown t(100);
+                    memcpy(m_interFace->m_bgrImage, m_bgrVideoFrame->VFrame.mpVirAddr[0], VIDEO_WIDTH * VIDEO_HEIGHT);
+                    memcpy(m_interFace->m_bgrImage + VIDEO_WIDTH * VIDEO_HEIGHT, m_bgrVideoFrame->VFrame.mpVirAddr[1], VIDEO_WIDTH * VIDEO_HEIGHT / 2);
+                    qt_debug() << "memcpy:" << t.right_ms();
                     g_usedSpace.release();
                 }
             }
@@ -178,7 +180,7 @@ void FaceManager::run()
                 onBreathingLight();
             }
         }
-//        hardware->checkCloseDoor();
+        hardware->checkCloseDoor();
 //        hardware->ctlWDG();
         if (switchCtl->m_ir)
         {
@@ -359,7 +361,7 @@ void FaceManager::sort(FaceHandle *faceHandle, int count)
 
 void FaceManager::ctlOpenDoor(int id)
 {
-    hardware->ctlLed(GREEN);
+//    hardware->ctlLed(GREEN);
     hardware->checkOpenDoor();
     QStringList datas;
     datas.clear();
@@ -398,7 +400,6 @@ void FaceManager::insertFaceGroups(int id, const QString &username, const QStrin
         ptrAppData->ptrFaceIDInData->importFaceID = id;
 
         DS_SetGetAppCall(m_ptrAppData);
-        qt_debug();
 
         //处理注册结果
         if (ptrAppData->ptrFaceIDOutData->curStatus == RETURN_REGISTER_SUCCESS)
@@ -445,6 +446,21 @@ void FaceManager::insertFaceGroups(int id, const QString &username, const QStrin
         }
     }
     QFile::remove(file);
+}
+
+void FaceManager::removeFaceGroup(int id)
+{
+    qt_debug() << id;
+    if (m_ptrAppData->ptrFaceIDOutData->totalRegPersonsNum > 0) {
+        m_ptrAppData->ptrFaceIDInData->FuncFlag = CTRL_DELETE_ONE;
+        m_ptrAppData->ptrFaceIDInData->importFaceID = id;
+        DS_SetGetAppCall(m_ptrAppData);
+        qt_debug() << m_ptrAppData->ptrFaceIDOutData->curStatus;
+    }
+
+//    if (m_ptrAppData->ptrFaceIDOutData->curStatus == RETURN_DELETE_SUCCESS) {
+//        sqlDatabase->sqlDelete(id);
+//    }
 }
 
 AppCall *FaceManager::DS_CreateAppCall(const char *ptrRegFilePath, const char *ptrModelFileAbsDir, const char *ptrFaceImgFilePath)

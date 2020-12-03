@@ -308,7 +308,7 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
             if(jsonData.contains("id"))
             {
                 dataShare->m_offlineFlag = false;
-                hardware->ctlLed(GREEN);
+//                hardware->ctlLed(GREEN);
                 hardware->checkOpenDoor();
                 QStringList datas;
                 datas.clear();
@@ -441,6 +441,7 @@ void ServerDataDeal::dealFaceNewData(QJsonObject jsonObj)
             int mid = mids["mid"].toInt();
             if(3 == cmd)
             {
+                dataShare->m_sync = true;
                 sqlDatabase->sqlDelete(mid);
                 sqlDatabase->sqlDeleteAuth(mid);
             }
@@ -448,6 +449,7 @@ void ServerDataDeal::dealFaceNewData(QJsonObject jsonObj)
                 datas.push_front(mid);
             }
         }
+        dataShare->m_sync = false;
         emit newUsers(datas);
     }
     else {

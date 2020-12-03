@@ -2,7 +2,7 @@
 
 FaceInterface::FaceInterface()
 {
-    m_iFaceHandle = nullptr;
+    m_ptrAppData = nullptr;
     m_count = 0;
     m_faceHandle.clear();
     m_iStop = true;

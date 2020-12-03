@@ -11,6 +11,8 @@ QalHardWare* QalHardWare::m_Instance = nullptr;
 QalHardWare::QalHardWare()
 {
     moveToThread(this);
+    IF_Vol_Set(100);
+    IF_PCMAUDIO_Init();
 }
 
 void QalHardWare::setVolume(int vol)
@@ -60,46 +62,12 @@ void QalHardWare::countdown_ms(int ms)
 
 void QalHardWare::ctlLed(int ctl)
 {
-    switch (ctl) {
-    case OFF:
-        m_i=0;
-        ioctl(m_fd,LED_G_SET,&m_i);
-        m_i=0;
-        ioctl(m_fd,LED_R_SET,&m_i);
-        break;
-    case GREEN:
-        ctlBLN(OFF);
-        m_i=1;
-        ioctl(m_fd,LED_G_SET,&m_i);
-        m_i=0;
-        ioctl(m_fd,LED_R_SET,&m_i);
-        break;
-    case RED:
-        ctlBLN(OFF);
-        m_i=0;
-        ioctl(m_fd,LED_G_SET,&m_i);
-        m_i=1;
-        ioctl(m_fd,LED_R_SET,&m_i);
-        break;
-    default:
-        break;
-    }
+
 }
 
 void QalHardWare::ctlBLN(int ctl)
 {
-    switch (ctl) {
-    case OFF:
-        m_led.w=0;
-        ioctl(m_fd,LED_B_PWM_SET,&m_led);
-        break;
-    case ON:
-        m_led.w=1;
-        ioctl(m_fd,LED_B_PWM_SET,&m_led);
-        break;
-    default:
-        break;
-    }
+
 }
 
 void QalHardWare::ctlWDG()
@@ -109,18 +77,36 @@ void QalHardWare::ctlWDG()
 
 void QalHardWare::ctlIr(int ctl)
 {
-    ioctl(m_fd,IR_SET,&ctl);
+    switch (ctl) {
+    case OFF:
+        system("echo 0 > /sys/gpio/ired");
+        break;
+    case ON:
+        system("echo 1 > /sys/gpio/ired");
+        break;
+    default:
+        break;
+    }
 }
 
 void QalHardWare::ctlWhite(int ctl)
 {
-    ioctl(m_fd,WHITE_SET,&ctl);
+    switch (ctl) {
+    case OFF:
+        system("echo 0 > /sys/gpio/wled");
+        break;
+    case ON:
+        system("echo 1 > /sys/gpio/wled");
+        break;
+    default:
+        break;
+    }
 }
 
 void QalHardWare::ctlIrWhite(int ctl)
 {
-    ioctl(m_fd,IR_SET,&ctl);
-    ioctl(m_fd,WHITE_SET,&ctl);
+//    ctlIr(ctl);
+//    ctlWhite(ctl);
 }
 
 void QalHardWare::ctlBacklight(int value)
@@ -131,18 +117,14 @@ void QalHardWare::ctlBacklight(int value)
 void QalHardWare::checkCloseDoor()
 {
     if (expired()) {
-        m_i = 0;
-        ioctl(m_fd, RELAY_SET, &m_i);
-        ctlLed(OFF);
-        ctlBLN(ON);
+        system("echo 0 > /sys/gpio/relay");
     }
 }
 
 void QalHardWare::checkOpenDoor()
 {
     if (expired()) {
-        m_i = 1;
-        ioctl(m_fd, RELAY_SET, &m_i);
+        system("echo 1 > /sys/gpio/relay");
         countdown_ms(switchCtl->m_doorDelayTime * 1000);
     }
 }

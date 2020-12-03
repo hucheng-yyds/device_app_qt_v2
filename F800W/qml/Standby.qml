@@ -15,7 +15,7 @@ Rectangle {
         anchors.horizontalCenter: parent.horizontalCenter;
         Item {
             anchors.horizontalCenter: parent.horizontalCenter;
-            y: 219;
+            y: 109;
             width: background.width; height: background.height
 
             Image {
@@ -61,7 +61,7 @@ Rectangle {
     Text {
         id: digitalClock
         anchors.horizontalCenter: parent.horizontalCenter
-        y: 906;
+        y: 706;
         font {
             pixelSize: 150;
             family: "multi-language"
@@ -74,7 +74,7 @@ Rectangle {
     Text {
         id :dateCur
         anchors.horizontalCenter: parent.horizontalCenter
-        y: 1098;
+        y: 898;
         font {
             pixelSize: 42
             family: "PingFang SC Light"

@@ -431,18 +431,14 @@ Item {
         id: pngShow
         visible: true
         x: 0
-        y: 852
-        width: 168
-        height: 170
+        y: 859
         source: "image/show.png"
     }
     AnimatedImage {
         id: gifShow
         visible: pngShow.visible
         x: 0
-        y: 852
-        width: 168
-        height: 170
+        y: 859
         source: "./gifs/show.gif"
                 playing: true
 //                playing: false
@@ -451,32 +447,29 @@ Item {
         id: pngRun
         visible: false
         x: 0
-        y: 852
-        width: 168
-        height: 170
+        y: 859
         source: "image/run.png"
     }
     AnimatedImage {
         id: gifRun
         visible: pngRun.visible
         x: 0
-        y: 852
-        width: 168
-        height: 170
+        y: 859
         source: "./gifs/run.gif"
-        //        playing: true
-                playing: false
+        playing: true
+//                playing: false
     }
 
     // 显示设备名称
     Text {
         id: corporateName
-        x: 175
+        x: 134
         y: 898
+        width: 289
         color: "#fffffe"
         font {
 //            bold: "Medium"
-            pixelSize: 54
+            pixelSize: 42
             family: "multi-language"
         }
         text: qsTr("")
@@ -486,9 +479,9 @@ Item {
     Rectangle {
         id: devIndoBg
         x: 0
-        y: 997
+        y: 986
         width: 600
-        height: 27
+        height: 38
         opacity: 0.5
         color: "#000000"
     }
@@ -496,10 +489,11 @@ Item {
     // 显示设备sn码
     Text {
         id: sn;
-        x: 13
-        y: 993
+        x: 11
+        y: 990
+        width: 256
         font {
-            pixelSize: 24;
+            pixelSize: 20
             family: "multi-language"
         }
         color: "#666666"
@@ -511,9 +505,10 @@ Item {
     Text {
         id: ip;
         x: 257
-        y: 993
+        y: 990
+        width: 169
         font {
-            pixelSize: 24;
+            pixelSize: 20
             family: "multi-language"
         }
         color: "#666666"
@@ -526,9 +521,10 @@ Item {
     Text {
         id: version;
         x: 518
-        y: 993
+        y: 990
+        width: 79
         font {
-            pixelSize: 24;
+            pixelSize: 20
             family: "multi-language"
         }
         color: "#666666"
@@ -567,26 +563,26 @@ Item {
     // 检测结果显示
     Rectangle {
         id: resultTextBg
-        x: 145
         y: 807
         visible: resultText.text.length
         color: "#000000"
         radius: 20
         opacity: 0.5
         anchors.horizontalCenter: parent.horizontalCenter
-        width: 333
+        width: 380
         height: 77
     }
 
     Text {
         id: resultText
-        x: 172
-        y: 806
         font {
-            pixelSize: 54
+            pixelSize: 42
             family: "multi-language"
         }
         color: "#16DFEC"
+        anchors.left: resultTextBg.left
+        anchors.leftMargin: 25
+        anchors.verticalCenter: resultTextBg.verticalCenter
         style: Text.Raised
     }
 

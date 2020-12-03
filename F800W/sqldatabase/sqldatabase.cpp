@@ -247,8 +247,9 @@ void SqlDatabase::sqlDeleteAll()
     }
     qt_debug() << "clear all face";
     m_localFaceSet.clear();
-//    resetFaceGroup(m_groupHandle);
     m_mutex.unlock();
+    system("rm /mnt/UDISK/regInfo/*");
+//    system("killall F01 && reboot");
 }
 
 void SqlDatabase::sqlDelete(int id)
@@ -262,7 +263,7 @@ void SqlDatabase::sqlDelete(int id)
     {
         qt_debug() << query.lastError();
     }
-//    removeFaceGroup(m_groupHandle, id);
+    emit removeFaceGroup(id);
     m_localFaceSet.remove(id);
     m_mutex.unlock();
 }
