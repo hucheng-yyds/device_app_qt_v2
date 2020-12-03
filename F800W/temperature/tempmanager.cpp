@@ -19,6 +19,7 @@ TempManager::TempManager()
 
 void TempManager::run()
 {
+    countdown_ms(0);
     m_recTempDataOK = false;
     checkUART();
     m_timer = new QTimer;

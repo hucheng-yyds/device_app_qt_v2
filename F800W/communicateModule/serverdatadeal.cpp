@@ -481,7 +481,7 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
     switch (jsonObj["cmd"].toInt())
     {
     case MqttModule::UserData: {
-        if(1 == switchCtl->m_protocol)
+        if(1 == switchCtl->m_protocol || 4 == switchCtl->m_protocol)
         {
             QJsonObject jsonData = jsonObj["data"].toObject();
             dealFaceNewData(jsonData);
@@ -492,6 +492,14 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
         }
         else if(3 == switchCtl->m_protocol) {
             dealHttpData(jsonObj);
+        }
+        break;
+    }
+    case MqttModule::ServerSyncEnd:
+    {
+        if(4 == switchCtl->m_protocol)
+        {
+            emit allUserId();
         }
         break;
     }
@@ -535,6 +543,7 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
     case MqttModule::Unbind:
     {
         system("rm *.db");
+        sleep(1);
         system("reboot");
         break;
     }
@@ -596,9 +605,20 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
     default:
         break;
     }
-    QString type = jsonObj.value("message").toString();
-    QString messageId = jsonObj.value("messageId").toString();
-    emit responseServer(type.replace("Req", "Rsp"), messageId, jsonData);
+    if(1 == switchCtl->m_protocol)
+    {
+        QString type = jsonObj.value("message").toString();
+        QString messageId = jsonObj.value("messageId").toString();
+        emit responseServer(type.replace("Req", "Rsp"), messageId, jsonData);
+    }
+    else if(4 == switchCtl->m_protocol)
+    {
+        QJsonObject jsonObj;
+        jsonData.insert("result", 200);
+        jsonData.insert("desc", "Success");
+        jsonData.insert("data", jsonObj);
+        emit responseServer("", "", jsonData);
+    }
 }
 
 void ServerDataDeal::dealIcNewData(QJsonObject jsonObj)

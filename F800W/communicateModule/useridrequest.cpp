@@ -326,7 +326,7 @@ void UserIdRequest::onUpdateUsers(const QJsonObject &jsonObj)
     }
     else
     {
-        if(switchCtl->m_protocol)
+        if(switchCtl->m_protocol != 3)
         {
             tcpUpdateUsers(jsonObj);
         }

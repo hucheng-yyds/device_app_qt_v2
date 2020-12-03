@@ -125,22 +125,22 @@ void FaceManager::run()
 //                qt_debug() << "ptrFaceInfo.trackID:" << ptrFaceInfo.trackID;
 //                qt_debug() << "totalRegPersonsNum" << m_ptrAppData->ptrFaceIDOutData->totalRegPersonsNum;
 
-                int offset = 10;
-                FaceRect rect;
-                rect.left = ptrFaceInfo.XMin;
-                rect.right = ptrFaceInfo.XMax;
-                rect.top = ptrFaceInfo.YMin;
-                rect.bottom = ptrFaceInfo.YMax;
-                offset = (rect.right - rect.left) / 20;
-                if (((qAbs(saveLeft[i] - rect.left) > offset) ||
-                     (qAbs(saveTop[i] - rect.top) > offset)) &&
-                        ((qAbs(saveRight[i] - rect.right) > offset) ||
-                         (qAbs(saveBottom[i] - rect.bottom) > offset))) {
-                    saveLeft[i] = rect.left /*- (rect.left % offset)*/;
-                    saveTop[i] = rect.top /*- (rect.top % offset)*/;
-                    saveRight[i] = rect.right /*- (rect.right % offset)*/;
-                    saveBottom[i] = rect.bottom /*- (rect.bottom % offset)*/;
-                }
+//                int offset = 10;
+//                FaceRect rect;
+//                rect.left = ptrFaceInfo.XMin;
+//                rect.right = ptrFaceInfo.XMax;
+//                rect.top = ptrFaceInfo.YMin;
+//                rect.bottom = ptrFaceInfo.YMax;
+//                offset = (rect.right - rect.left) / 20;
+//                if (((qAbs(saveLeft[i] - rect.left) > offset) ||
+//                     (qAbs(saveTop[i] - rect.top) > offset)) &&
+//                        ((qAbs(saveRight[i] - rect.right) > offset) ||
+//                         (qAbs(saveBottom[i] - rect.bottom) > offset))) {
+//                    saveLeft[i] = rect.left /*- (rect.left % offset)*/;
+//                    saveTop[i] = rect.top /*- (rect.top % offset)*/;
+//                    saveRight[i] = rect.right /*- (rect.right % offset)*/;
+//                    saveBottom[i] = rect.bottom /*- (rect.bottom % offset)*/;
+//                }
                 emit showFaceFocuse(saveLeft[i] * 1.66, saveTop[i] * 1.6, saveRight[i] * 1.66, saveBottom[i] * 1.6, i, ptrFaceInfo.trackID);
         //        qDebug() << "======================================" << qAbs(saveLeft[i] - rect.left) << offset;
     //            if (ptrFaceInfo.trackID != track_id.value(i)) {

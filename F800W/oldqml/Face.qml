@@ -393,31 +393,31 @@ Item {
             sleep.restart()
         }
         onShowFaceFocuse:{
-            var flag = false;
-            for (var i = 0; i < focusingList.length; i ++) {
-                if (focusingList[i].trackId === trackId && !isTemp) {
-                    focusingList[i].focusingX = left - 20;
-                    focusingList[i].focusingY = top - 30;
-                    focusingList[i].focusingWidth = right - left + 50;
-                    focusingList[i].focusingHeight = bottom - top + 30;
-                    focusingList[i].focusingVisible = true;
-                    flag = true;
-                    break;
-                }
-                else
-                {
-                    focusingList[i].focusingVisible = false;
-                    focusingList[i].trackId = 0;
-                }
-            }
-            if (!flag && !isTemp) {
-                focusingList[index].focusingX = left - 20;
-                focusingList[index].focusingY = top - 30;
-                focusingList[index].focusingWidth = right - left + 50;
-                focusingList[index].focusingHeight = bottom - top + 30;
-                focusingList[index].focusingVisible = true;
-                focusingList[index].trackId = trackId;
-            }
+//            var flag = false;
+//            for (var i = 0; i < focusingList.length; i ++) {
+//                if (focusingList[i].trackId === trackId && !isTemp) {
+//                    focusingList[i].focusingX = left - 20;
+//                    focusingList[i].focusingY = top - 30;
+//                    focusingList[i].focusingWidth = right - left + 50;
+//                    focusingList[i].focusingHeight = bottom - top + 30;
+//                    focusingList[i].focusingVisible = true;
+//                    flag = true;
+//                    break;
+//                }
+//                else
+//                {
+//                    focusingList[i].focusingVisible = false;
+//                    focusingList[i].trackId = 0;
+//                }
+//            }
+//            if (!flag && !isTemp) {
+//                focusingList[index].focusingX = left - 20;
+//                focusingList[index].focusingY = top - 30;
+//                focusingList[index].focusingWidth = right - left + 50;
+//                focusingList[index].focusingHeight = bottom - top + 30;
+//                focusingList[index].focusingVisible = true;
+//                focusingList[index].trackId = trackId;
+//            }
             standby.visible = false;
             face.visible = true;
             sleep.restart();

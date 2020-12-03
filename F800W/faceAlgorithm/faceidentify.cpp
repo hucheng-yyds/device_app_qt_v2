@@ -132,6 +132,7 @@ void FaceIdentify::run()
         qt_debug() << "ptrFaceInfo.faceMaskOrNot:" << m_iMFaceHandle[i].faceMaskOrNot;
 
         if (RETURN_REC_SUCCESS == m_iMFaceHandle[i].recStatus) {
+            dataShare->m_offlineFlag = false;
 //            if (identify->track_id.value(i) != trId) {
 //                timer.countdown(3);
 //            } else {
@@ -144,7 +145,7 @@ void FaceIdentify::run()
 //            }
 //            QByteArray faceByte = QByteArray((const char*)m_iMFaceHandle[i].ID, 16);
 //            int id = m_iMFaceHandle[i].ID;
-            qt_debug() << "m_iMFaceHandle[i].ID:" << m_iMFaceHandle[i].ID;
+            qt_debug() << "m_iMFaceHandle[i].ID:" << m_iMFaceHandle[i].ID << face_id;
 //            QVariantList varlist = sqlDatabase->sqlSelect((uint64_t)m_iMFaceHandle[i].ID);
 //            QString name = varlist.value(1).toString();
 //            qt_debug() << name;
@@ -187,7 +188,7 @@ void FaceIdentify::run()
                 egPass = true;
                 hardware->playSound("chengong.wav");
             }
-            if(tempCtl) {
+            if(tempCtl && !authority) {
                 emit showStartTemp();
                 qt_debug() << "holding temp" << m_tempFlag;
                 int tempCount = 0;

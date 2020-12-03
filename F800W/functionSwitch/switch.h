@@ -8,8 +8,8 @@
 
 #define switchCtl SwitchCtl::getInstance()
 
-#define VERSION     "2.0.7"
-#define DEVICE_TYPE "F800W"
+#define VERSION     "1.0.0"
+#define DEVICE_TYPE "F700B"
 
 class SwitchCtl
 {

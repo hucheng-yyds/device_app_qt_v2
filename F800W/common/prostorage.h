@@ -7,6 +7,7 @@
 #include "netmanager.h"
 #include "httpsclient.h"
 #include "tcpclient.h"
+#include "v1tcpclient.h"
 #include "tempmanager.h"
 #include "httpsclient.h"
 #include "useridrequest.h"

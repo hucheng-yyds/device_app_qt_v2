@@ -4,7 +4,8 @@ SOURCES += \
     $$PWD/useridrequest.cpp \
     $$PWD/serverdatadeal.cpp \
     $$PWD/serverdatalist.cpp \
-    $$PWD/offlinerecord.cpp
+    $$PWD/offlinerecord.cpp \
+    $$PWD/v1tcpclient.cpp
 
 HEADERS += \
     $$PWD/tcpclient.h \
@@ -12,4 +13,5 @@ HEADERS += \
     $$PWD/useridrequest.h \
     $$PWD/serverdatadeal.h \
     $$PWD/serverdatalist.h \
-    $$PWD/offlinerecord.h
+    $$PWD/offlinerecord.h \
+    $$PWD/v1tcpclient.h
