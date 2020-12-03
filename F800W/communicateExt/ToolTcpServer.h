@@ -73,6 +73,8 @@ private:
     QTcpSocket   *m_tcpSocket = nullptr;
     UdpServer    m_udpServer;
     void sendHeartBeat(void);//發送心跳
+    void get1080pImage();
+    void sendImage();
 
     QTimer * m_heartBeat = nullptr;
     bool m_isSendingLostsOfData = false;//在發送大數據,暫停心跳檢測,true:暫停檢測，false:檢測心跳

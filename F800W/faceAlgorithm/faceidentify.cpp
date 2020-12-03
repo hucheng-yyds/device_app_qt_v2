@@ -491,7 +491,7 @@ void FaceIdentify::run()
         else {
             datas << uploadTime << m_tempVal << isSuccess << invalidReason << isStranger << m_cardNo << "" << "" << "" << "" << "";
         }
-        if((switchCtl->m_uploadStrangerCtl || egPass) && !vi)
+        if((switchCtl->m_uploadStrangerCtl || egPass) && (!vi||idCardResult))
         {
             if(m_cardWork && !tempCtl)
             {
