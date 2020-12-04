@@ -53,7 +53,7 @@ Log::Log(QObject *parent) : QObject(parent)
             }
         }
     });
- // qInstallMessageHandler(outputMessage);
+  qInstallMessageHandler(outputMessage);
 }
 
 void Log::onToolTcpStateChange(bool state)//true:链接上了，false:链接断开
@@ -62,7 +62,7 @@ void Log::onToolTcpStateChange(bool state)//true:链接上了，false:链接断�
     {
         timer->stop();
         dataShare->m_log = true;
-      // qInstallMessageHandler(outputMessage);
+       qInstallMessageHandler(outputMessage);
     }
 }
 
@@ -73,7 +73,7 @@ void Log::onLogFun(bool on)
     {
         dataShare->m_log = true;
         timer->stop();
-     //  qInstallMessageHandler(outputMessage);
+       qInstallMessageHandler(outputMessage);
 
     }else {
         dataShare->m_log = false;
@@ -84,6 +84,6 @@ void Log::onLogFun(bool on)
             logList.removeOne(item);
         }
         timer->start();
-    // qInstallMessageHandler(outputMessageOnLine);
+     qInstallMessageHandler(outputMessageOnLine);
     }
 }
