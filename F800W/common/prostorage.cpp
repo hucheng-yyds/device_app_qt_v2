@@ -177,23 +177,21 @@ void ProStorage::DeviceSnJudgment()
 {
     if(switchCtl->m_sn.isEmpty())
     {
-        QString mac = "";
-        QList<QNetworkInterface> list = QNetworkInterface::allInterfaces();
-        foreach(QNetworkInterface i, list)
-        {
-            if(i.name().compare("eth0") == 0)
-            {
-                mac = "OFF1MJ" + i.hardwareAddress().replace(":", "");
-                break;
-            }
-        }
-        if(mac.isEmpty())
+        QProcess* process = new QProcess;
+        process->start("cat /sys/class/net/eth0/address");
+        process->waitForFinished();
+        QString outputStr = QString::fromLocal8Bit(process->readAllStandardOutput());
+        process->close();
+        process->deleteLater();
+
+        if(outputStr.isEmpty())
         {
             system("reboot");
         }
         else {
-            switchCtl->m_sn = mac;
-            system("echo " + mac.toUtf8() + " > /dev/mmcblk0p6");
+            QString sn = "OFF1MJ" + outputStr.replace(":", "").replace("\n", "");
+            switchCtl->m_sn = sn;
+            system("echo " + sn.toUtf8() + " > /dev/mmcblk0p6");
             switchCtl->saveSreenParam();
         }
     }

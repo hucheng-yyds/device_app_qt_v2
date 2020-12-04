@@ -250,7 +250,7 @@ Item {
     Image {
         id: image_people
         x: 12
-        y: 993
+        y: 983
         source: "image/public_people.png"
     }
 
@@ -270,7 +270,7 @@ Item {
     Image {
         id: image_ip
         x: 117
-        y: 993
+        y: 983
         source: "image/public_ip.png"
     }
 
@@ -297,7 +297,7 @@ Item {
     Text {
         id: sn;
         x: 44
-        anchors.verticalCenter: image_sn.verticalCenter
+        y: 954
         font {
             pixelSize: 18
             family: "multi-language"
@@ -435,8 +435,8 @@ Item {
             version.text = qsTr("T" + ver);
             corporateName.text = qsTr(name);
             people.text = qsTr(number);
-            ip.text = qsTr("ip: " + devIp);
-            sn.text = qsTr("sn: " + devSn);
+            ip.text = qsTr(devIp);
+            sn.text = qsTr(devSn);
             if (isEg) {
                 iconFace.source = "image/icon_face.png"
             } else {
