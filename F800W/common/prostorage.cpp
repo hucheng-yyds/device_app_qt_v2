@@ -99,6 +99,7 @@ void ProStorage::init()
 
     MqttModule *mqttClient = new MqttModule;
     UserIdRequest *userRequest = new UserIdRequest;
+    connect(toolTcpServer, &ToolTcpServer::updateUsers, userRequest, &UserIdRequest::onUpdateUsers);//配置工具下发人脸
 
     ServerDataList *serverList = new ServerDataList;
     mqttClient->setPacket(serverList);

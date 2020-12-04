@@ -708,7 +708,6 @@ void ToolTcpServer::parseData(QByteArray &new_cmd)
                                             QString && nation = sqlDatabase->sqlSelectOffline(i).value(14).toString();//民族
                                             if(nation == "")
                                                 continue;
-
                                             infoList.append(sqlDatabase->sqlSelectOffline(i).value(13).toString());
                                             infoList.append(sqlDatabase->sqlSelectOffline(i).value(11).toString());
                                             infoList.append(QString::number(sqlDatabase->sqlSelectOffline(i).value(12).toInt()));
@@ -832,30 +831,11 @@ void ToolTcpServer::parseData(QByteArray &new_cmd)
                             }
                             else if(cmdStr == "1")//下发人脸
                             {
+                                qt_debug() << "upDateFace";
+                                updateUser(rootObj);
 
-                                 int id = rootObj.value("id").toInt();
-                                 int passNum = rootObj.value("passNum").toInt();
-                                 int isBack = rootObj.value("isBack").toInt();
-                                 QVariant picture = rootObj.value("picture").toInt();
-                                 QString userName = rootObj.value("userName").toString();
-                                 QString collectTimes = rootObj.value("collectTimes").toString();
-                                 QString carNum = rootObj.value("carNum").toString();
-                                 QString rightStarTime = rootObj.value("rightStarTime").toString();
-                                 QString rightEndTime = rootObj.value("rightEndTime").toString();
-                                 QString week = rootObj.value("week").toString();
-                                 QString Times = rootObj.value("Times").toString();
-                                 QString PhotoNum = rootObj.value("PhotoNum").toString();
-                                 QString picName = rootObj.value("picName").toString();
-                                 QString remark = rootObj.value("remark").toString();
-
-                                 QStringList list;
-                                 list << userName << collectTimes << carNum << rightStarTime << \
-                                 rightEndTime << week << Times << PhotoNum << picName << remark;
-                               // sqlDatabase->sqlInsert(id,passNum,isBack,picture,list);
-                                // data:从索引0依次开始 用户名、采集时间、门禁卡号、权限开始时间、权限结束时间、星期字段、一天的通行时段、手机号、图片名称、备注
-                                //void sqlInsert(int id, int passnum, int isBack, const QVariant &feature, const QStringList &data);
                             }
-                          //  ResponseDataToTool(Dev_FirmwareUpgrade_request,msgType,cmd,"","200","");
+
                         } else if(msgType == "3")//重启设备
                         {
                             QJsonObject response;
@@ -1451,5 +1431,31 @@ void ToolTcpServer::setSendingLostsOfData(bool flag)
     }else {
         m_isSendingLostsOfData = false;
         m_heartBeat->start();
+    }
+}
+
+void ToolTcpServer::updateUser(QJsonObject &data)
+{
+    if(dataShare->m_netStatus)
+    {
+        QJsonObject response,data;
+        response.insert("msgType","2");
+        response.insert("cmd","1");
+        response.insert("desc","deviceOnLine");
+        ResponseDataToTool(Dev_Debugging_response,response);
+       qt_debug() << " device is had connected to serve!";
+        return ;
+    }
+
+    if(data.contains("data") )
+    {
+        qt_debug() << "get new person";
+        QJsonObject && jsonObj = data.value("data").toObject();
+        emit  updateUsers(jsonObj);
+        QJsonObject response,data;
+        response.insert("msgType","2");
+        response.insert("cmd","1");
+        response.insert("desc","ok");
+        ResponseDataToTool(Dev_Debugging_response,response);
     }
 }
