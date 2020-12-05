@@ -597,7 +597,7 @@ void ToolTcpServer::parseData(QByteArray &new_cmd)
                 {
                      msgType = rootObj["msgType"].toString();
                      cmdStr = rootObj["cmd"].toString();
-                     qt_debug()<< msgType << cmdStr;
+//                     qt_debug()<< msgType << cmdStr;
                     if(m_cmd == Dev_Information_request)
                     {
                        if(msgType == "0") //设备配置信息

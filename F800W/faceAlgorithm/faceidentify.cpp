@@ -126,10 +126,10 @@ void FaceIdentify::run()
         {
             emit startTemp();
         }
-        qt_debug() << "ptrFaceInfo.pose:" << m_iMFaceHandle[i].pose;
-        qt_debug() << "ptrFaceInfo.recStatus:" << m_iMFaceHandle[i].recStatus;
-        qt_debug() << "ptrFaceInfo.recScoreVal:" << m_iMFaceHandle[i].recScoreVal;
-        qt_debug() << "ptrFaceInfo.faceMaskOrNot:" << m_iMFaceHandle[i].faceMaskOrNot;
+//        qt_debug() << "ptrFaceInfo.pose:" << m_iMFaceHandle[i].pose;
+//        qt_debug() << "ptrFaceInfo.recStatus:" << m_iMFaceHandle[i].recStatus;
+//        qt_debug() << "ptrFaceInfo.recScoreVal:" << m_iMFaceHandle[i].recScoreVal;
+//        qt_debug() << "ptrFaceInfo.faceMaskOrNot:" << m_iMFaceHandle[i].faceMaskOrNot;
 
         if (RETURN_REC_SUCCESS == m_iMFaceHandle[i].recStatus) {
             dataShare->m_offlineFlag = false;
@@ -145,7 +145,7 @@ void FaceIdentify::run()
 //            }
 //            QByteArray faceByte = QByteArray((const char*)m_iMFaceHandle[i].ID, 16);
 //            int id = m_iMFaceHandle[i].ID;
-            qt_debug() << "m_iMFaceHandle[i].ID:" << m_iMFaceHandle[i].ID << face_id;
+//            qt_debug() << "m_iMFaceHandle[i].ID:" << m_iMFaceHandle[i].ID << face_id;
 //            QVariantList varlist = sqlDatabase->sqlSelect((uint64_t)m_iMFaceHandle[i].ID);
 //            QString name = varlist.value(1).toString();
 //            qt_debug() << name;

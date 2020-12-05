@@ -37,7 +37,6 @@ void ProStorage::init()
     connect(netManager, &NetManager::showDeviceInfo, this, &ProStorage::showDeviceInfo);
     connect(netManager, &NetManager::networkChanged, this, &ProStorage::networkChanged);
     connect(netManager, &NetManager::timeSync, this, &ProStorage::timeSync);
-    netManager->start();
     FaceInterface *interFace = new FaceInterface;
     FaceManager *face = new FaceManager;
     connect(face, &FaceManager::showFaceFocuse, this, &ProStorage::showFaceFocuse);
@@ -53,7 +52,6 @@ void ProStorage::init()
     connect(identify, &FaceIdentify::showStartTemp, this, &ProStorage::showStartTemp);
     connect(identify, &FaceIdentify::tempShow, this, &ProStorage::tempShow);
     tempManager->setTempCallBack(identify);
-    tempManager->start();
     connect(identify, &FaceIdentify::icResultShow, this, &ProStorage::icResultShow);
     connect(identify, &FaceIdentify::idCardResultShow, this, &ProStorage::idCardResultShow);
 //    IdCardModule *idcard = new IdCardModule;
@@ -81,7 +79,6 @@ void ProStorage::init()
     connect(toolTcpServer,&ToolTcpServer::sigSetAllScreenOn,tempManager,&TempManager::openAllScreenTemp);
     connect(toolTcpServer,&ToolTcpServer::sigGetTempHardwareInfo,tempManager,&TempManager::getTempInfo);
 
-    toolTcpServer->start();
 
     MqttModule *mqttClient = new MqttModule;
     UserIdRequest *userRequest = new UserIdRequest;
@@ -94,6 +91,10 @@ void ProStorage::init()
     {
         sleep(1);
     }
+    tempManager->start();
+    netManager->start();
+    sleep(1);
+    toolTcpServer->start();
     float tempFlag = tempManager->onIsTemp();
     qt_debug() << "temp modle result:" << tempFlag;
     if(0 == tempFlag)
