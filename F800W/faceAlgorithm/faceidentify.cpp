@@ -303,11 +303,12 @@ void FaceIdentify::run()
 //                    goto exit;
 //                }
 //                emit faceResultShow(tr("未注册"), i, trId, tr("未注册"), tr("未注册"));
-                isStranger = "1";
-                emit faceResultShow(tr("未注册"), i, trId, tr("请联系管理员"), tr("未注册"));
-                egPass = false;
-                face_id = 0;
-                hardware->playSound("shibai.wav");
+//                isStranger = "1";
+//                emit faceResultShow(tr("未注册"), i, trId, tr("请联系管理员"), tr("未注册"));
+//                egPass = false;
+//                face_id = 0;
+//                hardware->playSound("shibai.wav");
+                goto  exit;
             } else if (m_iMFaceHandle[i].pose > 0) {
 //                emit pose();
                 goto exit;

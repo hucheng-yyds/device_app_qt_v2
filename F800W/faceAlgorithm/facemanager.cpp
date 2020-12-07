@@ -141,18 +141,19 @@ void FaceManager::run()
 //                    saveRight[i] = rect.right /*- (rect.right % offset)*/;
 //                    saveBottom[i] = rect.bottom /*- (rect.bottom % offset)*/;
 //                }
-                emit showFaceFocuse(saveLeft[i] * 1.66, saveTop[i] * 1.6, saveRight[i] * 1.66, saveBottom[i] * 1.6, i, ptrFaceInfo.trackID);
+//                emit showFaceFocuse(saveLeft[i] * 1.66, saveTop[i] * 1.6, saveRight[i] * 1.66, saveBottom[i] * 1.6, i, ptrFaceInfo.trackID);
         //        qDebug() << "======================================" << qAbs(saveLeft[i] - rect.left) << offset;
     //            if (ptrFaceInfo.trackID != track_id.value(i)) {
     //                c_timer->countdown_ms(500);
     //            }
                 if (m_interFace->m_iStop) {
+                    emit showFaceFocuse(saveLeft[i] * 1.66, saveTop[i] * 1.6, saveRight[i] * 1.66, saveBottom[i] * 1.6, i, ptrFaceInfo.trackID);
                     m_interFace->m_iStop = false;
                     m_interFace->m_faceHandle << ptrFaceInfo;
                     Countdown t(100);
                     memcpy(m_interFace->m_bgrImage, m_bgrVideoFrame->VFrame.mpVirAddr[0], VIDEO_WIDTH * VIDEO_HEIGHT);
                     memcpy(m_interFace->m_bgrImage + VIDEO_WIDTH * VIDEO_HEIGHT, m_bgrVideoFrame->VFrame.mpVirAddr[1], VIDEO_WIDTH * VIDEO_HEIGHT / 2);
-                    qt_debug() << "memcpy:" << t.right_ms();
+//                    qt_debug() << "memcpy:" << t.right_ms();
                     g_usedSpace.release();
                 }
             }
@@ -185,7 +186,7 @@ void FaceManager::run()
         IF_ReleaseData(m_bgrVideoFrame);
         if (j >= 100) {
             double d_ms = m_count / 100.00;
-            qt_debug() << "m_count:" << m_count << d_ms;
+//            qt_debug() << "m_count:" << m_count << d_ms;
             j = 0;
             m_count = 0;
         }
