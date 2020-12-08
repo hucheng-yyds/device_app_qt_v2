@@ -190,7 +190,7 @@ void ProStorage::DeviceSnJudgment()
             system("reboot");
         }
         else {
-            QString sn = "OFF1MJ" + outputStr.replace(":", "").replace("\n", "");
+            QString sn = "OFF1MJ" + outputStr.replace(":", "").replace("\n", "").toUpper();
             switchCtl->m_sn = sn;
             system("echo " + sn.toUtf8() + " > /dev/mmcblk0p6");
             switchCtl->saveSreenParam();
