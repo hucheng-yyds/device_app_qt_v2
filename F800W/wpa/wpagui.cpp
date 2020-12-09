@@ -281,7 +281,7 @@ int WpaGui::ctrlRequest(const char *cmd, char *buf, size_t *buflen)
 
     if (ctrl_conn == nullptr)
 		return -3;
-	ret = wpa_ctrl_request(ctrl_conn, cmd, strlen(cmd), buf, buflen, NULL);
+    ret = wpa_ctrl_request(ctrl_conn, cmd, strlen(cmd), buf, buflen, nullptr);
 	if (ret == -2)
 		qDebug("'%s' command timed out.", cmd);
 	else if (ret < 0)
@@ -842,14 +842,19 @@ void WpaGui::enableNetwork(char *ssid, char *psk, int auth)
         return;
     nc->setWpaGui(this);
 
-    memset(reply, 0, sizeof(reply));
+    memset(reply, 0, 10);
     reply_len = sizeof(reply) - 1;
 
-    ctrlRequest("ADD_NETWORK", reply, &reply_len);
+    int ret = ctrlRequest("ADD_NETWORK", reply, &reply_len);
+//    qDebug() << "===========================" << ret;
     if (reply[0] == 'F') {
         qDebug("Failed to add network to wpa_supplicant\n");
 		return;
 	}
+    for(int i = 0;i < 10;i++)
+    {
+        qDebug() << reply[i];
+    }
 	id = atoi(reply);
 	qDebug("addNetwork %d\n",id);
     nc->setNetworkParam(id, "ssid", ssid, true);
@@ -885,9 +890,10 @@ void WpaGui::enableNetwork(char *ssid, char *psk, int auth)
     if (key_mgmt)
     {
         qDebug("key_mgmt %s\n",key_mgmt);
-        nc->setNetworkParam(id, "key_mgmt", key_mgmt, false);
+        nc->setNetworkParam(id, "key_mgmt", key_mgmt, true);
     }
-
+    nc->setNetworkParam(id, "proto", "RSN WPA WPA2", true);
+    nc->setNetworkParam(id, "pairwise", "TKIP CCMP", true);
     nc->setNetworkParam(id, "psk",psk ,sizeof(psk)!=64);
 	snprintf(cmd, sizeof(cmd), "ENABLE_NETWORK %d", id);
 	reply_len = sizeof(reply);

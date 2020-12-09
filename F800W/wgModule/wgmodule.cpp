@@ -3,7 +3,7 @@
 
 WgModule::WgModule()
 {
-
+    wgCountdown_ms(0);
 }
 
 void WgModule::run()

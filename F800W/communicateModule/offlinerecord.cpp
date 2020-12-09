@@ -48,7 +48,7 @@ void OfflineRecord::run()
                 emit uploadopenlog(ids, values.at(1).toInt(), offlingImg, values.at(5).toInt(), values.at(2).toInt(), values.at(6).toInt(), values.at(12).toInt(), texts);
                 sleep(5);
             }
-            sleep(60);
+            sleep(50);
         }
         else {
             sleep(1);

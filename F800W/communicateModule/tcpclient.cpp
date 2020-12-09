@@ -334,19 +334,6 @@ void TcpClient::parseAllUserId(const QJsonObject &jsonObj)
     }
 }
 
-void TcpClient::parseUsersChange(const QJsonObject &jsonObj)
-{
-    int result = jsonObj.value("result").toInt();
-    int messageId = jsonObj.value("messageId").toString().toInt();
-    if(200 == result)
-    {
-        emit newUserId(jsonObj["updatePerson"].toArray());
-    }
-    else {
-        qt_debug() << "parseUsersChange result" << result << "messageId" << messageId;
-    }
-}
-
 void TcpClient::parseNewIc(QByteArray msgBody)
 {
 

@@ -4,6 +4,12 @@
 #include <QMutex>
 #include "faceinterface.h"
 
+struct MFaceHandle{
+    FaceRect rect;
+    int track_id;
+    int index;
+};
+
 // 人脸检测算法处理
 class FaceManager : public QThread
 {

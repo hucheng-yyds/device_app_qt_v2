@@ -138,8 +138,10 @@ static int setOpt(int fd, int nSpeed, int nBits, char nEvent, int nStop)
 RcodeModule::RcodeModule()
 {
     m_endTimerMs = 0;
+    countdown_ms(0);
     m_rcodeDatas.clear();
     m_fd = open("/dev/ttyAMA3", O_RDWR);
+    qt_debug() << "RcodeModule" << m_fd;
     int flags = fcntl(m_fd,F_GETFL,0);
     flags &= ~O_NONBLOCK;
     fcntl(m_fd,F_SETFL,flags);
@@ -148,12 +150,13 @@ RcodeModule::RcodeModule()
         perror("set_opt error");
         return;
     }
+    tcflush(m_fd, TCIOFLUSH);
 }
 
 void RcodeModule::run()
 {
-    QByteArray datas;
-    datas.clear();
+    QByteArray rcodeDatas;
+    rcodeDatas.clear();
     while(true)
     {
         int len, fs_sel;
@@ -168,18 +171,19 @@ void RcodeModule::run()
         {
             char buf[8];
             len = read(m_fd, buf, 8);
-            datas.append(buf);
+            rcodeDatas.append(buf);
         }
         else
         {
-            if (datas.isEmpty() || switchCtl->m_rcode != 2)
+            if (rcodeDatas.isEmpty() || switchCtl->m_rcode != 2)
             {
                 continue ;
             }
-            QByteArray content = QByteArray::fromBase64(datas);
+            tcflush(m_fd, TCIOFLUSH);
+            QByteArray content = QByteArray::fromBase64(rcodeDatas);
             QByteArray datas = content.mid(0, 65);
-            qDebug() << content << datas;
             QByteArrayList contentList = datas.split(',');
+            qDebug() << contentList;
             bool ok;
             QDateTime origin_time = QDateTime::fromString("1970-01-01 08:00:00","yyyy-MM-dd hh:mm:ss");
             QDateTime current_time = QDateTime::currentDateTime();//显示时间，格式为：年-月-日 时：分：秒 周几
@@ -286,7 +290,7 @@ void RcodeModule::run()
             }
             content.clear();
             contentList.clear();
-            datas.clear();
+            rcodeDatas.clear();
             sleep(2);
         }
     }

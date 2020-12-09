@@ -106,6 +106,13 @@ DISTFILES += \
     oldqml/QRcode.qml \
     oldqml/Standby.qml
 
+DISTFILES += \
+    5.5qml/main.qml \
+    5.5qml/Face.qml \
+    5.5qml/Focusing.qml \
+    5.5qml/QRcode.qml \
+    5.5qml/Standby.qml
+
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
 QML_IMPORT_PATH =

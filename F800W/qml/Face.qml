@@ -762,11 +762,13 @@ Item {
             {
                 helmet.visible = false;
                 mask.visible = true;
+                resultText.text = qsTr("请戴口罩");
             }
             else if(1 == flag)
             {
                 mask.visible = false;
                 helmet.visible = true;
+                resultText.text = qsTr("请戴安全帽");
             }
         }
         onIdCardResultShow: {

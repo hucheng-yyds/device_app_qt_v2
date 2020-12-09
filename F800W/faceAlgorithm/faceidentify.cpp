@@ -9,6 +9,7 @@ FaceIdentify::FaceIdentify()
     m_tempFlag = false;
     m_cardWork = false;
     m_tempVal = "0";
+    identifyCountdown_ms(0);
     m_tempResult = 0;
     m_irImage = new unsigned char[VIDEO_WIDTH*VIDEO_HEIGHT* 3 / 2];
     m_bgrImage = new unsigned char[VIDEO_WIDTH*VIDEO_HEIGHT* 3 / 2];
@@ -33,12 +34,15 @@ bool FaceIdentify::idCardFaceComparison(char *feature_result)
     auto image = cv::imread(file.toStdString());
     if(!image.empty())
     {
-        FacePoseBlur pose_blur;
+        m_interFace->m_mutex.lock();
         detect((const char *)image.data, image.cols, image.rows, BGR, 0.75, image.cols/19, &faceHandle, &count);
+        m_interFace->m_mutex.unlock();
         if(count > 0)
         {
+            m_interFace->m_mutex.lock();
             extract(faceHandle[0], &featureFrist, &size);
             compare(featureFrist, feature_result, size, &result);
+            m_interFace->m_mutex.unlock();
             QString name = dataShare->m_idCardDatas.at(0);
             if (result > switchCtl->m_idcardValue)
             {
@@ -103,7 +107,6 @@ void FaceIdentify::run()
             emit startTemp();
         }
         FaceHandle *bgrHandle = m_interFace->m_iFaceHandle, *irHandle;
-        m_iMFaceHandle = m_interFace->m_faceHandle;
         FacePoseBlur pose_blur;
         FaceAttr face_attr;
         QStringList datas;
@@ -141,7 +144,7 @@ void FaceIdentify::run()
             }
             judgeDate();
             int i = 0;
-            if (matchPair[m_iMFaceHandle[i].index] == irLength && ir)
+            if (matchPair[m_interFace->m_faceHandle[i].index] == irLength && ir)
             {
                 qDebug("[FACEPASS_DV300_TEST]  This bgrIndex=%d face handle is attack, can not pass the ir filter process!!", i);
                 m_interFace->m_iStop = true;
@@ -150,7 +153,7 @@ void FaceIdentify::run()
             else
             {
                 m_interFace->m_quality = true;
-                getPoseBlurAttribute(bgrHandle[m_iMFaceHandle[i].index], &pose_blur);
+                getPoseBlurAttribute(bgrHandle[m_interFace->m_faceHandle[i].index], &pose_blur);
                 if (qAbs(pose_blur.blur) > 0.8)
                 {
 //                    emit blur();
@@ -164,7 +167,7 @@ void FaceIdentify::run()
                 if (ir && m_interFace->m_quality)
                 {
                     float liveness_result = 0.0;
-                    getLiveness_bgrir(bgrHandle[m_iMFaceHandle[i].index], irHandle[matchPair[m_iMFaceHandle[i].index]],&liveness_result);
+                    getLiveness_bgrir(bgrHandle[m_interFace->m_faceHandle[i].index], irHandle[matchPair[m_interFace->m_faceHandle[i].index]],&liveness_result);
                     if (liveness_result < 0.8)
                     {
                         m_interFace->m_iStop = true;
@@ -174,7 +177,7 @@ void FaceIdentify::run()
                 {
                     if (mask)
                     {
-                        getFaceAttrResult(bgrHandle[m_iMFaceHandle[0].index],  &face_attr);
+                        getFaceAttrResult(bgrHandle[m_interFace->m_faceHandle[0].index],  &face_attr);
                         qt_debug() << "mask" <<  face_attr.respirator[0] << face_attr.respirator[1] << face_attr.respirator[2];
                         if (face_attr.respirator[0] > 0.8)
                         {
@@ -193,7 +196,7 @@ void FaceIdentify::run()
                     }
                     if (helmet)
                     {
-                        getFaceAttrResult(bgrHandle[m_iMFaceHandle[0].index],  &face_attr);
+                        getFaceAttrResult(bgrHandle[m_interFace->m_faceHandle[0].index],  &face_attr);
                         qt_debug() << "helmet" <<  face_attr.hat[0] << face_attr.hat[1] << face_attr.hat[2] << face_attr.hat[3] << face_attr.hat[4] << face_attr.hat[5] << face_attr.hat[6] << face_attr.hat[7] << face_attr.hat[8];
                         if (face_attr.hat[0] > 0.8 || face_attr.hat[1] < 0.2)
                         {
@@ -210,10 +213,9 @@ void FaceIdentify::run()
                     float result = 0.0;
                     int size = 0;
                     m_interFace->m_mutex.lock();
-                    extract(bgrHandle[m_iMFaceHandle[i].index], &feature_result, &size);
+                    extract(bgrHandle[m_interFace->m_faceHandle[i].index], &feature_result, &size);
                     identifyFromFaceGroup(sqlDatabase->m_groupHandle, feature_result, size, &result, &face_id);
                     m_interFace->m_mutex.unlock();
-//                    qt_debug() << "-------------------------------------------------" << result << face_id;
                     if ((result > dataShare->m_faceThreshold) && (face_id > 0))
                     {
                         QStringList value = dealOpencondition(face_id);
@@ -222,7 +224,7 @@ void FaceIdentify::run()
                         if(name.isEmpty())
                         {
                             authority = true;
-                            emit faceResultShow(name, i, m_iMFaceHandle[i].track_id, tr("未授权"), tr("未授权"));
+                            emit faceResultShow(name, i, m_interFace->m_faceHandle[i].track_id, tr("未授权"), tr("未授权"));
                             if(remark.isEmpty())
                             {
                                 hardware->playSound(tr("未授权").toUtf8(), "authority.aac");
@@ -241,7 +243,8 @@ void FaceIdentify::run()
                                     {
                                         name = name.replace(0, 2, "**");
                                     }
-                                    else if(name.size() > 1){
+                                    else if(name.size() > 1)
+                                    {
                                         name = name.replace(0, 1, '*');
                                     }
                                 }
@@ -250,7 +253,7 @@ void FaceIdentify::run()
                                     name = name.replace(0, name.size(), tr("您好"));
                                 }
                             }
-                            emit faceResultShow(name, i, m_iMFaceHandle[i].track_id, tr("认证通过"), m_faceInfo + name);
+                            emit faceResultShow(name, i, m_interFace->m_faceHandle[i].track_id, tr("认证通过"), m_faceInfo + name);
                             egPass = true;
                         }
                     }
@@ -272,20 +275,22 @@ void FaceIdentify::run()
                                     idCardResult = idCardFaceComparison(feature_result);
                                     dataShare->m_idCardFlag = false;
                                 }
-                                else {
+                                else
+                                {
                                     emit idCardResultShow(0, tr("未注册"), tr("请刷身份证"), tr("请刷身份证"));
                                     hardware->playSound(tr("请刷身份证").toUtf8(), "shenfenzh.aac");
                                     msleep(500);
                                     goto endIdentify;
                                 }
                             }
-                            else {
+                            else
+                            {
                                 goto endIdentify;
                             }
                         }
                         else {
                             isStranger = "1";
-                            emit faceResultShow(tr("未注册"), i, m_iMFaceHandle[i].track_id, tr("请联系管理员"), tr("未注册"));
+                            emit faceResultShow(tr("未注册"), i, m_interFace->m_faceHandle[i].track_id, tr("请联系管理员"), tr("未注册"));
                             egPass = false;
                             face_id = 0;
                         }
@@ -491,7 +496,7 @@ void FaceIdentify::run()
         else {
             datas << uploadTime << m_tempVal << isSuccess << invalidReason << isStranger << m_cardNo << "" << "" << "" << "" << "";
         }
-        if((switchCtl->m_uploadStrangerCtl || egPass) && (!vi||idCardResult))
+        if((switchCtl->m_uploadStrangerCtl || egPass) && !vi)
         {
             if(m_cardWork && !tempCtl)
             {

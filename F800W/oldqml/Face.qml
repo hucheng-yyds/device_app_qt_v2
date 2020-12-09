@@ -424,8 +424,8 @@ Item {
             version.text = qsTr("T" + ver);
             corporateName.text = qsTr(name);
             people.text = qsTr(number);
-            ip.text = qsTr("ip: " + devIp);
-            sn.text = qsTr("sn: " + devSn);
+            ip.text = qsTr(devIp);
+            sn.text = qsTr(devSn);
             if (isEg) {
                 iconFace.source = "image/icon_face.png"
             } else {
@@ -435,12 +435,12 @@ Item {
         onIcResultShow: {
             if(0 === result)
             {
-                textName.text = qsTr(name)
+                textName.text = qsTr(cardNo)
                 tips.text = qsTr("请联系管理员")
             }
             else if(1 === result)
             {
-                textName.text = qsTr(name)
+                textName.text = qsTr(cardNo)
                 tips.text = qsTr("认证通过")
             }
             hideName.restart()

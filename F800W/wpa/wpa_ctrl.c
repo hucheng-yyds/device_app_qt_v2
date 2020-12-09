@@ -540,7 +540,7 @@ retry_send:
 			return res;
 		if (FD_ISSET(ctrl->s, &rfds)) {
 			res = recv(ctrl->s, reply, *reply_len, 0);
-//            printf("=====================================%s\n", reply);
+//            printf("=====================================%s %d\n", reply, res);
 			if (res < 0)
 				return res;
 			if (res > 0 && reply[0] == '<') {

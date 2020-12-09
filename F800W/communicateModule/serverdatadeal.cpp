@@ -485,10 +485,14 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
     {
     case MqttModule::UserData:
     {
-        if(1 == switchCtl->m_protocol)
+        if(1 == switchCtl->m_protocol || 4 == switchCtl->m_protocol)
         {
             QJsonObject jsonData = jsonObj["data"].toObject();
             dealFaceNewData(jsonData);
+        }
+        else if(2 == switchCtl->m_protocol)
+        {
+            dealMiddwareFaceData(jsonObj);
         }
         else if(3 == switchCtl->m_protocol) {
             dealHttpData(jsonObj);
@@ -604,6 +608,162 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
         QString type = jsonObj.value("message").toString();
         QString messageId = jsonObj.value("messageId").toString();
         emit responseServer(type.replace("Req", "Rsp"), messageId, jsonData);
+    }
+}
+
+void ServerDataDeal::dealMiddwareFaceData(const QJsonObject &jsonObj)
+{
+    QString edittime = "", remark = "", startTime = "", expireTime = "", passTimeSection = "", passPeriod = "", mobile = "", photoName = "";
+    int passNum = -1, isBlack = -1;
+    int allCount = jsonObj.value("userCount").toInt();
+    QJsonObject faceDatas = jsonObj.value("data").toObject();
+    int cmd = faceDatas.value("operator").toInt();
+    int mid = faceDatas.value("mid").toInt();
+    if(3 == cmd)
+    {
+        sqlDatabase->sqlDelete(mid);
+    }
+    else if(cmd > 0) {
+        QString name = "";
+        QString photo = jsonObj["photo"].toString();
+        bool status = false;
+        QVariantList value;
+        value.clear();
+        value = sqlDatabase->sqlSelect(mid);
+        if(value.size() > 0)
+        {
+            status = true;
+        }
+        if(jsonObj.contains("updateDate"))
+        {
+            edittime = jsonObj["updateDate"].toString();
+        }
+        else {
+            if(status)
+            {
+                edittime = value.at(2).toString();
+            }
+        }
+        if(jsonObj.contains("username"))
+        {
+            name = jsonObj["username"].toString();
+        }
+        else {
+            if(status)
+            {
+                name = value.at(1).toString();
+            }
+        }
+        if(jsonObj.contains("mobile"))
+        {
+            mobile = jsonObj["mobile"].toString();
+        }
+        else {
+            if(status)
+            {
+                mobile = value.at(5).toString();
+            }
+        }
+        if(jsonObj.contains("photoName"))
+        {
+            photoName = jsonObj["photoName"].toString();
+        }
+        else {
+            if(status)
+            {
+                photoName = value.at(4).toString();
+            }
+        }
+        if(value.size() > 0)
+        {
+            sqlDatabase->sqlUpdate(mid, name, edittime, photoName, mobile);
+        }
+        else {
+            emit insertFaceGroups(mid, name, edittime, photoName, mobile);
+        }
+        status = false;
+        value.clear();
+        value = sqlDatabase->sqlSelectAuth(mid);
+        if(jsonObj.contains("passNum"))
+        {
+            passNum = jsonObj["passNum"].toInt();
+        }
+        else {
+            if(status)
+            {
+                passNum = value.at(1).toInt();
+            }
+        }
+        if(jsonObj.contains("startTime"))
+        {
+            startTime = jsonObj["startTime"].toString();
+        }
+        else {
+            if(status)
+            {
+                startTime = value.at(2).toString();
+            }
+        }
+        if(jsonObj.contains("expireTime"))
+        {
+            expireTime = jsonObj["expireTime"].toString();
+        }
+        else {
+            if(status)
+            {
+                expireTime = value.at(3).toString();
+            }
+        }
+        if(jsonObj.contains("isBlack"))
+        {
+            isBlack = jsonObj["isBlack"].toInt();
+        }
+        else {
+            if(status)
+            {
+                isBlack = value.at(4).toInt();
+            }
+        }
+        if(jsonObj.contains("passPeriod"))
+        {
+            passPeriod = jsonObj["passPeriod"].toString();
+        }
+        else {
+            if(status)
+            {
+                passPeriod = value.at(5).toString();
+            }
+        }
+        if(jsonObj.contains("passTimeSection"))
+        {
+            passTimeSection = jsonObj["passTimeSection"].toString();
+        }
+        else {
+            if(status)
+            {
+                passTimeSection = value.at(6).toString();
+            }
+        }
+        if(jsonObj.contains("remark"))
+        {
+            remark = jsonObj["remark"].toString();
+        }
+        else {
+            if(status)
+            {
+                remark = value.at(7).toString();
+            }
+        }
+        QStringList datas;
+        datas.clear();
+        datas << startTime << expireTime << passPeriod << passTimeSection << remark;
+        if(value.size() > 0)
+        {
+            sqlDatabase->sqlUpdateAuth(mid, passNum, isBlack, datas);
+        }
+        else {
+            sqlDatabase->sqlInsertAuth(mid, passNum, isBlack, datas);
+        }
     }
 }
 

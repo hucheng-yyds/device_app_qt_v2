@@ -12,8 +12,7 @@
 #define VIDEO_WIDTH     800
 #define VIDEO_HEIGHT    1280
 
-struct MFaceHandle{
-    FaceRect rect;
+struct FaceTrack{
     int track_id;
     int index;
 };
@@ -24,7 +23,7 @@ class FaceInterface
 public:
     explicit FaceInterface();
     FaceHandle *m_iFaceHandle;
-    QVector<MFaceHandle> m_faceHandle;
+    QVector<FaceTrack> m_faceHandle;
     int m_count;
     bool m_iStop;
     bool m_quality;

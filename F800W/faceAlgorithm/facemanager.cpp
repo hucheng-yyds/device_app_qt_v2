@@ -7,6 +7,7 @@ QSemaphore g_usedSpace(0);
 FaceManager::FaceManager()
 {
     m_isIdentify = false;
+    faceCountdown_ms(0);
 }
 
 void FaceManager::updateIdentifyValue()
@@ -144,6 +145,9 @@ void FaceManager::run()
             }
             sort(bgrHandle, bgrLength);
         }
+        else {
+            bgrLength = 0;
+        }
         if (bgrLength > 0)
         {
             dataShare->m_offlineFlag = false;
@@ -167,7 +171,13 @@ void FaceManager::run()
             if (!m_interFace->m_iFaceHandle && m_isIdentify)
             {
                 m_interFace->m_iFaceHandle = bgrHandle;
-                m_interFace->m_faceHandle = m_sMFaceHandle;
+                int count = m_sMFaceHandle.size();
+                m_interFace->m_faceHandle.resize(count);
+                for(int i = 0;i < count;i++)
+                {
+                    m_interFace->m_faceHandle[i].index = m_sMFaceHandle[i].index;
+                    m_interFace->m_faceHandle[i].track_id = m_sMFaceHandle[i].track_id;
+                }
                 m_interFace->m_count = bgrLength;
                 m_interFace->m_iStop = false;
                 memcpy(m_interFace->m_bgrImage, (const char *)m_bgrVideoFrame->stVFrame.u64VirAddr[0], VIDEO_WIDTH * VIDEO_HEIGHT * 3 / 2);

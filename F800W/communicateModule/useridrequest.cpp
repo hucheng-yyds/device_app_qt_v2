@@ -65,7 +65,7 @@ void UserIdRequest::run()
             }
             else
             {
-                if(1 == switchCtl->m_protocol)
+                if(1 == switchCtl->m_protocol || 1 == switchCtl->m_protocol)
                 {
                     emit allUserIc();
                 }

@@ -37,7 +37,6 @@ void ProStorage::init()
     connect(netManager, &NetManager::showDeviceInfo, this, &ProStorage::showDeviceInfo);
     connect(netManager, &NetManager::networkChanged, this, &ProStorage::networkChanged);
     connect(netManager, &NetManager::timeSync, this, &ProStorage::timeSync);
-    netManager->start();
     FaceInterface *interFace = new FaceInterface;
     FaceManager *face = new FaceManager;
     connect(face, &FaceManager::showFaceFocuse, this, &ProStorage::showFaceFocuse);
@@ -58,32 +57,25 @@ void ProStorage::init()
     connect(identify, &FaceIdentify::icResultShow, this, &ProStorage::icResultShow);
     connect(identify, &FaceIdentify::idCardResultShow, this, &ProStorage::idCardResultShow);
 
-    IdCardModule *idcard = new IdCardModule;
-    connect(idcard, &IdCardModule::sigIdInfo, identify, &FaceIdentify::dealIcData);
-    connect(idcard, &IdCardModule::readIdStatus, this, &ProStorage::readIcStatus);
-    idcard->start();
-    if(switchCtl->m_vi)
+    if(switchCtl->m_vi && switchCtl->m_rcode != 2)
     {
-        IcCardModule *iccard = new IcCardModule;
-        connect(iccard, &IcCardModule::sigIcInfo, identify, &FaceIdentify::dealIcData);
-        connect(iccard, &IcCardModule::readIcStatus, this, &ProStorage::readIcStatus);
-        connect(identify, &FaceIdentify::readIcStatus, this, &ProStorage::readIcStatus);
-        connect(face, &FaceManager::readIcStatus, this, &ProStorage::readIcStatus);
-        iccard->start();
+        IdCardModule *idcard = new IdCardModule;
+        connect(idcard, &IdCardModule::sigIdInfo, identify, &FaceIdentify::dealIcData);
+        connect(idcard, &IdCardModule::readIdStatus, this, &ProStorage::readIcStatus);
+        idcard->start();
     }
+    IcCardModule *iccard = new IcCardModule;
+    connect(iccard, &IcCardModule::sigIcInfo, identify, &FaceIdentify::dealIcData);
+    connect(iccard, &IcCardModule::readIcStatus, this, &ProStorage::readIcStatus);
+    connect(identify, &FaceIdentify::readIcStatus, this, &ProStorage::readIcStatus);
+    connect(face, &FaceManager::readIcStatus, this, &ProStorage::readIcStatus);
+    iccard->start();
 
     WgModule *wg = new WgModule;
     connect(identify, &FaceIdentify::wgOut, wg, &WgModule::wgOut);
     connect(wg, &WgModule::sigWgInfo, identify, &FaceIdentify::dealIcData);
     wg->start();
 
-    if(switchCtl->m_rcode > 0)
-    {
-        RcodeModule *rcode = new RcodeModule;
-        connect(face, &FaceManager::rcodeResult, rcode, &RcodeModule::recvRcodeResult);
-        connect(rcode, &RcodeModule::rcodeResultShow, this, &ProStorage::icResultShow);
-        rcode->start();
-    }
 
     ToolTcpServer * toolTcpServer = new ToolTcpServer();
     connect(toolTcpServer,&ToolTcpServer::sigRealTimeLog,log,&Log::onLogFun);
@@ -99,8 +91,7 @@ void ProStorage::init()
 
     MqttModule *mqttClient = new MqttModule;
     UserIdRequest *userRequest = new UserIdRequest;
-    connect(toolTcpServer, &ToolTcpServer::updateUsers, userRequest, &UserIdRequest::onUpdateUsers);//配置工具下发人脸
-
+    netManager->start();
     ServerDataList *serverList = new ServerDataList;
     mqttClient->setPacket(serverList);
     bool status = face->init();
@@ -121,6 +112,13 @@ void ProStorage::init()
     OfflineRecord *offlineRecord = new OfflineRecord;
     ServerDataDeal *dataDeal = new ServerDataDeal;
     dataDeal->setPacket(serverList);
+    if(switchCtl->m_rcode > 0)
+    {
+        RcodeModule *rcode = new RcodeModule;
+        connect(face, &FaceManager::rcodeResult, rcode, &RcodeModule::recvRcodeResult);
+        connect(rcode, &RcodeModule::rcodeResultShow, this, &ProStorage::icResultShow);
+        rcode->start();
+    }
     if(1 == switchCtl->m_protocol)
     {
         connect(dataDeal, &ServerDataDeal::insertFaceGroups, face, &FaceManager::insertFaceGroups);
@@ -131,7 +129,6 @@ void ProStorage::init()
         connect(tcpClient, &TcpClient::updateUsers, userRequest, &UserIdRequest::onUpdateUsers);
         connect(dataDeal, &ServerDataDeal::allUserId, tcpClient, &TcpClient::requestGetAllUserID);
         connect(tcpClient, &TcpClient::allUserIc, userRequest, &UserIdRequest::onAllUsersIc);
-        connect(tcpClient, &TcpClient::newUserId, userRequest, &UserIdRequest::onNewUsers);
         connect(userRequest, &UserIdRequest::insertFaceGroups, face, &FaceManager::insertFaceGroups);
         connect(identify, &FaceIdentify::uploadopenlog, tcpClient, &TcpClient::uploadopenlog);
         connect(offlineRecord, &OfflineRecord::uploadopenlog, tcpClient, &TcpClient::uploadopenlog);
@@ -144,7 +141,14 @@ void ProStorage::init()
     }
     else if(2 == switchCtl->m_protocol)
     {
-
+        connect(dataDeal, &ServerDataDeal::insertFaceGroups, face, &FaceManager::insertFaceGroups);
+        TcpMiddware *tcpMiddware = new TcpMiddware;
+        tcpMiddware->setPacket(serverList);
+        connect(identify, &FaceIdentify::uploadopenlog, tcpMiddware, &TcpMiddware::uploadopenlog);
+        connect(offlineRecord, &OfflineRecord::uploadopenlog, tcpMiddware, &TcpMiddware::uploadopenlog);
+        connect(dataDeal, &ServerDataDeal::responseServer, tcpMiddware, &TcpMiddware::responseServer);
+        connect(dataDeal, &ServerDataDeal::uploadopenlog, tcpMiddware, &TcpMiddware::uploadopenlog);
+        tcpMiddware->start();
     }
     else if(3 == switchCtl->m_protocol)
     {
@@ -156,6 +160,28 @@ void ProStorage::init()
         connect(httpClient, &HttpsClient::updateUsers, userRequest, &UserIdRequest::onUpdateUsers);
         connect(userRequest, &UserIdRequest::insertFaceGroups, face, &FaceManager::insertFaceGroups);
         httpClient->start();
+    }
+    else if(4 == switchCtl->m_protocol)
+    {
+        connect(dataDeal, &ServerDataDeal::insertFaceGroups, face, &FaceManager::insertFaceGroups);
+        dataDeal->setHttp(httpClient);
+        V1TcpClient *tcpClient = new V1TcpClient;
+        tcpClient->setPacket(serverList);
+        connect(tcpClient, &V1TcpClient::allUserId, userRequest, &UserIdRequest::onAlluserId);
+        connect(userRequest, &UserIdRequest::getUsers, tcpClient, &V1TcpClient::requestGetUsers);
+        connect(tcpClient, &V1TcpClient::updateUsers, userRequest, &UserIdRequest::onUpdateUsers);
+        connect(dataDeal, &ServerDataDeal::allUserId, tcpClient, &V1TcpClient::requestGetAllUserID);
+        connect(tcpClient, &V1TcpClient::allIC, userRequest, &UserIdRequest::onAllUsersIc);
+        connect(userRequest, &UserIdRequest::insertFaceGroups, face, &FaceManager::insertFaceGroups);
+        connect(identify, &FaceIdentify::uploadopenlog, tcpClient, &V1TcpClient::uploadopenlog);
+        connect(offlineRecord, &OfflineRecord::uploadopenlog, tcpClient, &V1TcpClient::uploadOffine);
+        connect(dataDeal, &ServerDataDeal::newUsers, userRequest, &UserIdRequest::onNewUsers);
+        connect(userRequest, &UserIdRequest::sigInsertFail, tcpClient, &V1TcpClient::requestInserFail);
+        connect(dataDeal, &ServerDataDeal::responseServer, tcpClient, &V1TcpClient::responseServer);
+        connect(dataDeal, &ServerDataDeal::uploadopenlog, tcpClient, &V1TcpClient::uploadopenlog);
+        connect(userRequest, &UserIdRequest::allUserIc, tcpClient, &V1TcpClient::requestGetAllIC);
+        tcpClient->start();
+        dataDeal->start();
     }
     offlineRecord->start();
     dataDeal->start();

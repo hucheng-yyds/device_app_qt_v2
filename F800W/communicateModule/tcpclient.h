@@ -74,8 +74,6 @@ private:
     void parseAllIc(const QJsonObject &jsonObj);
     // 处理记录上传应答
     void parseUploadData(const QJsonObject &jsonObj);
-    // 处理定时请求人员应答
-    void parseUsersChange(const QJsonObject &jsonObj);
     // 处理单个人员数据
     void parseGetUsers(const QJsonObject &jsonObj);
     // 处理alluser id
@@ -118,8 +116,6 @@ private slots:
 signals:
     // 处理所有alluserid
     void allUserId(const QJsonArray &jsonArr);
-    // 增量接口人脸数据
-    void newUserId(const QJsonArray &jsonArr);
     // 处理所有ic卡数据
     void allUserIc(const QJsonArray &jsonArr);
     // 发送单个人员数据

@@ -50,6 +50,8 @@ private:
     void dealHttpData(const QJsonObject &jsonObj);
     // 处理人脸变动数据
     void dealFaceNewData(QJsonObject jsonObj);
+    // 处理中间件人脸下发
+    void dealMiddwareFaceData(const QJsonObject &jsonObj);
     // 处理ic卡号变动
     void dealIcNewData(QJsonObject jsonObj);
     void faceInsertSql(int id, int passnum, int idBack, const QStringList &data);

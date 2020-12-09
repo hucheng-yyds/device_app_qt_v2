@@ -21,6 +21,7 @@ void TempManager::run()
 {
     m_recTempDataOK = false;
     checkUART();
+    countdown_ms(0);
     m_timer = new QTimer;
     m_timer->setInterval(200);
     connect(m_timer, &QTimer::timeout, this, &TempManager::timeckeck);
@@ -237,6 +238,7 @@ void TempManager::openAllScreenTemp(bool status)
 
 void TempManager::startTemp()
 {
+    qt_debug() << "start temp" << expired();
     if(expired())
     {
         int lens = 0;

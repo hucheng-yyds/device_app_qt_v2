@@ -5,7 +5,7 @@
 
 IcCardModule::IcCardModule()
 {
-
+    icCountdown_ms(0);
 }
 
 void IcCardModule::run()
