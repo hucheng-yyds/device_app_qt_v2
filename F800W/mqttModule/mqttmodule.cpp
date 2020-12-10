@@ -77,7 +77,7 @@ void MqttModule::run()
             int rc = MQTTClient_connect(m_mqttClient, &opts);
             if(rc != MQTTCLIENT_SUCCESS)
             {
-                qt_debug() << "MQTTClient_connect fail";
+                qt_debug() << "MQTTClient_connect fail" << switchCtl->m_sn;
                 sleep(2);
                 continue;
             }

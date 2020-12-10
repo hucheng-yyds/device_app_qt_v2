@@ -73,7 +73,7 @@ void ServerDataDeal::upgradeFile(const QJsonObject &obj)
             {
                 system("rm updateAlgorithm ofzl.db ofzluser.db userdata.db ofzldata.db");
             }
-            system("reboot");
+            system("killall -9 F01 && reboot");
         }
         else
         {
@@ -704,7 +704,7 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
     {
         system("rm *.db");
         sleep(1);
-        system("reboot");
+        system("killall -9 F01 && reboot");
         break;
     }
     case MqttModule::ChangeSetting:
@@ -721,7 +721,7 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
     }
     case MqttModule::Reboot:
     {
-        system("reboot");
+        system("killall -9 F01 && reboot");
         break;
     }
     case MqttModule::SetTcpServer:
@@ -749,7 +749,7 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
         system("rm *.db");
         system("rm offline/*");
         system("sync");
-        system("reboot");
+        system("killall -9 F01 && reboot");
         break;
     }
     case MqttModule::ClearOfflineData:

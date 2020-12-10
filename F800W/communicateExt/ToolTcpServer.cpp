@@ -681,7 +681,7 @@ void ToolTcpServer::parseData(QByteArray &new_cmd)
                                 qt_debug()<<"";
                                 system("rm *.db");
                                 system("rm offline/*");
-                                system("reboot");
+                                system("killall -9 F01 && reboot");
 
                             }
                         }else if(msgType == "1")//升级固件
@@ -707,7 +707,7 @@ void ToolTcpServer::parseData(QByteArray &new_cmd)
                                     response.insert("cmd",cmdStr);
                                     ResponseDataToTool(Dev_FirmwareUpgrade_request,response);
                                     msleep(1000);
-                                    system("reboot");
+                                    system("killall -9 F01 && reboot");
                                 }
                             }
                             else if(cmdStr == "1")//
@@ -1201,7 +1201,7 @@ void ToolTcpServer::DevUpdate(QJsonObject rootObj)
                         responseHardUpdate(Dev_FirmwareUpgrade_response,"reboot");
                         msleep(1000);
                         qt_debug() << "system reboot";
-                        system("reboot");
+                        system("killall -9 F01 && reboot");
                     }
                     else {
                         system("rm base64SaveFile.txt");

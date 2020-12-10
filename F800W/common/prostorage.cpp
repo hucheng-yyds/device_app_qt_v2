@@ -193,7 +193,7 @@ void ProStorage::DeviceSnJudgment()
 
         if(outputStr.isEmpty())
         {
-            system("reboot");
+            system("killall -9 F01 && reboot");
         }
         else {
             QString sn = "OFF1MJ" + outputStr.replace(":", "").replace("\n", "").toUpper();
