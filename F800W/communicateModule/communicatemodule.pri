@@ -5,7 +5,8 @@ SOURCES += \
     $$PWD/serverdatadeal.cpp \
     $$PWD/serverdatalist.cpp \
     $$PWD/offlinerecord.cpp \
-    $$PWD/v1tcpclient.cpp
+    $$PWD/v1tcpclient.cpp \
+    $$PWD/tcpmiddware.cpp
 
 HEADERS += \
     $$PWD/tcpclient.h \
@@ -14,4 +15,5 @@ HEADERS += \
     $$PWD/serverdatadeal.h \
     $$PWD/serverdatalist.h \
     $$PWD/offlinerecord.h \
-    $$PWD/v1tcpclient.h
+    $$PWD/v1tcpclient.h \
+    $$PWD/tcpmiddware.h

@@ -36,6 +36,8 @@ signals:
     void sigInsertFail();
     // 发送单个人员入库
     void insertFaceGroups(int id, const QString &username, const QString &time, const QString &photoname, const QString &iphone);
+    // 删除算法
+    void removeFaceGroup(int id);
 
 private:
     // 版本比较
@@ -47,6 +49,8 @@ private:
     void dealHttpData(const QJsonObject &jsonObj);
     // 处理后台数据
     void dealJsonData(QJsonObject jsonObj);
+    // 处理中间件
+    void dealMiddwareFaceData(const QJsonObject &jsonObj);
     // 处理人脸变动数据
     void dealFaceNewData(QJsonObject jsonObj);
     // 处理ic卡号变动

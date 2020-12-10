@@ -37,6 +37,8 @@ signals:
     void sigInsertFail();
     // 发送单个人员入库
     void insertFaceGroups(int id, const QString &username, const QString &time, const QString &photoname, const QString &iphone);
+    // 删除算法
+    void removeFaceGroup(int id);
 
 private:
     // 更新算法阈值

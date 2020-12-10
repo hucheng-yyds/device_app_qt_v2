@@ -1,5 +1,6 @@
-#ifndef V1TCPCLIENT_H
-#define V1TCPCLIENT_H
+#ifndef TCPMIDDWARE_H
+#define TCPMIDDWARE_H
+
 #include <QThread>
 #include <QTcpSocket>
 #include <QtNetwork>
@@ -7,12 +8,9 @@
 #include "sqldatabase.h"
 #include "serverdatadeal.h"
 
-class V1TcpClient : public QThread
+class TcpMiddware : public QThread
 {
     Q_OBJECT
-protected:
-    void run();
-
 public:
     enum ClientType {
         DEV_LOGIN_REQUEST = 1,
@@ -33,69 +31,86 @@ public:
         DEV_RECORD_PHOTO_RESPONE = 20,
         DEV_FACE_INSERT_FAIL_REQUEST = 21,
         DEV_FACE_INSERT_FAIL_RESPONE = 22,
-        DEV_GET_ALL_NUMBER_REQUEST = 0x19,
-        DEV_GET_ALL_NUMBER_RESPONE = 0x1A,
-        DEV_RECORD_ALARM_REQUEST = 0x1B,
-        DEV_RECORD_ALARM_RESPONE = 0x1C,
+        DEV_GET_ALL_IC_REQUEST = 0x19,
+        DEV_GET_ALL_IC_RESPONE = 0x1A,
 
         SERVER_REQUEST_CMD = 48,
         SERVER_RESPONSE_CMD = 49
     };
-
-    explicit V1TcpClient();
+    explicit TcpMiddware();
     // 处理后台服务器数据入口
     void setPacket(ServerDataList *packet);
 
+protected:
+    virtual void run();
 
 public slots:
-    void requestRegister();
-    void requestDoortoken();
-    void requestHeartbeat();
-    void requestGetUsers(int id);
-    void requestGetAllUserID();
+    // 服务器应答
     void responseServer(const QString &type, const QString &messageId, const QJsonObject &jsonData);
+    // 上传失败入库人员
     void requestInserFail();
-    void requestGetAllIC();
-    void requestUploadAlarm(const QString &type);
+    // 向后台拉取全量人员id
+    void requestGetAllUserID();
+    // 向后台拉去全量人员IC卡
+    void requestGetAllUserIC();
+    // 向后台请求单个人员数据
+    void requestGetUsers(int id);
+    // 实时上传记录
     void uploadopenlog(int id, int userId, const QString &photo, int isOver,int type, int isTemp, int sex, const QStringList &datas);
-    void uploadOffine(int id, int userId, const QString &photo, int isOver,int type, int isTemp, int sex, const QStringList &datas);
+
+private:
+    // 获取时区分钟
+    int getTimeZoneMin();
+    // 获取时区小时
+    int getTimeZone();
+    // 应答服务器设备端设置
+    void responseServerSetup(const QString &messageId);
+    // 处理后台服务器设置
+    void parseServerSeting(const QJsonObject &jsonObj);
+    // ic数据应答
+    void parseAllIc(const QJsonObject &jsonObj);
+    // 处理记录上传应答
+    void parseUploadData(const QJsonObject &jsonObj);
+    // 处理心跳应答
+    void pareHeartbeat(const QJsonObject &jsonObj);
+    // 处理登录应答
+    void pareLogin(const QJsonObject &jsonObj);
+    // 后台登录
+    void requestLogin();
+    // 向服务器发送数据
+    void WriteDataToServer(int msgType, QJsonObject &postObj);
+    // 连接服务器
+    void ConnectHost();
+    // int类型大小端转换
+    QByteArray intToByte(int num);
+    // byte转int
+    int bytesToInt(QByteArray bytes);
 
 private slots:
-    int getTimeZoneMin();
-    int getTimeZone();
-    void OnReadData();
-    void OnStateChanged(QAbstractSocket::SocketState state);
-    void ConnectHost();
-    void ConnectError(QAbstractSocket::SocketError state);
+    // 心跳包数据发送
+    void requestHeartbeat();
+    // 重连
     void Reconnect();
-    void WriteDataToServer(int msgType, QJsonObject &postObj);
-
-    QByteArray intToByte(int num);
-    int bytesToInt(QByteArray bytes);
+    // 接收后台数据
+    void OnReadData();
+    // 处理后台数据
     void parseData(int cmdType, QByteArray &recData);
-    bool checkPacketHead(const QByteArray &packet);
-
-    void parseRegister(const QJsonObject &rootObj);
-    void parseDoortoken(const QJsonObject &rootObj);
-    void parseHeartbeat(const QJsonObject &rootObj);
-    void parseGetUsers(const QJsonObject &rootObj);
-    void parseGetAllUserID(const QJsonObject &rootObj);
-    void parseUploadopenlog(const QJsonObject &rootObj);
-    void parseRecord(bool isPhoto, const QJsonObject &rootObj);
-    void parseInsertFail(const QJsonObject &rootObj);
-    void parseGetCmd(QByteArray msgBody);
-    void parseGetAllIC(const QJsonObject &rootObj);
-    void parseUploadAlarm(const QJsonObject &rootObj);
-
-    void responseServerSetup();
+    // 处理粘包
     void checkReadData(QByteArray readData);
+    // 网络接连状态
+    void OnStateChanged(QAbstractSocket::SocketState state);
+    // 连接错误
+    void ConnectError(QAbstractSocket::SocketError state);
 
 signals:
+    // 处理所有alluserid
     void allUserId(const QJsonArray &jsonArr);
-    void allIC(const QJsonArray &jsonArr);
-    void insertIC(const QJsonArray &jsonArr);
+    // 增量接口人脸数据
+    void newUserId(const QJsonArray &jsonArr);
+    // 处理所有ic卡数据
+    void allUserIc(const QJsonArray &jsonArr);
+    // 发送单个人员数据
     void updateUsers(const QJsonObject &jsonObj);
-    void messageReceived(QByteArray msgBody);
 
 private:
     QTcpSocket *m_tcpSocket;
@@ -108,4 +123,4 @@ private:
     int m_seq;
     ServerDataList *m_serverData;
 };
-#endif // V1TCPCLIENT_H
+#endif // TCPMIDDWARE_H

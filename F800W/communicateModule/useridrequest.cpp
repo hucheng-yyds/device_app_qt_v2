@@ -355,9 +355,9 @@ void UserIdRequest::onAlluserId(const QJsonArray &jsonArr)
             {
                 QString newTime = jsonObj["updateDate"].toString();
                 QString updateTime = sqlDatabase->sqlSelectAllUserTime(id);
-                qt_debug() << newTime << updateTime;
                 if(updateTime.compare(newTime) != 0)
                 {
+                    emit removeFaceGroup(id);
                     sqlDatabase->sqlDelete(id);
                     m_updateFace.insert(id);
                 }

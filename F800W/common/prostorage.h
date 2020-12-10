@@ -13,6 +13,7 @@
 #include "useridrequest.h"
 #include "mqttmodule.h"
 #include "serverdatadeal.h"
+#include "tcpmiddware.h"
 #include "serverdatalist.h"
 #include "ToolTcpServer.h"
 #include "idmodule.h"

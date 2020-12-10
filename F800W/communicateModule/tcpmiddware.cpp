@@ -1,12 +1,14 @@
-#include "tcpclient.h"
+#include "tcpmiddware.h"
 #include "datashare.h"
 
-TcpClient::TcpClient()
+#define TCPHEAD "OFZL"
+
+TcpMiddware::TcpMiddware()
 {
     moveToThread(this);
 }
 
-void TcpClient::run()
+void TcpMiddware::run()
 {
     m_seq = 3;
     m_msgLength = 0;
@@ -19,19 +21,19 @@ void TcpClient::run()
     m_connectTimer = new QTimer();
     m_connectTimer->setInterval(5000);
     m_connectTimer->setSingleShot(true);
-    connect(m_heartbeatTimer, &QTimer::timeout, this, &TcpClient::requestHeartbeat);
-    connect(m_connectTimer, &QTimer::timeout, this, &TcpClient::Reconnect);
-    connect(m_requestTimer, &QTimer::timeout, this, &TcpClient::Reconnect);
+    connect(m_heartbeatTimer, &QTimer::timeout, this, &TcpMiddware::requestHeartbeat);
+    connect(m_connectTimer, &QTimer::timeout, this, &TcpMiddware::Reconnect);
+    connect(m_requestTimer, &QTimer::timeout, this, &TcpMiddware::Reconnect);
     ConnectHost();
     exec();
 }
 
-void TcpClient::setPacket(ServerDataList *packet)
+void TcpMiddware::setPacket(ServerDataList *packet)
 {
     m_serverData = packet;
 }
 
-void TcpClient::ConnectHost()
+void TcpMiddware::ConnectHost()
 {
     m_tcpSocket = new QTcpSocket();
     connect(m_tcpSocket,SIGNAL(error(QAbstractSocket::SocketError)),this,SLOT(ConnectError(QAbstractSocket::SocketError)));
@@ -64,7 +66,7 @@ void TcpClient::ConnectHost()
     }
 }
 
-void TcpClient::Reconnect()
+void TcpMiddware::Reconnect()
 {
     qt_debug() << "timer reconnect !";
     if (m_tcpSocket) {
@@ -79,7 +81,7 @@ void TcpClient::Reconnect()
     ConnectHost();
 }
 
-void TcpClient::ConnectError(QAbstractSocket::SocketError state)
+void TcpMiddware::ConnectError(QAbstractSocket::SocketError state)
 {
     qt_debug()<<state;
     if(QAbstractSocket::RemoteHostClosedError == state)
@@ -88,7 +90,7 @@ void TcpClient::ConnectError(QAbstractSocket::SocketError state)
     }
 }
 
-void TcpClient::OnStateChanged(QAbstractSocket::SocketState state)
+void TcpMiddware::OnStateChanged(QAbstractSocket::SocketState state)
 {
     qt_debug()<<state;
     if(state == QAbstractSocket::UnconnectedState)
@@ -96,7 +98,7 @@ void TcpClient::OnStateChanged(QAbstractSocket::SocketState state)
     }
 }
 
-void TcpClient::parseData(int cmdType, QByteArray &recData)
+void TcpMiddware::parseData(int cmdType, QByteArray &recData)
 {
     QJsonParseError jsonError;
     QJsonDocument json = QJsonDocument::fromJson(recData, &jsonError);
@@ -106,11 +108,6 @@ void TcpClient::parseData(int cmdType, QByteArray &recData)
         if (json.isObject())
         {
             QJsonObject jsonObj = json.object();
-            if(cmdType == DEV_REGISTER_RESPONSE)
-            {
-                qDebug() << jsonObj;
-                pareRegister(jsonObj);
-            }
             if(cmdType == DEV_LOGIN_RESPONSE)
             {
                 qDebug() << jsonObj;
@@ -120,15 +117,6 @@ void TcpClient::parseData(int cmdType, QByteArray &recData)
             {
                 qDebug() << jsonObj;
                 pareHeartbeat(jsonObj);
-            }
-            if(cmdType == DEV_PERSON_RESPONSE)
-            {
-                parseGetUsers(jsonObj);
-            }
-            if(cmdType == DEV_ALL_PERSON_ID_RESPONSE)
-            {
-                qDebug() << "--------------------------------------------------------------------------------------------------------" << recData.size();
-                parseAllUserId(jsonObj);
             }
             if(cmdType == DEV_DOOR_RECORD_RESPONSE)
             {
@@ -149,7 +137,7 @@ void TcpClient::parseData(int cmdType, QByteArray &recData)
     }
 }
 
-void TcpClient::checkReadData(QByteArray readData)
+void TcpMiddware::checkReadData(QByteArray readData)
 {
     QByteArray recData;
     recData = readData;
@@ -181,7 +169,7 @@ void TcpClient::checkReadData(QByteArray readData)
     }
 }
 
-void TcpClient::OnReadData()
+void TcpMiddware::OnReadData()
 {
     QByteArray recData, datas;
     bool ok;
@@ -264,21 +252,7 @@ void TcpClient::OnReadData()
     }
 }
 
-void TcpClient::pareRegister(const QJsonObject &jsonObj)
-{
-    int messageId = jsonObj.value("messageId").toString().toInt();
-    int result = jsonObj.value("result").toInt();
-    if(2 == messageId && 200 == result)
-    {
-        if(!m_heartbeatTimer->isActive())
-        {
-            m_heartbeatTimer->start();
-        }
-        requestLogin();
-    }
-}
-
-void TcpClient::pareLogin(const QJsonObject &jsonObj)
+void TcpMiddware::pareLogin(const QJsonObject &jsonObj)
 {
     int messageId = jsonObj.value("messageId").toString().toInt();
     int result = jsonObj.value("result").toInt();
@@ -287,13 +261,9 @@ void TcpClient::pareLogin(const QJsonObject &jsonObj)
         dataShare->m_netStatus = true;
         requestGetAllUserID();
     }
-    else if(1 == messageId && 1002 == result)
-    {
-        requestRegister();
-    }
 }
 
-void TcpClient::pareHeartbeat(const QJsonObject &jsonObj)
+void TcpMiddware::pareHeartbeat(const QJsonObject &jsonObj)
 {
     if(jsonObj.contains("result"))
     {
@@ -305,54 +275,7 @@ void TcpClient::pareHeartbeat(const QJsonObject &jsonObj)
     }
 }
 
-void TcpClient::parseGetUsers(const QJsonObject &jsonObj)
-{
-    int result = jsonObj.value("result").toInt();
-    QString messageId = jsonObj.value("messageId").toString();
-    if(200 == result && jsonObj.contains("data"))
-    {
-        QJsonValue dataValue = jsonObj.value("data");
-        if(dataValue.isObject())
-        {
-            emit updateUsers(dataValue.toObject());
-        }
-    }
-}
-
-void TcpClient::parseAllUserId(const QJsonObject &jsonObj)
-{
-    int result = jsonObj.value("result").toInt();
-    int messageId = jsonObj.value("messageId").toString().toInt();
-
-    if (200 == result && 3 == messageId)
-    {
-        emit allUserId(jsonObj["data"].toArray());
-    }
-    else
-    {
-        qt_debug() << "parseAllUserId result" << result << "messageId" << messageId;
-    }
-}
-
-void TcpClient::parseUsersChange(const QJsonObject &jsonObj)
-{
-    int result = jsonObj.value("result").toInt();
-    int messageId = jsonObj.value("messageId").toString().toInt();
-    if(200 == result)
-    {
-        emit newUserId(jsonObj["updatePerson"].toArray());
-    }
-    else {
-        qt_debug() << "parseUsersChange result" << result << "messageId" << messageId;
-    }
-}
-
-void TcpClient::parseNewIc(QByteArray msgBody)
-{
-
-}
-
-void TcpClient::parseUploadData(const QJsonObject &jsonObj)
+void TcpMiddware::parseUploadData(const QJsonObject &jsonObj)
 {
     int result = jsonObj.value("result").toInt();
     int messageId = jsonObj.value("messageId").toString().toInt();
@@ -365,7 +288,7 @@ void TcpClient::parseUploadData(const QJsonObject &jsonObj)
     }
 }
 
-void TcpClient::parseAllIc(const QJsonObject &jsonObj)
+void TcpMiddware::parseAllIc(const QJsonObject &jsonObj)
 {
     int result = jsonObj.value("result").toInt();
     int messageId = jsonObj.value("messageId").toString().toInt();
@@ -378,7 +301,7 @@ void TcpClient::parseAllIc(const QJsonObject &jsonObj)
     }
 }
 
-void TcpClient::parseServerSeting(const QJsonObject &jsonObj)
+void TcpMiddware::parseServerSeting(const QJsonObject &jsonObj)
 {
     if(jsonObj.contains("cmd"))
     {
@@ -400,7 +323,7 @@ void TcpClient::parseServerSeting(const QJsonObject &jsonObj)
     }
 }
 
-void TcpClient::requestInserFail()
+void TcpMiddware::requestInserFail()
 {
     if(sqlDatabase->m_localFaceFail.size() > 0)
     {
@@ -420,37 +343,14 @@ void TcpClient::requestInserFail()
     }
 }
 
-void TcpClient::requestRegister()
+void TcpMiddware::requestLogin()
 {
     QString rec_passwd = switchCtl->m_passwd;
     QString sn = switchCtl->m_sn;
     QDateTime origin_time = QDateTime::fromString("1970-01-01 08:00:00","yyyy-MM-dd hh:mm:ss");
     QDateTime current_date_time = QDateTime::currentDateTime().addSecs(28800);
     QString timestamp = QString("%1").arg(origin_time.secsTo(current_date_time));
-    QString sign = sn + rec_passwd + timestamp + PACKET_HEAD;
-    QByteArray hash = QCryptographicHash::hash(sign.toLatin1(), QCryptographicHash::Md5);
-    QJsonObject dataObj, obj;
-    sign = hash.toHex();
-    dataObj.insert("sn", sn);
-    dataObj.insert("messageId", "2");
-    dataObj.insert("message", "registerReq");
-    obj.insert("timestamp", timestamp.toInt());
-    obj.insert("type", DEVICE_TYPE);
-    obj.insert("sign", sign);
-    obj.insert("protocolVersion", "2");
-    dataObj.insert("data", obj);
-    qt_debug() << dataObj;
-    WriteDataToServer(DEV_REGISTER_REQUEST, dataObj);
-}
-
-void TcpClient::requestLogin()
-{
-    QString rec_passwd = switchCtl->m_passwd;
-    QString sn = switchCtl->m_sn;
-    QDateTime origin_time = QDateTime::fromString("1970-01-01 08:00:00","yyyy-MM-dd hh:mm:ss");
-    QDateTime current_date_time = QDateTime::currentDateTime().addSecs(28800);
-    QString timestamp = QString("%1").arg(origin_time.secsTo(current_date_time));
-    QString sign = sn + rec_passwd + timestamp + PACKET_HEAD;
+    QString sign = sn + rec_passwd + timestamp + TCPHEAD;
     QByteArray hash = QCryptographicHash::hash(sign.toLatin1(), QCryptographicHash::Md5);
     QJsonObject dataObj, obj;
     sign = hash.toHex();
@@ -466,7 +366,7 @@ void TcpClient::requestLogin()
     WriteDataToServer(DEV_LOGIN_REQUEST, dataObj);
 }
 
-void TcpClient::requestHeartbeat()
+void TcpMiddware::requestHeartbeat()
 {
     int count = sqlDatabase->m_localFaceSet.size();
     QJsonObject dataObj, obj;
@@ -483,7 +383,7 @@ void TcpClient::requestHeartbeat()
     WriteDataToServer(DEV_HEARTBEAT_REQUEST, dataObj);
 }
 
-void TcpClient::requestGetAllUserID()
+void TcpMiddware::requestGetAllUserID()
 {
     QJsonObject dataObj;
     dataObj.insert("messageId", "3");
@@ -493,7 +393,7 @@ void TcpClient::requestGetAllUserID()
     WriteDataToServer(DEV_ALL_PERSON_ID_REQUEST,dataObj);
 }
 
-void TcpClient::requestGetUsers(int id)
+void TcpMiddware::requestGetUsers(int id)
 {
     QJsonObject dataObj, obj;
     QString oldPhotoName = sqlDatabase->sqlSelectPhotoName(id);
@@ -507,7 +407,7 @@ void TcpClient::requestGetUsers(int id)
     WriteDataToServer(DEV_PERSON_REQUEST,dataObj);
 }
 
-int TcpClient::getTimeZone()
+int TcpMiddware::getTimeZone()
 {
     int hourNum = 0;
     QString timeZoneStr = switchCtl->m_timeZone;
@@ -526,7 +426,7 @@ int TcpClient::getTimeZone()
     return hourNum;
 }
 
-int TcpClient::getTimeZoneMin()
+int TcpMiddware::getTimeZoneMin()
 {
     int minuteNum = 0;
     QString timeZoneStr = switchCtl->m_timeZone;
@@ -546,7 +446,7 @@ int TcpClient::getTimeZoneMin()
     return minuteNum;
 }
 
-void TcpClient::uploadopenlog(int id, int userId, const QString &photo, int isOver,int type, int isTemp, int sex, const QStringList &datas)
+void TcpMiddware::uploadopenlog(int id, int userId, const QString &photo, int isOver,int type, int isTemp, int sex, const QStringList &datas)
 {
     qt_debug() << "uploadopenlog" << datas;
     QJsonObject jsonObj, obj;
@@ -579,7 +479,7 @@ void TcpClient::uploadopenlog(int id, int userId, const QString &photo, int isOv
     WriteDataToServer(DEV_DOOR_RECORD_REQUEST, obj);
 }
 
-void TcpClient::responseServerSetup(const QString &messageId)
+void TcpMiddware::responseServerSetup(const QString &messageId)
 {
     QJsonObject jsonObj;
     jsonObj.insert("result", 200);
@@ -609,7 +509,7 @@ void TcpClient::responseServerSetup(const QString &messageId)
     document.setObject(jsonObj);
     data = document.toJson(QJsonDocument::Compact);
     sendData.clear();
-    sendData.append(PACKET_HEAD);
+    sendData.append(TCPHEAD);
     sendData.append(uchar(2));
     sendData.append(uchar(1));
     sendData.append(uchar(SERVER_RESPONSE_CMD));
@@ -622,7 +522,7 @@ void TcpClient::responseServerSetup(const QString &messageId)
     m_tcpSocket->flush();
 }
 
-void TcpClient::responseServer(const QString &type, const QString &messageId, const QJsonObject &jsonData)
+void TcpMiddware::responseServer(const QString &type, const QString &messageId, const QJsonObject &jsonData)
 {
     QJsonObject jsonObj;
     jsonObj.insert("result", 200);
@@ -636,7 +536,7 @@ void TcpClient::responseServer(const QString &type, const QString &messageId, co
     document.setObject(jsonObj);
     data = document.toJson(QJsonDocument::Compact);
     sendData.clear();
-    sendData.append(PACKET_HEAD);
+    sendData.append(TCPHEAD);
     sendData.append(uchar(2));
     sendData.append(uchar(1));
     sendData.append(uchar(SERVER_RESPONSE_CMD));
@@ -649,7 +549,7 @@ void TcpClient::responseServer(const QString &type, const QString &messageId, co
     m_tcpSocket->flush();
 }
 
-void TcpClient::requestGetAllUserIC()
+void TcpMiddware::requestGetAllUserIC()
 {
     QJsonObject dataObj;
     dataObj.insert("messageId", QString("%1").arg(m_seq++));
@@ -659,7 +559,7 @@ void TcpClient::requestGetAllUserIC()
     WriteDataToServer(DEV_GET_ALL_IC_REQUEST,dataObj);
 }
 
-int TcpClient::bytesToInt(QByteArray bytes)
+int TcpMiddware::bytesToInt(QByteArray bytes)
 {
     int addr = bytes[0] & 0x000000FF;
     addr |= ((bytes[1] << 8) & 0x0000FF00);
@@ -668,7 +568,7 @@ int TcpClient::bytesToInt(QByteArray bytes)
     return addr;
 }
 
-QByteArray TcpClient::intToByte(int num)
+QByteArray TcpMiddware::intToByte(int num)
 {
     QByteArray abyte0;
     abyte0.resize(4);
@@ -679,7 +579,7 @@ QByteArray TcpClient::intToByte(int num)
     return abyte0;
 }
 
-void TcpClient::WriteDataToServer(int msgType, QJsonObject &postObj)
+void TcpMiddware::WriteDataToServer(int msgType, QJsonObject &postObj)
 {
     if (msgType != DEV_LOGIN_REQUEST && !m_tcpSocket)
     {
@@ -699,7 +599,7 @@ void TcpClient::WriteDataToServer(int msgType, QJsonObject &postObj)
     document.setObject(postObj);
     data = document.toJson(QJsonDocument::Compact);
     sendData.clear();
-    sendData.append(PACKET_HEAD);
+    sendData.append(TCPHEAD);
     sendData.append(uchar(2));
     sendData.append(uchar(1));
     sendData.append(uchar(msgType));

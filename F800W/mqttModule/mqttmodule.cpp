@@ -56,7 +56,7 @@ void MqttModule::run()
     opts.will->message = "willmessage";
     opts.will->qos = 1;
     opts.will->retained = 0;
-    opts.will->topicName = "willtopic";
+    opts.will->topicName = switchCtl->m_sn.toUtf8();
     opts.will = nullptr;
     int rc = MQTTClient_create(&m_mqttClient, m_serverUrl.toUtf8(), switchCtl->m_sn.toUtf8(), MQTTCLIENT_PERSISTENCE_DEFAULT, nullptr);
     if (rc != MQTTCLIENT_SUCCESS)

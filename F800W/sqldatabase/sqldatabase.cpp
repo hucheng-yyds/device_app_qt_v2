@@ -12,7 +12,7 @@ SqlDatabase::SqlDatabase()
     else
     {
         m_database = QSqlDatabase::addDatabase("QSQLITE");
-        m_database.setDatabaseName("facedatas.db");
+        m_database.setDatabaseName("/mnt/UDISK/facedatas.db");
         if (!m_database.open())
         {
             qt_debug() << "Error: Failed to connect database." << m_database.lastError();
@@ -257,7 +257,6 @@ void SqlDatabase::sqlDelete(int id)
     {
         qt_debug() << query.lastError();
     }
-    emit removeFaceGroup(id);
     m_localFaceSet.remove(id);
     m_mutex.unlock();
 }
@@ -268,8 +267,7 @@ void SqlDatabase::sqlInsertOffline(int id, int userid, int type, int isOver, int
     QSqlQuery query(m_database);
     QString cmd = QString("insert into offline values(%1, %2, %3,'%4','%5',%6,%7,'%8','%9','%10','%11', '%12',%13,'%14','%15','%16','%17')")
             .arg(id).arg(userid).arg(type).arg(datas.at(0)).arg(datas.at(1)).arg(isOver).arg(isTemp).arg(datas.at(2)).arg(datas.at(3))
-            .arg(datas.at(4)).arg(datas.at(5)).arg(datas.at(6)).arg(sex).arg(datas.at(7)).arg(datas.at(8)).arg(datas.at(9))
-            .arg(datas.at(10));
+            .arg(datas.at(4)).arg(datas.at(5)).arg(datas.at(6)).arg(sex).arg(datas.at(7)).arg(datas.at(8)).arg(datas.at(9)).arg(datas.at(10));
     if (!query.exec(cmd))
     {
         qt_debug() << query.lastError() << datas;

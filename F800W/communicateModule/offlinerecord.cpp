@@ -34,7 +34,7 @@ void OfflineRecord::run()
                    << values.at(8).toString() << values.at(9).toString() << values.at(10).toString() << values.at(11).toString()
                       << values.at(13).toString() << values.at(14).toString() << values.at(15).toString() << values.at(16).toString();
                 int ids = values.at(0).toInt();
-                QString path = "offline/" + QString::number(ids) + ".jpg";
+                QString path = "/mnt/UDISKoffline/" + QString::number(ids) + ".jpg";
                 QFile file(path);
                 QString offlingImg = "";
                 if(file.open(QIODevice::ReadWrite))

@@ -6,7 +6,7 @@ void Log::outputMessage(QtMsgType type, const QMessageLogContext &context, const
 {
 //    QMutexLocker locker(&mutex);
     QDateTime dateTime = QDateTime::currentDateTime().addSecs(28800);
-    QString path = QDir::currentPath() + "/log/";
+    QString path = "/mnt/UDISK/log/";
     QDir dir(path);
     if (!dir.exists()) {
         qt_debug() << path << dir.mkdir(path);
@@ -45,41 +45,45 @@ Log::Log(QObject *parent) : QObject(parent)
     timer->setInterval(500);
     connect(timer,&QTimer::timeout,[=](){
         if( dataShare->m_log ==false)
-        if(Log::logList.length()!=0)
         {
-            for(int i = 0;i<Log::logList.length();i++)
+            foreach(auto item,Log::logList)
             {
-                emit sigLogMsg(Log::logList.at(i));
+                emit sigLogMsg(item);
+                logList.removeOne(item);
             }
-            Log::logList.clear();
         }
     });
-//    qInstallMessageHandler(outputMessageOnLine);
-}
+//    qInstallMessageHandler(outputMessage);
+  }
 
-void Log::onToolTcpStateChange(bool state)//true:链接上了，false:链接断开
-{
-    if(!state)//
-    {
-        qt_debug() << state;
-        timer->stop();
-        dataShare->m_log = true;
-        qInstallMessageHandler(outputMessage);
-    }
-}
+  void Log::onToolTcpStateChange(bool state)//true:链接上了，false:链接断开
+  {    qt_debug() << state;
+      if(!state)//
+      {
+//          timer->stop();
+//          dataShare->m_log = true;
+//         qInstallMessageHandler(outputMessage);
+      }
+  }
 
+  //true 输出到文件
+  void Log::onLogFun(bool on)
+  {
+      if(on)
+      {
+          dataShare->m_log = true;
+          timer->stop();
+         qInstallMessageHandler(outputMessage);
 
-void Log::onLogFun(bool on)
-{
-    if(on)
-    {
-        dataShare->m_log = true;
-        timer->stop();
-        qInstallMessageHandler(outputMessage);
-
-    }else {
-        dataShare->m_log = false;
-        timer->start();
-        qInstallMessageHandler(outputMessageOnLine);
-    }
-}
+      }else {
+          dataShare->m_log = false;
+          //立刻发送数据
+          foreach(auto item,Log::logList)
+          {
+              emit sigLogMsg(item);
+              logList.removeOne(item);
+          }
+          timer->start();
+       qInstallMessageHandler(outputMessageOnLine);
+      }
+  }

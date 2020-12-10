@@ -133,6 +133,7 @@ void FaceIdentify::run()
 
         if (RETURN_REC_SUCCESS == m_iMFaceHandle[i].recStatus) {
             dataShare->m_offlineFlag = false;
+/*不同人脸识别间隔判断*/
 //            if (identify->track_id.value(i) != trId) {
 //                timer.countdown(3);
 //            } else {
@@ -302,13 +303,13 @@ void FaceIdentify::run()
 //                    qt_debug() << "22222222222sid:" << trId;
 //                    goto exit;
 //                }
-//                emit faceResultShow(tr("未注册"), i, trId, tr("未注册"), tr("未注册"));
-//                isStranger = "1";
-//                emit faceResultShow(tr("未注册"), i, trId, tr("请联系管理员"), tr("未注册"));
-//                egPass = false;
-//                face_id = 0;
-//                hardware->playSound("shibai.wav");
-                goto  exit;
+                emit faceResultShow(tr("未注册"), i, trId, tr("未注册"), tr("未注册"));
+                isStranger = "1";
+                emit faceResultShow(tr("未注册"), i, trId, tr("请联系管理员"), tr("未注册"));
+                egPass = false;
+                face_id = 0;
+                hardware->playSound("shibai.wav");
+//                goto  exit;
             } else if (m_iMFaceHandle[i].pose > 0) {
 //                emit pose();
                 goto exit;
@@ -323,9 +324,11 @@ void FaceIdentify::run()
         }
         if (switchCtl->m_uploadImageCtl)
         {
-            cv::Mat nv21(VIDEO_HEIGHT + VIDEO_HEIGHT / 2, VIDEO_WIDTH, CV_8UC1, m_interFace->m_bgrImage);
+            memcpy(m_bgrImage, m_interFace->m_bgrImage, VIDEO_WIDTH * VIDEO_HEIGHT * 3 / 2);
+            cv::Mat nv21(VIDEO_HEIGHT + VIDEO_HEIGHT / 2, VIDEO_WIDTH, CV_8UC1, m_bgrImage);
             cv::Mat image;
-            cv::cvtColor(nv21, image, CV_YUV2BGR_NV12);
+//            cv::cvtColor(nv21, image, CV_YUV2BGR_NV12);
+            cv::cvtColor(nv21, image, CV_YUV2BGR_IYUV);
             if(image.empty())
             {
                 printf("load image error!!\n");
@@ -342,7 +345,7 @@ void FaceIdentify::run()
             snapshot = QString::fromUtf8(file.readAll().toBase64());
             file.close();
             offlineNmae = QDateTime::currentDateTime().toTime_t();
-            QString offline_path = "cp snap.jpg offline/" + QString::number(offlineNmae) + ".jpg";
+            QString offline_path = "cp snap.jpg /mnt/UDISK/offline/" + QString::number(offlineNmae) + ".jpg";
             system(offline_path.toStdString().c_str());
         }
         isOver = tempPass ? 1 : 0;

@@ -598,7 +598,7 @@ void V1TcpClient::parseRecord(bool isPhoto, const QJsonObject &rootObj)
         }
         int id = rootObj.value("messageId").toInt();
         qDebug() << "delete offline data id:" << id;
-        QString fileImg1 = "rm offline/" + QString::number(id) + ".jpg";
+        QString fileImg1 = "rm /mnt/UDISK/offline/" + QString::number(id) + ".jpg";
         system(fileImg1.toStdString().c_str());
         sqlDatabase->sqlDeleteOffline(id);
     }
@@ -632,9 +632,13 @@ void V1TcpClient::parseUploadAlarm(const QJsonObject &rootObj)
     }
 }
 
-void V1TcpClient::uploadopenlog(int id, int userId, const QString &photo, int isOver,int type, int isTemp, int sex, const QStringList &datas)
+void V1TcpClient::uploadOffine(int id, int userId, const QString &photo, int isOver,int type, int isTemp, int sex, const QStringList &datas)
 {
-    qt_debug() << "uploadopenlog" << datas;
+    qt_debug() << "uploadOffine id" << id << type;
+    if(4 == type)
+    {
+        return;
+    }
     QJsonObject jsonObj, obj;
     jsonObj.insert("sn", switchCtl->m_sn);
     jsonObj.insert("did", id);
@@ -656,6 +660,38 @@ void V1TcpClient::uploadopenlog(int id, int userId, const QString &photo, int is
     jsonObj.insert("invalidReason", datas.at(3));
     jsonObj.insert("isStranger", datas.at(4).toInt());
     WriteDataToServer(DEV_RECORD_PHOTO_REQUEST, jsonObj);
+}
+
+void V1TcpClient::uploadopenlog(int id, int userId, const QString &photo, int isOver,int type, int isTemp, int sex, const QStringList &datas)
+{
+    qt_debug() << "uploadopenlog" << datas;
+    QJsonObject jsonObj;
+    jsonObj.insert("sn", switchCtl->m_sn);
+    jsonObj.insert("messageId", id);
+    jsonObj.insert("message", "snapshotFaceReq");
+    jsonObj.insert("userId", userId);
+    jsonObj.insert("deviceId", 0);
+    jsonObj.insert("unlockType", type);
+    jsonObj.insert("photo", photo);
+    jsonObj.insert("tempTime", datas.at(0));
+    jsonObj.insert("unlockTime", datas.at(0));
+    int sec = getTimeZoneMin()*60 + getTimeZone()*3600;
+    jsonObj.insert("timeZone", switchCtl->m_timeZone);
+    jsonObj.insert("zoneUnlockTime", QString("%1").arg(QDateTime::currentDateTime().addSecs(sec).toString("yyyy-MM-dd HH:mm:ss")));
+    jsonObj.insert("temperature", datas.at(1));
+    jsonObj.insert("isOver", isOver);
+    jsonObj.insert("isTemp", isTemp);
+    jsonObj.insert("isSuccess", datas.at(2).toInt());
+    jsonObj.insert("invalidReason", datas.at(3));
+    jsonObj.insert("isStranger", datas.at(4).toInt());
+    jsonObj.insert("mjkh", datas.at(5));
+    jsonObj.insert("realName", datas.at(6));
+    jsonObj.insert("sex", sex);
+    jsonObj.insert("cardNum", datas.at(7));
+    jsonObj.insert("nation", datas.at(8));
+    jsonObj.insert("address", datas.at(9));
+    jsonObj.insert("birthday", datas.at(10));
+    WriteDataToServer(DEV_DOOR_RECORD_REQUEST, jsonObj);
 }
 
 void V1TcpClient::parseGetCmd(QByteArray msgBody)
@@ -683,10 +719,6 @@ void V1TcpClient::parseGetCmd(QByteArray msgBody)
                 if(2 == mode)
                 {
                     requestGetAllIC();
-                }
-                else if(1 == mode)
-                {
-                    emit insertIC(data["cardData"].toArray());
                 }
                 break;
             }
@@ -753,8 +785,18 @@ void V1TcpClient::parseGetAllUserID(const QJsonObject &rootObj)
 
 void V1TcpClient::parseUploadopenlog(const QJsonObject &rootObj)
 {
+    qt_debug() << rootObj;
     if(rootObj.contains("result")) {
         int result = rootObj.value("result").toInt();
-        qt_debug() << result;
+        if(200 == result)
+        {
+            if(rootObj.contains("messageId"))
+            {
+                int messageId = rootObj.value("messageId").toInt();
+                QString fileImg1 = "rm offline/" + QString::number(messageId) + ".jpg";
+                system(fileImg1.toStdString().c_str());
+                sqlDatabase->sqlDeleteOffline(messageId);
+            }
+        }
     }
 }

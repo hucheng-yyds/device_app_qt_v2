@@ -6,6 +6,11 @@ QSemaphore g_usedSpace(0);
 FaceManager::FaceManager()
 {
     m_isIdentify = false;
+    QString path = "/mnt/UDISK/offline/";
+    QDir dir(path);
+    if (!dir.exists()) {
+        qt_debug() << path << dir.mkdir(path);
+    }
 }
 
 FaceManager::~FaceManager()
@@ -62,17 +67,17 @@ void FaceManager::run()
     int m_count = 0;
     while (1) {
         Countdown timer(300);
-        m_bgrVideoFrame = NULL;
+        m_bgrVideoFrame = nullptr;
         IF_GetData(&m_bgrVideoFrame, VIDEO_WIDTH, VIDEO_HEIGHT);
-        if(m_bgrVideoFrame == NULL) {
+        if(m_bgrVideoFrame == nullptr) {
             qt_debug() << ("bgrVideoFrame error\n");
             sleep(4);
             continue;
         }
         if (switchCtl->m_ir) {
-            m_irVideoFrame = NULL;
+            m_irVideoFrame = nullptr;
             IF_GetIRData(&m_irVideoFrame, SOURCE_WIDTH, SOURCE_HEIGHT);
-            if (m_irVideoFrame == NULL) {
+            if (m_irVideoFrame == nullptr) {
                 qt_debug() << ("irVideoFrame error\n");
                 sleep(4);
                 continue;
@@ -113,9 +118,10 @@ void FaceManager::run()
         m_ptrAppData->ptrFaceIDInData->bgrImageWidth = 0;
         m_ptrAppData->ptrFaceIDInData->bgrImageHeight = 0;
         DS_SetGetAppCall(m_ptrAppData);
-    //    qt_debug() << "Get People Num " << m_ptrAppData->ptrFaceIDOutData->curFaceNum << m_ptrAppData->ptrFaceIDOutData->curStatus;
-        if (m_ptrAppData->ptrFaceIDOutData->curFaceNum > 0) {
-            sort(NULL, 0);
+//        qt_debug() << "Get People Num " << m_ptrAppData->ptrFaceIDOutData->curFaceNum << m_ptrAppData->ptrFaceIDOutData->curStatus;
+        if (m_ptrAppData->ptrFaceIDOutData->curFaceNum > 0)
+        {
+            sort(nullptr, 0);
             m_ptrAppData->ptrFaceIDOutData->curFaceNum = 1;
             for (int i = 0; i < m_ptrAppData->ptrFaceIDOutData->curFaceNum; ++i)
             {
@@ -384,7 +390,7 @@ void FaceManager::insertFaceGroups(int id, const QString &username, const QStrin
     }
     else
     {
-        if (NULL == m_ptrAppData) {
+        if (nullptr == m_ptrAppData) {
             return ;
         }
         int tmpW = image.cols;
@@ -436,7 +442,7 @@ void FaceManager::insertFaceGroups(int id, const QString &username, const QStrin
         else
         {
             tmp->regProgress = 100.0f;
-            ptrAppData->ptrFaceIDInData->ptrBGRImage = NULL;
+            ptrAppData->ptrFaceIDInData->ptrBGRImage = nullptr;
             qt_debug() << ptrAppData->ptrFaceIDOutData->faceID;
             sqlDatabase->sqlInsert(id, username, time, "", photoname, iphone);
             sqlDatabase->sqlDeleteFail(id);
