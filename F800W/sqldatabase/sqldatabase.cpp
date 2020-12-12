@@ -12,7 +12,7 @@ SqlDatabase::SqlDatabase()
     else
     {
         m_database = QSqlDatabase::addDatabase("QSQLITE");
-        m_database.setDatabaseName("/mnt/UDISK/facedatas.db");
+        m_database.setDatabaseName(dataShare->m_pathPrefix + "facedatas.db");
         if (!m_database.open())
         {
             qt_debug() << "Error: Failed to connect database." << m_database.lastError();
@@ -242,7 +242,7 @@ void SqlDatabase::sqlDeleteAll()
     qt_debug() << "clear all face";
     m_localFaceSet.clear();
     m_mutex.unlock();
-    system("rm /mnt/UDISK/regInfo/*");
+    system("rm " + dataShare->m_regInfoPath.toUtf8() + "*");
 //    system("killall F01 && reboot");
 }
 

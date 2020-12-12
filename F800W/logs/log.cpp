@@ -1,12 +1,12 @@
 #include "log.h"
-#include "datashare.h"
+
 QStringList Log::logList;
 
 void Log::outputMessage(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
 //    QMutexLocker locker(&mutex);
     QDateTime dateTime = QDateTime::currentDateTime().addSecs(28800);
-    QString path = "/mnt/UDISK/log/";
+    QString path = dataShare->m_pathPrefix + "log/";
     QDir dir(path);
     if (!dir.exists()) {
         qt_debug() << path << dir.mkdir(path);

@@ -49,9 +49,6 @@ signals:
 
 private:
     FaceInterface *m_interFace;
-    unsigned char *m_irImage;
-    unsigned char *m_bgrImage;
-//    QVector<DS_FaceInfo> m_iMFaceHandle;
     bool m_tempFlag;
     QString m_tempVal;
     QString m_faceInfo;

@@ -15,6 +15,12 @@ public:
         }
         return m_Instance;
     }
+    // 储存目录前缀
+    const QString m_pathPrefix = "/mnt/UDISK/";
+    // 离线图片目录
+    const QString m_offlinePath = m_pathPrefix + "offline/";
+    // 人脸注册目录
+    const QString m_regInfoPath = m_pathPrefix + "regInfo/";
     // 获取读卡状态
     bool getReadingStatus();
     // 设置读卡状态

@@ -598,7 +598,7 @@ void V1TcpClient::parseRecord(bool isPhoto, const QJsonObject &rootObj)
         }
         int id = rootObj.value("messageId").toInt();
         qDebug() << "delete offline data id:" << id;
-        QString fileImg1 = "rm /mnt/UDISK/offline/" + QString::number(id) + ".jpg";
+        QString fileImg1 = "rm " + dataShare->m_offlinePath + QString::number(id) + ".jpg";
         system(fileImg1.toStdString().c_str());
         sqlDatabase->sqlDeleteOffline(id);
     }

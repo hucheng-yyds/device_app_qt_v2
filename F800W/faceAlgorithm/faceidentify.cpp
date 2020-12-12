@@ -10,8 +10,6 @@ FaceIdentify::FaceIdentify()
     m_cardWork = false;
     m_tempVal = "0";
     m_tempResult = 0;
-    m_irImage = new unsigned char[VIDEO_WIDTH*VIDEO_HEIGHT* 3 / 2];
-    m_bgrImage = new unsigned char[VIDEO_WIDTH*VIDEO_HEIGHT* 3 / 2];
 }
 
 //bool FaceIdentify::idCardFaceComparison(char *feature_result)
@@ -100,7 +98,7 @@ void FaceIdentify::run()
         g_usedSpace.acquire();
         int i = 0;
         QVector<DS_FaceInfo> &m_iMFaceHandle = m_interFace->m_faceHandle;
-        int trId = m_iMFaceHandle[i].trackID/*[0] + m_iMFaceHandle[i].trackID[1]*/;
+        int trId = m_iMFaceHandle[i].trackID;
         bool ir = switchCtl->m_ir;
         bool faceDoor = switchCtl->m_faceDoorCtl;
         bool tempCtl = switchCtl->m_tempCtl;
@@ -133,7 +131,7 @@ void FaceIdentify::run()
 
         if (RETURN_REC_SUCCESS == m_iMFaceHandle[i].recStatus) {
             dataShare->m_offlineFlag = false;
-/*不同人脸识别间隔判断*/
+            /*不同人脸识别间隔判断*/
 //            if (identify->track_id.value(i) != trId) {
 //                timer.countdown(3);
 //            } else {
@@ -144,12 +142,6 @@ void FaceIdentify::run()
 //                    goto exit;
 //                }
 //            }
-//            QByteArray faceByte = QByteArray((const char*)m_iMFaceHandle[i].ID, 16);
-//            int id = m_iMFaceHandle[i].ID;
-//            qt_debug() << "m_iMFaceHandle[i].ID:" << m_iMFaceHandle[i].ID << face_id;
-//            QVariantList varlist = sqlDatabase->sqlSelect((uint64_t)m_iMFaceHandle[i].ID);
-//            QString name = varlist.value(1).toString();
-//            qt_debug() << name;
             judgeDate();
             QStringList value = dealOpencondition(face_id);
             QString name = value.at(0);
@@ -292,11 +284,9 @@ void FaceIdentify::run()
 //                }
             }
         } else if (RETURN_RECOGING == m_iMFaceHandle[i].recStatus) {
-            if (/*m_iMFaceHandle[i].recScoreVal > 0 &&
-                    */m_iMFaceHandle[i].recScoreVal < 0.75 &&
+            if (m_iMFaceHandle[i].recScoreVal < 0.75 &&
                     m_iMFaceHandle[i].pose == 0 /*&&
-                    identify->track_id.value(i) == trId &&
-                    identify->c_timer->expired()*/) {
+                    identify->track_id.value(i) == trId*/) {
 //                if (timer.expired()) {
 //                    timer.countdown(3);
 //                } else {
@@ -324,11 +314,9 @@ void FaceIdentify::run()
         }
         if (switchCtl->m_uploadImageCtl)
         {
-            memcpy(m_bgrImage, m_interFace->m_bgrImage, VIDEO_WIDTH * VIDEO_HEIGHT * 3 / 2);
-            cv::Mat nv21(VIDEO_HEIGHT + VIDEO_HEIGHT / 2, VIDEO_WIDTH, CV_8UC1, m_bgrImage);
+            cv::Mat nv21(VIDEO_HEIGHT + VIDEO_HEIGHT / 2, VIDEO_WIDTH, CV_8UC1, m_interFace->m_bgrImage);
             cv::Mat image;
-//            cv::cvtColor(nv21, image, CV_YUV2BGR_NV12);
-            cv::cvtColor(nv21, image, CV_YUV2BGR_IYUV);
+            cv::cvtColor(nv21, image, CV_YUV2BGR_NV12);
             if(image.empty())
             {
                 printf("load image error!!\n");
@@ -345,7 +333,7 @@ void FaceIdentify::run()
             snapshot = QString::fromUtf8(file.readAll().toBase64());
             file.close();
             offlineNmae = QDateTime::currentDateTime().toTime_t();
-            QString offline_path = "cp snap.jpg /mnt/UDISK/offline/" + QString::number(offlineNmae) + ".jpg";
+            QString offline_path = "cp snap.jpg " + dataShare->m_offlinePath + QString::number(offlineNmae) + ".jpg";
             system(offline_path.toStdString().c_str());
         }
         isOver = tempPass ? 1 : 0;

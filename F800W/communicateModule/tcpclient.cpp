@@ -359,7 +359,7 @@ void TcpClient::parseUploadData(const QJsonObject &jsonObj)
     qt_debug() << "parseUploadData" << result << messageId;
     if(200 == result)
     {
-        QString fileImg1 = "rm /mnt/UDISK/offline/" + QString::number(messageId) + ".jpg";
+        QString fileImg1 = "rm " + dataShare->m_offlinePath + QString::number(messageId) + ".jpg";
         system(fileImg1.toStdString().c_str());
         sqlDatabase->sqlDeleteOffline(messageId);
     }
