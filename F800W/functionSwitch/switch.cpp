@@ -205,7 +205,7 @@ void SwitchCtl::setSwitchDefault()
     m_tcpAddr = "";
     m_tcpPort = 8777;
     m_httpAddr = "http://120.79.147.36:8086/starr-web";
-    m_tcpTimeout = 3;
+    m_tcpTimeout = 8;
     m_ntpAddr = "120.25.108.11";
     m_passwd = "";
 

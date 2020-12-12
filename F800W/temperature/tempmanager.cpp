@@ -31,6 +31,11 @@ void TempManager::run()
     exec();
 }
 
+void TempManager::stopTimer()
+{
+    m_timer->stop();
+}
+
 static void hexdump(const char *notice, void *buffer, int len)
 {
     int i=0;

@@ -72,7 +72,7 @@ void UserIdRequest::run()
                 else {
 
                 }
-                sleep(1);
+                sleep(2);
                 updateIdentifyValue();
                 dataShare->m_sync = false;
                 m_startFaceDownload = false;
@@ -248,11 +248,16 @@ void UserIdRequest::tcpUpdateUsers(const QJsonObject &jsonObj)
             photoName = value.at(4).toString();
         }
     }
-    QFile file(QString::number(id) + ".jpg");
-    file.open(QIODevice::ReadWrite);
-    file.write(QByteArray::fromBase64(photo.toUtf8()));
-    file.close();
-    if(value.size() > 0)
+    if(!photo.isEmpty())
+    {
+        sqlDatabase->sqlDelete(id);
+        QFile file(QString::number(id) + ".jpg");
+        file.open(QIODevice::ReadWrite);
+        file.write(QByteArray::fromBase64(photo.toUtf8()));
+        file.close();
+    }
+
+    if(value.size() > 0 && photo.isEmpty())
     {
         sqlDatabase->sqlUpdate(id, name, edittime, photoName, mobile);
     }
@@ -354,7 +359,7 @@ void UserIdRequest::onUpdateUsers(const QJsonObject &jsonObj)
     }
     else
     {
-        if(1 == switchCtl->m_protocol)
+        if(1 == switchCtl->m_protocol || 4 == switchCtl->m_protocol)
         {
             tcpUpdateUsers(jsonObj);
         }

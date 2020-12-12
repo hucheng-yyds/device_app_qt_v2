@@ -91,7 +91,6 @@ void ProStorage::init()
 
     MqttModule *mqttClient = new MqttModule;
     UserIdRequest *userRequest = new UserIdRequest;
-    netManager->start();
     ServerDataList *serverList = new ServerDataList;
     mqttClient->setPacket(serverList);
     bool status = face->init();
@@ -102,19 +101,23 @@ void ProStorage::init()
     }
     float tempFlag = tempManager->onIsTemp();
     qt_debug() << "temp modle result:" << tempFlag;
+    dataShare->m_tempModule = true;
     if(0 == tempFlag)
     {
+        dataShare->m_tempModule = false;
         switchCtl->m_tempCtl = false;
         switchCtl->m_openMode = "Face";
         switchCtl->saveSwitchParam();
     }
+    netManager->start();
     userRequest->start();
     OfflineRecord *offlineRecord = new OfflineRecord;
     ServerDataDeal *dataDeal = new ServerDataDeal;
     dataDeal->setPacket(serverList);
+    RcodeModule *rcode = nullptr;
     if(switchCtl->m_rcode > 0)
     {
-        RcodeModule *rcode = new RcodeModule;
+        rcode = new RcodeModule;
         connect(face, &FaceManager::rcodeResult, rcode, &RcodeModule::recvRcodeResult);
         connect(rcode, &RcodeModule::rcodeResultShow, this, &ProStorage::icResultShow);
         rcode->start();
@@ -137,6 +140,10 @@ void ProStorage::init()
         connect(dataDeal, &ServerDataDeal::responseServer, tcpClient, &TcpClient::responseServer);
         connect(dataDeal, &ServerDataDeal::uploadopenlog, tcpClient, &TcpClient::uploadopenlog);
         connect(userRequest, &UserIdRequest::allUserIc, tcpClient, &TcpClient::requestGetAllUserIC);
+        if(rcode)
+        {
+            connect(rcode, &RcodeModule::uploadopenlog, tcpClient, &TcpClient::uploadopenlog);
+        }
         tcpClient->start();
     }
     else if(2 == switchCtl->m_protocol)
@@ -148,6 +155,10 @@ void ProStorage::init()
         connect(offlineRecord, &OfflineRecord::uploadopenlog, tcpMiddware, &TcpMiddware::uploadopenlog);
         connect(dataDeal, &ServerDataDeal::responseServer, tcpMiddware, &TcpMiddware::responseServer);
         connect(dataDeal, &ServerDataDeal::uploadopenlog, tcpMiddware, &TcpMiddware::uploadopenlog);
+        if(rcode)
+        {
+            connect(rcode, &RcodeModule::uploadopenlog, tcpMiddware, &TcpMiddware::uploadopenlog);
+        }
         tcpMiddware->start();
     }
     else if(3 == switchCtl->m_protocol)
@@ -159,6 +170,10 @@ void ProStorage::init()
         connect(userRequest, &UserIdRequest::getUsers, httpClient, &HttpsClient::HttpsGetUsers);
         connect(httpClient, &HttpsClient::updateUsers, userRequest, &UserIdRequest::onUpdateUsers);
         connect(userRequest, &UserIdRequest::insertFaceGroups, face, &FaceManager::insertFaceGroups);
+        if(rcode)
+        {
+            connect(rcode, &RcodeModule::uploadopenlog, httpClient, &HttpsClient::httpsUploadopenlog);
+        }
         httpClient->start();
     }
     else if(4 == switchCtl->m_protocol)
@@ -180,6 +195,10 @@ void ProStorage::init()
         connect(dataDeal, &ServerDataDeal::responseServer, tcpClient, &V1TcpClient::responseServer);
         connect(dataDeal, &ServerDataDeal::uploadopenlog, tcpClient, &V1TcpClient::uploadopenlog);
         connect(userRequest, &UserIdRequest::allUserIc, tcpClient, &V1TcpClient::requestGetAllIC);
+        if(rcode)
+        {
+            connect(rcode, &RcodeModule::uploadopenlog, tcpClient, &V1TcpClient::uploadopenlog);
+        }
         tcpClient->start();
         dataDeal->start();
     }

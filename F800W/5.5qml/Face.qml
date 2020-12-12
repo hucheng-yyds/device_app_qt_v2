@@ -38,29 +38,29 @@ Item {
 
     Image {
         id: netStatus
-        x: 739
-        y: 11
+        x: 673
+        y: 13
         source: "image/eth0_nosig.png";
     }
 
     Image {
         id: network
-        x: 690
-        y: 11
+        x: 623
+        y: 14
         source: "";
     }
 
     Image {
         id: image_version
         x: 14
-        y: 13
+        y: 16
         source: "image/public_version.png"
     }
 
     Text {
         id: version;
         x: 53
-        y: 17
+        y: 13
         font {
             pixelSize: 28;
             family: "multi-language"
@@ -98,7 +98,7 @@ Item {
     Text {
         id: textName
         x: 184
-        y: 930
+        y: 912
         text: qsTr("")
         font {
             pixelSize: 58
@@ -109,18 +109,10 @@ Item {
     }
     Image {
         id: iconFace
-        x: 102
-        y: 932
-        visible: textNameBg.visible
-        source: "image/icon_face.png"
-    }
-
-    Image {
-        id: iconFaceBorder
         x: 78
         y: 912
-        visible: iconFace.visible
-        source: "image/icon_faceBorder.png"
+        visible: textNameBg.visible
+        source: "image/facehead.png"
     }
 
     Rectangle {
@@ -190,13 +182,13 @@ Item {
     Image {
         id: image_ip
         x: 140
-        y: 1245
+        y: 1243
         source: "image/public_ip.png"
     }
 
     Text {
         id: ip;
-        x: 200
+        x: 186
         anchors.verticalCenter: image_ip.verticalCenter
         font {
             pixelSize: 24;

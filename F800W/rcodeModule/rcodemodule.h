@@ -15,7 +15,8 @@ public slots:
     void recvRcodeResult(const QByteArray &results);
 
 signals:
-    // 二维码结果 ui显示
+    // 实时上传记录
+    void uploadopenlog(int id, int userId, const QString &photo, int isOver,int type, int isTemp, int sex, const QStringList &datas);
     // ic状态显示
     void rcodeResultShow(int result, const QString &cardNo, const QString &showInfo);
 

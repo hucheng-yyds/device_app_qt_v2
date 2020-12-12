@@ -19,6 +19,7 @@ class TempManager : public QThread
     Q_OBJECT
 public:
     explicit TempManager();
+    void stopTimer();
     void setTempCallBack(TempCallBack *pointer){m_tempCallBack=pointer;}
 
 protected:

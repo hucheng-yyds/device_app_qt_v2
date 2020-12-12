@@ -477,7 +477,10 @@ void ToolTcpServer::setParameters(QJsonObject & data,QString msgType,QString cmd
     }
     if(data.contains(key_tempCtl))
     {
-        switchCtl->m_tempCtl = data.value(key_tempCtl).toBool();
+        if(dataShare->m_tempModule)
+        {
+            switchCtl->m_tempCtl = data.value(key_tempCtl).toBool();
+        }
     }
     if(data.contains(key_loose))
     {

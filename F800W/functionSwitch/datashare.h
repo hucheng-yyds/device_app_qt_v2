@@ -45,6 +45,8 @@ public:
     QString m_ipAddr;
     //当前日志模块的输出方向，true:输出到文件,false:输出到配置工具
     bool m_log;
+    // 带测温 不带测温标志 true带测温 false 不带测温
+    bool m_tempModule;
 
     //测温模块的信息
     int         m_offset;

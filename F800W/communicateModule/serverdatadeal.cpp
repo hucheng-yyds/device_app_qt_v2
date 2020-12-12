@@ -89,7 +89,7 @@ void ServerDataDeal::saveSetting(const QJsonObject &jsonData)
 {
     qt_debug() << jsonData;
     if (jsonData.contains("isTemp")) {
-        if(jsonData["isTemp"].toInt())
+        if(jsonData["isTemp"].toInt() && dataShare->m_tempModule)
         {
             switchCtl->m_tempCtl = true;
         }
@@ -124,11 +124,11 @@ void ServerDataDeal::saveSetting(const QJsonObject &jsonData)
         {
             switchCtl->m_openMode = "Face";
         }
-        else if(2 == type)
+        else if(2 == type && dataShare->m_tempModule)
         {
             switchCtl->m_openMode = "Temp";
         }
-        else if(3 == type)
+        else if(3 == type && dataShare->m_tempModule)
         {
             switchCtl->m_openMode = "FaceTemp";
         }
@@ -283,7 +283,7 @@ void ServerDataDeal::saveSetting(const QJsonObject &jsonData)
     if(jsonData.contains("usernameMasking"))
     {
         int nameShow = jsonData.value("icCardShow").toInt();
-        switchCtl->m_nameMask = nameShow > 0 ? true : false;
+        switchCtl->m_nameMask = nameShow;
     }
     if(jsonData.contains("icCardShow"))
     {

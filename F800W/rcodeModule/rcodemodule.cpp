@@ -155,6 +155,9 @@ RcodeModule::RcodeModule()
 
 void RcodeModule::run()
 {
+    int userId = 0;
+    QString isSuccess = "0";
+    QString isStranger = "0";
     QByteArray rcodeDatas;
     rcodeDatas.clear();
     while(true)
@@ -186,7 +189,7 @@ void RcodeModule::run()
             qDebug() << contentList;
             bool ok;
             QDateTime origin_time = QDateTime::fromString("1970-01-01 08:00:00","yyyy-MM-dd hh:mm:ss");
-            QDateTime current_time = QDateTime::currentDateTime();//显示时间，格式为：年-月-日 时：分：秒 周几
+            QDateTime current_time = QDateTime::currentDateTime().addSecs(28800);//显示时间，格式为：年-月-日 时：分：秒 周几
             qint64 nowTime = origin_time.secsTo(current_time);
             int starTime = contentList.mid(3, 4).join().toInt(&ok, 16);
             int endTime = contentList.mid(7, 4).join().toInt(&ok, 16) * 60 + starTime;
@@ -205,13 +208,17 @@ void RcodeModule::run()
                             int code = HttpsClient::httpsQRCode(QString(datas));
                             if (0 == code)
                             {
-                                emit rcodeResultShow(1, tr("认证通过"), tr("您好"));
+                                isStranger = "0";
+                                isSuccess = "1";
+                                emit rcodeResultShow(1, tr("您好"), tr("您好"));
                                 hardware->playSound(tr("认证通过").toUtf8(), "chengong.aac");
                                 hardware->ctlLed(GREEN);
                                 hardware->checkOpenDoor();
                             }
                             else
                             {
+                                isStranger = "1";
+                                isSuccess = "0";
                                 emit rcodeResultShow(1, tr("未注册"), tr("请联系管理员"));
                                 hardware->playSound(tr("未注册").toUtf8(), "shibai.aac");
                                 hardware->ctlLed(RED);
@@ -221,15 +228,19 @@ void RcodeModule::run()
                         {
                             int iphone = contentList.mid(12, 4).join().toInt(&ok, 16);
                             qt_debug() << iphone;
-                            int userId = sqlDatabase->sqlSelectMobile(QString("%1").arg(iphone));
+                            userId = sqlDatabase->sqlSelectMobile(QString("%1").arg(iphone));
                             if(userId > 1)
                             {
-                                emit rcodeResultShow(1, tr("认证通过"), tr("您好"));
+                                isStranger = "0";
+                                isSuccess = "1";
+                                emit rcodeResultShow(1, tr("您好"), tr("您好"));
                                 hardware->playSound(tr("认证通过").toUtf8(), "chengong.aac");
                                 hardware->ctlLed(GREEN);
                                 hardware->checkOpenDoor();
                             }
                             else {
+                                isStranger = "1";
+                                isSuccess = "0";
                                 emit rcodeResultShow(1, tr("未注册"), tr("请联系管理员"));
                                 hardware->playSound(tr("未注册").toUtf8(), "shibai.aac");
                                 hardware->ctlLed(RED);
@@ -237,10 +248,19 @@ void RcodeModule::run()
                         }
                     }
                     else {
+                        isStranger = "0";
+                        isSuccess = "0";
                         emit rcodeResultShow(1, tr("已过期"), tr("已过期"));
                         hardware->playSound(tr("未授权").toUtf8(), "authority.aac");
                         hardware->ctlLed(RED);
                     }
+                    QStringList datas;
+                    datas.clear();
+                    int offlineNmae = QDateTime::currentDateTime().toTime_t();
+                    datas << QDateTime::currentDateTime().addSecs(28800).toString("yyyy-MM-dd HH:mm:ss") << "" << isSuccess << "" << isStranger
+                          << "" << "" << "" << "" << "" << "";
+                    emit uploadopenlog(offlineNmae, userId, "", 0, 6, 1, 0, datas);
+                    sqlDatabase->sqlInsertOffline(offlineNmae, userId, 6, 0, 0, 0, datas);
                 }
                 else {
                     emit rcodeResultShow(1, tr("无效二维码"), tr("无效二维码"));
@@ -254,26 +274,39 @@ void RcodeModule::run()
                 {
                     if(nowTime < endTime && nowTime > starTime)
                     {
-                        int userId = contentList.mid(12, 4).join().toInt(&ok, 16);
+                        userId = contentList.mid(12, 4).join().toInt(&ok, 16);
                         QVariantList users = sqlDatabase->sqlSelect(userId);
                         if(users.size() > 0)
                         {
-                            emit rcodeResultShow(1, tr("认证通过"), tr("您好"));
+                            isStranger = "0";
+                            isSuccess = "1";
+                            emit rcodeResultShow(1, tr("您好"), tr("您好"));
                             hardware->playSound(tr("认证通过").toUtf8(), "chengong.aac");
                             hardware->ctlLed(GREEN);
                             hardware->checkOpenDoor();
                         }
                         else {
+                            isStranger = "1";
+                            isSuccess = "0";
                             emit rcodeResultShow(1, tr("未注册"), tr("请联系管理员"));
                             hardware->playSound(tr("未注册").toUtf8(), "shibai.aac");
                             hardware->ctlLed(RED);
                         }
                     }
                     else {
+                        isStranger = "0";
+                        isSuccess = "0";
                         emit rcodeResultShow(1, tr("已过期"), tr("已过期"));
                         hardware->playSound(tr("未授权").toUtf8(), "authority.aac");
                         hardware->ctlLed(RED);
                     }
+                    QStringList datas;
+                    datas.clear();
+                    int offlineNmae = QDateTime::currentDateTime().toTime_t();
+                    datas << QDateTime::currentDateTime().addSecs(28800).toString("yyyy-MM-dd HH:mm:ss") << "" << isSuccess << "" << isStranger
+                          << "" << "" << "" << "" << "" << "";
+                    emit uploadopenlog(offlineNmae, userId, "", 0, 6, 1, 0, datas);
+                    sqlDatabase->sqlInsertOffline(offlineNmae, userId, 6, 0, 0, 0, datas);
                 }
                 else
                 {
@@ -300,6 +333,9 @@ void RcodeModule::recvRcodeResult(const QByteArray &results)
 {
     if(expired())
     {
+        int userId = 0;
+        QString isSuccess = "0";
+        QString isStranger = "0";
         m_rcodeDatas = results;
         QByteArrayList contentList = m_rcodeDatas.split(',');
         bool ok;
@@ -318,26 +354,39 @@ void RcodeModule::recvRcodeResult(const QByteArray &results)
             {
                 if(nowTime < endTime && nowTime > starTime)
                 {
-                    int userId = contentList.mid(12, 4).join().toInt(&ok, 16);
+                    userId = contentList.mid(12, 4).join().toInt(&ok, 16);
                     QVariantList users = sqlDatabase->sqlSelect(userId);
                     if(users.size() > 0)
                     {
-                        emit rcodeResultShow(1, tr("认证通过"), tr("您好"));
+                        isStranger = "0";
+                        isSuccess = "1";
+                        emit rcodeResultShow(1, tr("您好"), tr("您好"));
                         hardware->playSound(tr("认证通过").toUtf8(), "chengong.aac");
                         hardware->ctlLed(GREEN);
                         hardware->checkOpenDoor();
                     }
                     else {
-                        emit rcodeResultShow(1, tr("未授权"), tr("未授权"));
-                        hardware->playSound(tr("未授权").toUtf8(), "authority.aac");
+                        isStranger = "1";
+                        isSuccess = "0";
+                        emit rcodeResultShow(1, tr("未注册"), tr("未注册"));
+                        hardware->playSound(tr("未注册").toUtf8(), "authority.aac");
                         hardware->ctlLed(RED);
                     }
                 }
                 else {
+                    isStranger = "0";
+                    isSuccess = "0";
                     emit rcodeResultShow(1, tr("已过期"), tr("已过期"));
                     hardware->playSound(tr("未授权").toUtf8(), "authority.aac");
                     hardware->ctlLed(RED);
                 }
+                QStringList datas;
+                datas.clear();
+                int offlineNmae = QDateTime::currentDateTime().toTime_t();
+                datas << QDateTime::currentDateTime().addSecs(28800).toString("yyyy-MM-dd HH:mm:ss") << "" << isSuccess << "" << isStranger
+                      << "" << "" << "" << "" << "" << "";
+                emit uploadopenlog(offlineNmae, userId, "", 0, 6, 1, 0, datas);
+                sqlDatabase->sqlInsertOffline(offlineNmae, userId, 6, 0, 0, 0, datas);
             }
             else
             {

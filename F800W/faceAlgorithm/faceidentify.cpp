@@ -130,12 +130,7 @@ void FaceIdentify::run()
         QString uplaodTemp = "";
         int bgrLength = m_interFace->m_count, irLength;
         memcpy(m_bgrImage, m_interFace->m_bgrImage, VIDEO_WIDTH * VIDEO_HEIGHT * 3 / 2);
-        memcpy(m_irImage, m_interFace->m_irImage, VIDEO_WIDTH * VIDEO_HEIGHT * 3 / 2);
-        m_interFace->m_mutex.lock();
-        detect((const char *)m_irImage, VIDEO_WIDTH, VIDEO_HEIGHT, NV21, 0.75, 67, &irHandle, &irLength);
-        m_interFace->m_mutex.unlock();
-        QVector<int> matchPair(bgrLength, irLength);
-        BGR_IR_match(bgrHandle, bgrLength, irHandle, irLength, matchPair.data());
+
         if (faceDoor && !m_cardWork)
         {
             if(dataShare->getReadingStatus() && dataShare->m_idCardFlag)
@@ -144,162 +139,171 @@ void FaceIdentify::run()
             }
             judgeDate();
             int i = 0;
-            if (matchPair[m_interFace->m_faceHandle[i].index] == irLength && ir)
+            if(ir)
             {
-                qDebug("[FACEPASS_DV300_TEST]  This bgrIndex=%d face handle is attack, can not pass the ir filter process!!", i);
-                m_interFace->m_iStop = true;
-                goto endIdentify;
-            }
-            else
-            {
-                m_interFace->m_quality = true;
-                getPoseBlurAttribute(bgrHandle[m_interFace->m_faceHandle[i].index], &pose_blur);
-                if (qAbs(pose_blur.blur) > 0.8)
+                memcpy(m_irImage, m_interFace->m_irImage, VIDEO_WIDTH * VIDEO_HEIGHT * 3 / 2);
+                m_interFace->m_mutex.lock();
+                detect((const char *)m_irImage, VIDEO_WIDTH, VIDEO_HEIGHT, NV21, 0.75, 67, &irHandle, &irLength);
+                m_interFace->m_mutex.unlock();
+                QVector<int> matchPair(bgrLength, irLength);
+                BGR_IR_match(bgrHandle, bgrLength, irHandle, irLength, matchPair.data());
+                if (ir && matchPair[m_interFace->m_faceHandle[i].index] == irLength)
                 {
-//                    emit blur();
-                    m_interFace->m_quality = false;
+                    qDebug("[FACEPASS_DV300_TEST]  This bgrIndex=%d face handle is attack, can not pass the ir filter process!!", i);
+                    m_interFace->m_iStop = true;
+                    goto endIdentify;
                 }
-                if (qAbs(pose_blur.pitch) >= 45 || qAbs(pose_blur.roll) >= 45 || qAbs(pose_blur.yaw) >= 45)
+                else
                 {
-//                    emit pose();
-                    m_interFace->m_quality = false;
-                }
-                if (ir && m_interFace->m_quality)
-                {
-                    float liveness_result = 0.0;
-                    getLiveness_bgrir(bgrHandle[m_interFace->m_faceHandle[i].index], irHandle[matchPair[m_interFace->m_faceHandle[i].index]],&liveness_result);
-                    if (liveness_result < 0.8)
+                    if (ir && m_interFace->m_quality)
                     {
-                        m_interFace->m_iStop = true;
+                        float liveness_result = 0.0;
+                        getLiveness_bgrir(bgrHandle[m_interFace->m_faceHandle[i].index], irHandle[matchPair[m_interFace->m_faceHandle[i].index]],&liveness_result);
+                        if (liveness_result < 0.8)
+                        {
+                            m_interFace->m_iStop = true;
+                        }
                     }
                 }
-                if (!m_interFace->m_iStop && m_interFace->m_quality)
+            }
+            m_interFace->m_quality = true;
+            getPoseBlurAttribute(bgrHandle[m_interFace->m_faceHandle[i].index], &pose_blur);
+            if (qAbs(pose_blur.blur) > 0.8)
+            {
+//                    emit blur();
+                m_interFace->m_quality = false;
+            }
+            if (qAbs(pose_blur.pitch) >= 45 || qAbs(pose_blur.roll) >= 45 || qAbs(pose_blur.yaw) >= 45)
+            {
+//                    emit pose();
+                m_interFace->m_quality = false;
+            }
+            if (!m_interFace->m_iStop && m_interFace->m_quality)
+            {
+                if (mask)
                 {
-                    if (mask)
+                    getFaceAttrResult(bgrHandle[m_interFace->m_faceHandle[0].index],  &face_attr);
+                    qt_debug() << "mask" <<  face_attr.respirator[0] << face_attr.respirator[1] << face_attr.respirator[2];
+                    if (face_attr.respirator[0] > 0.8)
                     {
-                        getFaceAttrResult(bgrHandle[m_interFace->m_faceHandle[0].index],  &face_attr);
-                        qt_debug() << "mask" <<  face_attr.respirator[0] << face_attr.respirator[1] << face_attr.respirator[2];
-                        if (face_attr.respirator[0] > 0.8)
+                        emit maskHelmet(0);
+                        hardware->playSound(tr("请戴口罩").toUtf8(), "dkouzhao.aac");
+                        if (2 == mask)
                         {
-                            emit maskHelmet(0);
-                            hardware->playSound(tr("请戴口罩").toUtf8(), "dkouzhao.aac");
-                            if (2 == mask)
-                            {
-                                sleep(2);
-                                goto endIdentify;
-                            }
-                            msleep(500);
+                            sleep(2);
+                            goto endIdentify;
+                        }
+                        msleep(500);
+                    }
+                    else {
+
+                    }
+                }
+                if (helmet)
+                {
+                    getFaceAttrResult(bgrHandle[m_interFace->m_faceHandle[0].index],  &face_attr);
+                    qt_debug() << "helmet" <<  face_attr.hat[0] << face_attr.hat[1] << face_attr.hat[2] << face_attr.hat[3] << face_attr.hat[4] << face_attr.hat[5] << face_attr.hat[6] << face_attr.hat[7] << face_attr.hat[8];
+                    if (face_attr.hat[0] > 0.8 || face_attr.hat[1] < 0.2)
+                    {
+                        emit maskHelmet(1);
+                        hardware->playSound(tr("请戴安全帽").toUtf8(), "helmet.aac");
+                        if (2 == helmet)
+                        {
+                            sleep(2);
+                            goto endIdentify;
+                        }
+                        msleep(500);
+                    }
+                }
+                float result = 0.0;
+                int size = 0;
+                m_interFace->m_mutex.lock();
+                extract(bgrHandle[m_interFace->m_faceHandle[i].index], &feature_result, &size);
+                identifyFromFaceGroup(sqlDatabase->m_groupHandle, feature_result, size, &result, &face_id);
+                m_interFace->m_mutex.unlock();
+                if ((result > dataShare->m_faceThreshold) && (face_id > 0))
+                {
+                    QStringList value = dealOpencondition(face_id);
+                    QString name = value.at(0);
+                    QString remark = value.at(1);
+                    if(name.isEmpty())
+                    {
+                        authority = true;
+                        emit faceResultShow(name, i, m_interFace->m_faceHandle[i].track_id, tr("未授权"), tr("未授权"));
+                        if(remark.isEmpty())
+                        {
+                            hardware->playSound(tr("未授权").toUtf8(), "authority.aac");
                         }
                         else {
-
-                        }
-                    }
-                    if (helmet)
-                    {
-                        getFaceAttrResult(bgrHandle[m_interFace->m_faceHandle[0].index],  &face_attr);
-                        qt_debug() << "helmet" <<  face_attr.hat[0] << face_attr.hat[1] << face_attr.hat[2] << face_attr.hat[3] << face_attr.hat[4] << face_attr.hat[5] << face_attr.hat[6] << face_attr.hat[7] << face_attr.hat[8];
-                        if (face_attr.hat[0] > 0.8 || face_attr.hat[1] < 0.2)
-                        {
-                            emit maskHelmet(1);
-                            hardware->playSound(tr("请戴安全帽").toUtf8(), "helmet.aac");
-                            if (2 == helmet)
-                            {
-                                sleep(2);
-                                goto endIdentify;
-                            }
-                            msleep(500);
-                        }
-                    }
-                    float result = 0.0;
-                    int size = 0;
-                    m_interFace->m_mutex.lock();
-                    extract(bgrHandle[m_interFace->m_faceHandle[i].index], &feature_result, &size);
-                    identifyFromFaceGroup(sqlDatabase->m_groupHandle, feature_result, size, &result, &face_id);
-                    m_interFace->m_mutex.unlock();
-                    if ((result > dataShare->m_faceThreshold) && (face_id > 0))
-                    {
-                        QStringList value = dealOpencondition(face_id);
-                        QString name = value.at(0);
-                        QString remark = value.at(1);
-                        if(name.isEmpty())
-                        {
-                            authority = true;
-                            emit faceResultShow(name, i, m_interFace->m_faceHandle[i].track_id, tr("未授权"), tr("未授权"));
-                            if(remark.isEmpty())
-                            {
-                                hardware->playSound(tr("未授权").toUtf8(), "authority.aac");
-                            }
-                            else {
-                                hardware->playSound(remark.toUtf8(), "authority.aac");
-                            }
-                        }
-                        else
-                        {
-                            if(0 == switchCtl->m_language)
-                            {
-                                if(1 == switchCtl->m_nameMask)
-                                {
-                                    if(name.size() > 3)
-                                    {
-                                        name = name.replace(0, 2, "**");
-                                    }
-                                    else if(name.size() > 1)
-                                    {
-                                        name = name.replace(0, 1, '*');
-                                    }
-                                }
-                                else if(2 == switchCtl->m_nameMask)
-                                {
-                                    name = name.replace(0, name.size(), tr("您好"));
-                                }
-                            }
-                            emit faceResultShow(name, i, m_interFace->m_faceHandle[i].track_id, tr("认证通过"), m_faceInfo + name);
-                            egPass = true;
+                            hardware->playSound(remark.toUtf8(), "authority.aac");
                         }
                     }
                     else
                     {
-                        if(vi)
+                        if(0 == switchCtl->m_language)
                         {
-                            if(!dataShare->getReadingStatus())
+                            if(1 == switchCtl->m_nameMask)
                             {
-                                if(dataShare->m_idCardFlag)
+                                if(name.size() > 3)
                                 {
-                                    openDoorType = 4;
-                                    realName = dataShare->m_idCardDatas.at(0);
-                                    cardNum = dataShare->m_idCardDatas.at(1);
-                                    nation = dataShare->m_idCardDatas.at(2);
-                                    addr = dataShare->m_idCardDatas.at(3);
-                                    birth = dataShare->m_idCardDatas.at(4);
-                                    sex = dataShare->m_idCardDatas.at(5).compare("男") == 0 ? 1 : 2;
-                                    idCardResult = idCardFaceComparison(feature_result);
-                                    dataShare->m_idCardFlag = false;
+                                    name = name.replace(0, 2, "**");
                                 }
-                                else
+                                else if(name.size() > 1)
                                 {
-                                    emit idCardResultShow(0, tr("未注册"), tr("请刷身份证"), tr("请刷身份证"));
-                                    hardware->playSound(tr("请刷身份证").toUtf8(), "shenfenzh.aac");
-                                    msleep(500);
-                                    goto endIdentify;
+                                    name = name.replace(0, 1, '*');
                                 }
                             }
-                            else
+                            else if(2 == switchCtl->m_nameMask)
                             {
-                                goto endIdentify;
+                                name = name.replace(0, name.size(), tr("您好"));
                             }
                         }
-                        else {
-                            isStranger = "1";
-                            emit faceResultShow(tr("未注册"), i, m_interFace->m_faceHandle[i].track_id, tr("请联系管理员"), tr("未注册"));
-                            egPass = false;
-                            face_id = 0;
-                        }
+                        emit faceResultShow(name, i, m_interFace->m_faceHandle[i].track_id, tr("认证通过"), m_faceInfo + name);
+                        egPass = true;
                     }
                 }
                 else
                 {
-                    goto endIdentify;
+                    if(vi)
+                    {
+                        if(!dataShare->getReadingStatus())
+                        {
+                            if(dataShare->m_idCardFlag)
+                            {
+                                openDoorType = 4;
+                                realName = dataShare->m_idCardDatas.at(0);
+                                cardNum = dataShare->m_idCardDatas.at(1);
+                                nation = dataShare->m_idCardDatas.at(2);
+                                addr = dataShare->m_idCardDatas.at(3);
+                                birth = dataShare->m_idCardDatas.at(4);
+                                sex = dataShare->m_idCardDatas.at(5).compare("男") == 0 ? 1 : 2;
+                                idCardResult = idCardFaceComparison(feature_result);
+                                dataShare->m_idCardFlag = false;
+                            }
+                            else
+                            {
+                                emit idCardResultShow(0, tr("未注册"), tr("请刷身份证"), tr("请刷身份证"));
+                                hardware->playSound(tr("请刷身份证").toUtf8(), "shenfenzh.aac");
+                                msleep(500);
+                                goto endIdentify;
+                            }
+                        }
+                        else
+                        {
+                            goto endIdentify;
+                        }
+                    }
+                    else {
+                        isStranger = "1";
+                        emit faceResultShow(tr("未注册"), i, m_interFace->m_faceHandle[i].track_id, tr("请联系管理员"), tr("未注册"));
+                        egPass = false;
+                        face_id = 0;
+                    }
                 }
+            }
+            else
+            {
+                goto endIdentify;
             }
             if (!tempCtl && (!vi || egPass))
             {
@@ -600,7 +604,12 @@ void FaceIdentify::dealIcData(int mid, const QString &cardNo)
         isStranger = "0";
     }
     else {
-        emit icResultShow(0, tr("未注册"), tr("未注册"));
+        QString icShow = cardNo;
+        if(!switchCtl->m_showIc)
+        {
+            icShow = tr("未注册");
+        }
+        emit icResultShow(0, icShow, icShow);
         if(tempCtl)
         {
             hardware->playSound(tr("请看摄像头").toUtf8(), "kansxt.aac");
