@@ -248,6 +248,7 @@ Item {
         text: qsTr("")
         style: Text.Raised
     }
+
     Text {
         id: pose_blur
         y: 89
@@ -543,6 +544,10 @@ Item {
             } else {
                 iconFace.source = "image/icon_temp.png"
             }
+        }
+        onDistance: {
+            pose_blur.text = qsTr(text);
+            pose_blur_Timer.restart();
         }
         onIcResultShow: {
             if(0 === result)

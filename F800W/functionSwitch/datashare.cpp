@@ -14,6 +14,7 @@ DataShare::DataShare()
     m_offlineFlag = false;
     m_log = true;
     m_readingCard = false;
+    m_ipAddr = "";
 }
 
 bool DataShare::getReadingStatus()

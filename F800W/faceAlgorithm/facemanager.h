@@ -46,6 +46,8 @@ private:
     void faceCountdown_ms(int ms);
 
 signals:
+    // 距离显示
+    void distance(const QString &text);
     // 读卡状态
     void readIcStatus(int flag);
     // 显示人脸框 ui界面显示

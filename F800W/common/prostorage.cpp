@@ -42,6 +42,7 @@ void ProStorage::init()
     connect(face, &FaceManager::showFaceFocuse, this, &ProStorage::showFaceFocuse);
     connect(face, &FaceManager::hideFaceFocuse, this, &ProStorage::hideFaceFocuse);
     connect(face, &FaceManager::faceTb, this, &ProStorage::faceTb);
+    connect(face, &FaceManager::distance, this, &ProStorage::distance);
     face->setFaceInter(interFace);
     FaceIdentify *identify = new FaceIdentify;
     identify->setFaceInter(interFace);

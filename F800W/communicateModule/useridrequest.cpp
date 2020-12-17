@@ -161,10 +161,9 @@ void UserIdRequest::httpsUpdateUsers(const QJsonObject &jsonObj)
     }
     if(jsonObj.contains("mjkh"))
     {
-        cardNo = jsonObj["mjkh"].toString();
+        cardNo = jsonObj["mjkh"].toString().toLower();
         if(!cardNo.isEmpty() && cardNo.size() >= 6)
         {
-            cardNo = cardNo.toLower();
             sqlDatabase->sqlInsertIc(id, cardNo);
         }
         else
@@ -398,6 +397,7 @@ void UserIdRequest::onAlluserId(const QJsonArray &jsonArr)
                 if(updateTime.compare(newTime) != 0)
                 {
                     sqlDatabase->sqlDelete(id);
+                    sqlDatabase->sqlDeleteAuth(id);
                     m_updateFace.insert(id);
                 }
                 localFaceSet.remove(id);
@@ -410,6 +410,7 @@ void UserIdRequest::onAlluserId(const QJsonArray &jsonArr)
         foreach(int i, localFaceSet)
         {
             sqlDatabase->sqlDelete(i);
+            sqlDatabase->sqlDeleteAuth(i);
         }
     }
     else {
@@ -434,7 +435,7 @@ void UserIdRequest::onAllUsersIc(const QJsonArray &jsonArr)
     {
         QJsonObject obj = val.toObject();
         int mid = obj.value("mid").toInt();
-        QString cardNo = obj.value("cardNo").toString();
+        QString cardNo = obj.value("cardNo").toString().toLower();
         sqlDatabase->sqlInsertIc(mid, cardNo);
     }
     emit sigInsertFail();

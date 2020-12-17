@@ -35,6 +35,8 @@ protected:
     void run();
 
 signals:
+    // 距离显示
+    void distance(const QString &text);
     // ui界面更新时间
     void timeSync(int sleeptime, bool sleepctl, const QString &dataCur, const QString &digitalClock, int hour, int min, const QString &dataTime);
     // 人脸检测结果显示 ui显示

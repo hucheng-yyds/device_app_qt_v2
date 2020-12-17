@@ -231,7 +231,7 @@ bool FaceManager::filter(const FaceRect &rect)
         if (width > 400)
         {
             pass = false;
-//            emit faceTips(tr("太近了"));
+            emit distance(tr("太近了"));
         }
         else
         {
@@ -244,15 +244,14 @@ bool FaceManager::filter(const FaceRect &rect)
             else
             {
                 dis = width > 250;
-//                region = rect.left > 92 && rect.top > 281 && rect.right < 708 && rect.bottom < 861;
                 int x = (rect.right - rect.left)/2 + rect.left;
                 int y = (rect.bottom - rect.top)/4 + rect.top;
-                region = x > 330 && x < 480 &&  y > 526 && y < 646;
+                region = x > 330 && x < 480 &&  y > 600 && y < 800;
             }
             pass = dis && region;
-            if (region && !dis)
+            if (!region || !dis)
             {
-//                emit blur();
+                emit distance(tr("请靠近点"));
             }
         }
     }
@@ -261,7 +260,7 @@ bool FaceManager::filter(const FaceRect &rect)
         if(width <= 45)
         {
             pass = false;
-//            emit blur();
+            emit distance(tr("请靠近点"));
         }
     }
     return pass;

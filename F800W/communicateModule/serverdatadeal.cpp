@@ -780,7 +780,7 @@ void ServerDataDeal::dealIcNewData(QJsonObject jsonObj)
             int mid = obj.value("mid").toInt();
             if(1 == cmd)
             {
-                sqlDatabase->sqlInsertIc(mid, obj.value("cardNo").toString());
+                sqlDatabase->sqlInsertIc(mid, obj.value("cardNo").toString().toLower());
             }
             else
             {
