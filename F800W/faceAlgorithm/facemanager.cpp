@@ -98,7 +98,7 @@ void FaceManager::run()
                 dataShare->m_sync = false;
             }
             qt_debug() << "dataShare->m_sync:" << dataShare->m_sync;
-            hardware->checkOpenDoor();
+            hardware->checkCloseDoor();
 //            hardware->ctlWDG();
             msleep(500);
             continue;
