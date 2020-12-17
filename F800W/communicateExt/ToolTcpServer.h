@@ -57,6 +57,8 @@ signals:
     void sigRealTimeLog(bool);//控制日志模块
     void sigToolTcpStateChange(bool state);//true:链接上了，false:链接断开
     void sigSetAllScreenOn(bool);//打開或關閉全屏測溫
+    // 发送单个人员入库
+    void updateUsers(QJsonObject &obj);
 public slots:
 //    void onToolCmdResponse(ToolCmds cmd ,QByteArray dat);//其他的模块通过这个接口反馈消息到配置工具
     void onGetTempResponse(QByteArray dat);//测温模块的反馈接口
@@ -96,6 +98,7 @@ private:
     void responseHardUpdate(ToolCmdHead cmd,QString state);//返回數據到配置工具
     void responseDataToService(ToolCmdHead cmd,QJsonObject &sendObj);//返回數據到配置工具
     void setSendingLostsOfData(bool flag);
+    void updateUser(QJsonObject &data);
 };
 
 #endif // TOOLTCPSERVER_H
