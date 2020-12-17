@@ -725,7 +725,8 @@ void TempManager::recvUpdateData()
     memset(join_buf, 0, 4095);
     memset(buf, 0, 4095);
     int len = read(m_fd, buf, 4095);
-    printf("%d %d\n",len, sendOk);
+  //  qt_debug() << len << sendOk;
+    //printf("%d %d\n",len, sendOk);
     if (!len)
     {
         return;
@@ -773,7 +774,7 @@ void TempManager::recvUpdateData()
             status = true;
         }
     }
-    printf("======================================================fileAllSize:%d, %d\n", m_fileSize, m_upgradeFileSize);
+    qt_debug()<<"fileAllSize:%d, %d\n"<<m_fileSize<< m_upgradeFileSize;
     if(status && m_fileSize <= m_upgradeFileSize)
     {
         memset(pdemo->heard, 0xff, sizeof(pdemo->heard));
@@ -786,14 +787,15 @@ void TempManager::recvUpdateData()
         int len = write(m_fd, out, ret);
         if (len > 0)
         {
-            printf("serial write %d\n",len);
+          //  printf("serial write %d\n",len);
+        }else{
+                qt_debug() << "write error";
         }
         sendOk = true;
         system("rm temp.bin");
         delete m_fileBuf;
         m_fileBuf = nullptr;
         QByteArray data;
-        data.append("tempok");
         emit tempeatureInfo(data);
     }
 }

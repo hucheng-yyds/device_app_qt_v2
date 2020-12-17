@@ -814,6 +814,7 @@ void ToolTcpServer::parseData(QByteArray &new_cmd)
 
                                 system("rm base64SaveFile.txt");
                                 system("rm update.tar.xz");
+                                system("temp.bin");
                             }
                         }
                     }else if(m_cmd == Dev_Debugging_request)
