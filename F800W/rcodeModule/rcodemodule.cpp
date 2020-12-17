@@ -196,16 +196,17 @@ void RcodeModule::run()
             ushort crc = contentList.mid(20, 2).join().toUShort(&ok, 16);
             ushort crc16 = CRC16_CCITT(datas);
             int type = contentList.at(0).toInt(&ok, 16);
-            qt_debug() << type << crc << crc16 << starTime << nowTime << endTime;
+            int userType = contentList.at(11).toInt(&ok, 16);
+            qt_debug() << type << crc << crc16 << starTime << nowTime << endTime << userType;
             if(0xF8 == type)
             {
                 if (crc == crc16)
                 {
                     if(nowTime < endTime && nowTime > starTime)
                     {
-                        if (contentList.at(11).toInt(&ok, 16))
+                        if (userType > 0)
                         {
-                            int code = HttpsClient::httpsQRCode(QString(datas));
+                            int code = HttpsClient::httpsQRCode(QString(rcodeDatas));
                             if (0 == code)
                             {
                                 isStranger = "0";
@@ -219,7 +220,7 @@ void RcodeModule::run()
                             {
                                 isStranger = "1";
                                 isSuccess = "0";
-                                emit rcodeResultShow(1, tr("未注册"), tr("请联系管理员"));
+                                emit rcodeResultShow(0, tr("未注册"), tr("请联系管理员"));
                                 hardware->playSound(tr("未注册").toUtf8(), "shibai.aac");
                                 hardware->ctlLed(RED);
                             }

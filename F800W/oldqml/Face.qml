@@ -75,6 +75,27 @@ Item {
         style: Text.Raised
     }
 
+    Text {
+        id: remark
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.horizontalCenter: parent.horizontalCenter
+        font {
+            pixelSize: 48
+            family: "multi-language"
+        }
+        color: "#fffffe"
+        style: Text.Raised
+    }
+
+    Timer {
+        id: remarkTimer;
+        interval: 2000;
+        running: false;
+        onTriggered: {
+            remark.text = qsTr("");
+        }
+    }
+
     Image {
         id: image_version
         x: 20
@@ -124,6 +145,92 @@ Item {
             pose_blur.text = "";
             tempNormal.visible = false;
             tempUnusual.visible = false;
+        }
+    }
+
+    Rectangle {
+        id: wearmaskBg
+        x: 0
+        y: 0
+        visible: wearmasktxt.text.length;
+        width: 800;
+        height: 1280;
+        opacity:0.5;
+        color: "black"
+        radius: 0;
+        anchors.horizontalCenter: parent.horizontalCenter
+    }
+
+    Image {
+        id: wearmasktip
+        x: 340
+        y: 527
+        source: "image/wearmasktip.png"
+        visible: wearmaskBg.visible
+    }
+
+    Text {
+        id: wearmasktxt
+        x: 322
+        y: 713
+        width: 236
+        height: 45
+        color: "#fffffe"
+        text: qsTr("")
+        font {
+            pixelSize: 48
+            family: "PingFang SC Bold"
+        }
+        anchors.horizontalCenter: parent.horizontalCenter
+        verticalAlignment: Text.AlignVCenter
+        horizontalAlignment: Text.AlignHCenter
+    }
+
+    Rectangle {
+        id: wearHelmetBg
+        x: 0
+        y: 0
+        visible: wearHelmettxt.text.length;
+        width: 800;
+        height: 1280;
+        opacity:0.5;
+        color: "black"
+        radius: 0;
+        anchors.horizontalCenter: parent.horizontalCenter
+    }
+
+    Image {
+        id: wearHelmettip
+        x: 340
+        y: 527
+        source: "image/wearmasktip.png"
+        visible: wearmaskBg.visible
+    }
+
+    Text {
+        id: wearHelmettxt
+        x: 322
+        y: 713
+        width: 236
+        height: 45
+        color: "#fffffe"
+        text: qsTr("")
+        font {
+            pixelSize: 48
+            family: "PingFang SC Bold"
+        }
+        anchors.horizontalCenter: parent.horizontalCenter
+        verticalAlignment: Text.AlignVCenter
+        horizontalAlignment: Text.AlignHCenter
+    }
+
+    Timer {
+        id: hidemask;
+        interval: 2000;
+        running: false;
+        onTriggered: {
+            wearmasktxt.text = qsTr("");
+            wearHelmettxt.text = qsTr("")
         }
     }
 
@@ -341,6 +448,11 @@ Item {
             sleep.restart();
         }
 
+        onRemark: {
+            remark.text = qsTr(text)
+            remarkTimer.restart()
+        }
+
         onNetworkChanged: {
             if (net) {
                 network.source = "image/online.png";
@@ -421,7 +533,7 @@ Item {
             isEg = faceCtl;
             isTemp = tempCtl;
             image_head.visible = isTemp
-            version.text = qsTr("T" + ver);
+            version.text = qsTr(ver);
             corporateName.text = qsTr(name);
             people.text = qsTr(number);
             ip.text = qsTr(devIp);

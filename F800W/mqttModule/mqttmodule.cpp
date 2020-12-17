@@ -1,8 +1,7 @@
 #include <QQueue>
 #include "mqttmodule.h"
 
-QQueue<QByteArray> g_payload;
-bool g_recvDataOk = false;
+static ServerDataList *g_dataList = nullptr;
 
 MqttModule::MqttModule()
 {
@@ -12,7 +11,7 @@ MqttModule::MqttModule()
 
 void MqttModule::setPacket(ServerDataList *dataList)
 {
-    m_packet = dataList;
+    g_dataList = dataList;
 }
 
 static void deliveryComplete(void* context, MQTTClient_deliveryToken dt)
@@ -22,14 +21,9 @@ static void deliveryComplete(void* context, MQTTClient_deliveryToken dt)
 
 static int messageArrived(void* context, char* topicName, int topicLen, MQTTClient_message* m)
 {
-    if(!g_recvDataOk)
-    {
-        g_payload.enqueue(QByteArray((char*)m->payload, (int)m->payloadlen));
-        g_recvDataOk = true;
-    }
-    else {
-        qDebug() << "messageArrived";
-    }
+    FacePacketNode_t *packetNode = new FacePacketNode_t;
+    packetNode->datas.append(QByteArray((char*)m->payload, (int)m->payloadlen));
+    g_dataList->PushLogPacket(packetNode);
     MQTTClient_free(topicName);
     MQTTClient_freeMessage(&m);
     return 1;
@@ -122,13 +116,6 @@ void MqttModule::run()
                 continue;
             }
             sleep(5);
-        }
-        if(g_recvDataOk)
-        {
-            FacePacketNode_t *packetNode = new FacePacketNode_t;
-            packetNode->datas = g_payload.dequeue();
-            m_packet->PushLogPacket(packetNode);
-            g_recvDataOk = false;
         }
         msleep(500);
     }

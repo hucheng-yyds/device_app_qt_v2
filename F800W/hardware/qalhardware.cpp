@@ -285,7 +285,7 @@ void QalHardWare::playSoundAac(int type, const QString &filename)
         m_mutex.unlock();
         return ;
     }
-    qDebug() << "send start !";
+//    qDebug() << "send start !";
     do {
         size = file.read(buf, 160);
         if(size > 0)
@@ -293,7 +293,7 @@ void QalHardWare::playSoundAac(int type, const QString &filename)
             IF_AUDIO_SendData(size, buf);
         }
     } while (size);
-    qDebug() << "send over !";
+//    qDebug() << "send over !";
     file.close();
     msleep(400);
     m_mutex.unlock();

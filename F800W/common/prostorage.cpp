@@ -56,6 +56,7 @@ void ProStorage::init()
     tempManager->start();
     connect(identify, &FaceIdentify::icResultShow, this, &ProStorage::icResultShow);
     connect(identify, &FaceIdentify::idCardResultShow, this, &ProStorage::idCardResultShow);
+    connect(identify, &FaceIdentify::remark, this, &ProStorage::remark);
 
     if(switchCtl->m_vi && switchCtl->m_rcode != 2)
     {

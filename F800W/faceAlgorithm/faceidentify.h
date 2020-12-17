@@ -41,6 +41,8 @@ signals:
     void icResultShow(int result, const QString &cardNo, const QString &showInfo);
     // 人脸检测结果显示 ui显示
     void faceResultShow(const QString &name, int index, int trackId, const QString &result, const QString &showInfo);
+    // 未授权结果显示
+    void remark(const QString &text);
     // 显示身份证信息
     void idCardResultShow(int flag, const QString &name, const QString &result, const QString &showInfo);
     // 开始测温信号

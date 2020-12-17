@@ -733,7 +733,7 @@ Item {
         onShowDeviceInfo:{
             isTemp = tempCtl;
             image_head.visible = isTemp
-            version.text = qsTr("T" + ver);
+            version.text = qsTr("V" + ver);
             corporateName.text = qsTr(name);
             people.text = qsTr(number);
             ip.text = qsTr("IP: " + devIp);

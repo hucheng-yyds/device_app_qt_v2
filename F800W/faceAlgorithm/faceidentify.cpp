@@ -225,17 +225,18 @@ void FaceIdentify::run()
                 {
                     QStringList value = dealOpencondition(face_id);
                     QString name = value.at(0);
-                    QString remark = value.at(1);
+                    QString remarks = value.at(1);
                     if(name.isEmpty())
                     {
                         authority = true;
-                        emit faceResultShow(name, i, m_interFace->m_faceHandle[i].track_id, tr("未授权"), tr("未授权"));
-                        if(remark.isEmpty())
+                        emit faceResultShow(tr("未授权"), i, m_interFace->m_faceHandle[i].track_id, tr("请联系管理员"), tr("未授权"));
+                        if(remarks.isEmpty())
                         {
                             hardware->playSound(tr("未授权").toUtf8(), "authority.aac");
                         }
                         else {
-                            hardware->playSound(remark.toUtf8(), "authority.aac");
+                            emit remark(remarks);
+                            hardware->playSound(remarks.toUtf8(), "authority.aac");
                         }
                     }
                     else
@@ -649,7 +650,7 @@ QStringList FaceIdentify::dealOpencondition(int faceId)
         text << name << "";
         return text;
     }
-    qt_debug() << value;
+//    qt_debug() << value;
     int passnum = value[1].toInt();
     QString startTime = value[2].toString();
     QString expireTime = value[3].toString();
@@ -689,6 +690,7 @@ QStringList FaceIdentify::dealOpencondition(int faceId)
         else {
             QDateTime current_date_time = QDateTime::currentDateTime();
             QString current_week = current_date_time.toString("ddd");
+//            qt_debug() << current_week;
             if(0 == current_week.compare("Mon"))
             {
                 status = passPeriod.mid(0, 1).toInt();
@@ -736,6 +738,7 @@ QStringList FaceIdentify::dealOpencondition(int faceId)
             QString timeStr = QTime::currentTime().addSecs(28800).toString("hh:mm");
             foreach (QString time, list) {
                 QStringList timeList = time.split("~");
+//                qt_debug() << timeStr << timeList;
                 if (timeStr > timeList.value(0) && timeStr < timeList.value(1)) {
                     pass = true;
                 }

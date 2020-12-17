@@ -137,6 +137,28 @@ Item {
         style: Text.Raised
     }
 
+    Text {
+        id: remark
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.horizontalCenter: parent.horizontalCenter
+        font {
+            pixelSize: 48
+            family: "multi-language"
+        }
+        color: "#fffffe"
+        style: Text.Raised
+    }
+
+    Timer {
+        id: remarkTimer;
+        interval: 2000;
+        running: false;
+        onTriggered: {
+            remark.text = qsTr("");
+        }
+    }
+
+
     Rectangle {
         id: image_rect
         x: 0
@@ -280,7 +302,10 @@ Item {
                     break;
             }
         }
-
+        onRemark: {
+            remark.text = qsTr(text)
+            remarkTimer.restart()
+        }
         onFaceResultShow:{
             textName.text = qsTr(name);
             tips.text = qsTr(result);
@@ -324,7 +349,7 @@ Item {
             }
         }
         onShowDeviceInfo:{
-            version.text = qsTr("T" + ver);
+            version.text = qsTr(ver);
             corporateName.text = qsTr(name);
             people.text = qsTr(number);
             ip.text = qsTr(devIp);

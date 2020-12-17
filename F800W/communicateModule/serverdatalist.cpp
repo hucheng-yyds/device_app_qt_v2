@@ -13,8 +13,8 @@ ServerDataList::~ServerDataList()
     {
         delete (*iter);
     }
-    m_mutex.unlock();
     m_dataList.clear();
+    m_mutex.unlock();
 }
 
 void ServerDataList::PushLogPacket(FacePacketNode_t* Packet)
@@ -30,6 +30,7 @@ void ServerDataList::PushLogPacket(FacePacketNode_t* Packet)
 
 FacePacketNode_t* ServerDataList::GetLogPacket()
 {
+    m_mutex.lock();
     if(!m_dataList.empty())
     {
         FacePacketNode_t *packet = new FacePacketNode_t;
@@ -38,8 +39,10 @@ FacePacketNode_t* ServerDataList::GetLogPacket()
         delete pkt;
         pkt = nullptr;
         m_dataList.pop_back();
+        m_mutex.unlock();
         return packet;
     }
+    m_mutex.unlock();
     return nullptr;
 }
 

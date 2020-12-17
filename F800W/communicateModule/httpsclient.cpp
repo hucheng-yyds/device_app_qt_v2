@@ -50,7 +50,7 @@ int HttpsClient::httpsQRCode(const QString &data)
     document.setObject(jsonObj);
 
     QTimer timer;
-    timer.setInterval(15000);
+    timer.setInterval(5000);
     timer.setSingleShot(true);
     QNetworkAccessManager manager;
     QNetworkReply *reply = manager.post(request, document.toJson());
@@ -74,6 +74,7 @@ int HttpsClient::httpsQRCode(const QString &data)
             else
             {
                 jsonObj = document.object();
+                qt_debug() << jsonObj;
                 if (jsonObj.contains("code"))
                 {
                     code = jsonObj["code"].toInt();
@@ -95,7 +96,7 @@ int HttpsClient::httpsQRCode(const QString &data)
         qt_debug() << "post time out";
     }
     reply->deleteLater();
-
+    qt_debug() << code;
     return code;
 }
 

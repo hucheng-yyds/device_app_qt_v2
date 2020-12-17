@@ -1061,7 +1061,7 @@ void ToolTcpServer::sendSNtoClient()
     dat.insert("log",dataShare->m_log);
     dat.insert("sn",switchCtl->m_sn);
     dat.insert("screenCtl",switchCtl->m_screenCtl);
-
+    dat.insert("version", VERSION);
     dat.insert("msgType","0");
     dat.insert("cmd","0");
 
