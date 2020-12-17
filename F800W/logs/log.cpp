@@ -84,6 +84,6 @@ void Log::onLogFun(bool on)
             logList.removeOne(item);
         }
         timer->start();
-     qInstallMessageHandler(outputMessageOnLine);
+        qInstallMessageHandler(outputMessageOnLine);
     }
 }

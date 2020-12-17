@@ -57,8 +57,8 @@ signals:
     void sigRealTimeLog(bool);//控制日志模块
     void sigToolTcpStateChange(bool state);//true:链接上了，false:链接断开
     void sigSetAllScreenOn(bool);//打開或關閉全屏測溫
-    // 发送单个人员入库
-    void updateUsers(QJsonObject &obj);
+    void updateUsers(QJsonObject &obj);// 发送单个人员入库
+    void sigSendUpdateTemp();//测温模块升级
 public slots:
 //    void onToolCmdResponse(ToolCmds cmd ,QByteArray dat);//其他的模块通过这个接口反馈消息到配置工具
     void onGetTempResponse(QByteArray dat);//测温模块的反馈接口
@@ -66,6 +66,7 @@ public slots:
     void onCaptureCamPicture(QByteArray dat);//抓取到图片的数据
     void onCamCalibration();//摄像头校准的结果
     void onGetRealTimeLog(QString);//日志模块输入信息
+    void onGetTempFirmSuccess(QByteArray);//测温模块固件升级成功
 private slots:
       void onNewConnect(void);
       void onTcpRead(void);

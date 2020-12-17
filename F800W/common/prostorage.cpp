@@ -87,6 +87,9 @@ void ProStorage::init()
     connect(tempManager,&TempManager::tempeatureInfo,toolTcpServer,&ToolTcpServer::onGetTempResponse);
     connect(toolTcpServer,&ToolTcpServer::sigSetAllScreenOn,tempManager,&TempManager::openAllScreenTemp);
     connect(toolTcpServer,&ToolTcpServer::sigGetTempHardwareInfo,tempManager,&TempManager::getTempInfo);
+    //测温模块程序升级
+    connect(toolTcpServer,&ToolTcpServer::sigSendUpdateTemp,tempManager, &TempManager::sendTempProgram);
+    connect(tempManager, &TempManager::tempeatureInfo,toolTcpServer,&ToolTcpServer::onGetTempFirmSuccess);
 
     toolTcpServer->start();
 

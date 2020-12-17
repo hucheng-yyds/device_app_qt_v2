@@ -128,6 +128,14 @@ void ToolTcpServer::onCamCalibration()
     ResponseDataToTool(Dev_CameraCalibration_response,jaSonObject);
 }
 
+void ToolTcpServer::onGetTempFirmSuccess(QByteArray )
+{
+    QJsonObject jaSonObject;
+    jaSonObject.insert("msgType","1");
+    jaSonObject.insert("cmd","2");
+    ResponseDataToTool(Dev_FirmwareUpgrade_response,jaSonObject);
+}
+
 void ToolTcpServer::onGetRealTimeLog(QString dat)
 {
     QJsonObject jaSonObject;
@@ -758,10 +766,10 @@ void ToolTcpServer::parseData(QByteArray &new_cmd)
                         {
                             if(cmdStr == "0")
                             {
-                                if(rootObj.contains("versionUpdate"))
+                                if(rootObj.contains("hardUpdate"))
                                 {
                                     QString verStr;
-                                    verStr = rootObj.value("versionUpdate").toString();
+                                    verStr = rootObj.value("hardUpdate").toString();
                                     QByteArray verdata = QByteArray::fromBase64(verStr.toUtf8());
                                     QFile file("F01N");
                                     if (!file.open(QFile::ReadWrite)) {
@@ -775,7 +783,7 @@ void ToolTcpServer::parseData(QByteArray &new_cmd)
                                     QJsonObject response;
                                     response.insert("msgType",msgType);
                                     response.insert("cmd",cmdStr);
-                                    ResponseDataToTool(Dev_FirmwareUpgrade_request,response);
+                                    ResponseDataToTool(Dev_FirmwareUpgrade_response,response);
                                     msleep(1000);
                                     system("reboot");
                                 }
@@ -786,11 +794,11 @@ void ToolTcpServer::parseData(QByteArray &new_cmd)
                             }
                             else if(cmdStr == "2")//测温固件升级
                             {
-                                if(rootObj.contains("versionTempUpdate"))
+                                if(rootObj.contains("hardUpdate"))
                                 {
                                     system("rm temp.bin");
                                     QString verStr;
-                                    verStr = rootObj.value("versionTempUpdate").toString();
+                                    verStr = rootObj.value("hardUpdate").toString();
                                     QByteArray verdata = QByteArray::fromBase64(verStr.toUtf8());
                                     QFile file("temp.bin");
                                     if (!file.open(QFile::ReadWrite)) {
@@ -799,11 +807,7 @@ void ToolTcpServer::parseData(QByteArray &new_cmd)
                                     }
                                     file.write(verdata);
                                     file.close();
-                                    QJsonObject response;
-                                    response.insert("msgType",msgType);
-                                    response.insert("cmd",cmdStr);
-                                    ResponseDataToTool(Dev_FirmwareUpgrade_request,response);
-                                    // emit sigSendUpdateTemp();
+                                    emit sigSendUpdateTemp();
                                 }
                             }
                             else if(cmdStr == "3"){
