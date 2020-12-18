@@ -74,7 +74,7 @@ public:
     // 定时息屏时间 单位秒最小3秒钟
     int m_closeScreenTime;
 
-    // 后台通信协议开关 1:tcp协议，2：中间件协议，3:http协议
+    // 后台通信协议开关 1:2代tcp协议，2：中间件协议，3:http协议,4:1代tcp协议
     int m_protocol;
     // tcp后台地址
     QString m_tcpAddr;

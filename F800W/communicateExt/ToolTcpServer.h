@@ -66,7 +66,7 @@ public slots:
     void onCaptureCamPicture(QByteArray dat);//抓取到图片的数据
     void onCamCalibration();//摄像头校准的结果
     void onGetRealTimeLog(QString);//日志模块输入信息
-    void onGetTempFirmSuccess(QByteArray);//测温模块固件升级成功
+
 private slots:
       void onNewConnect(void);
       void onTcpRead(void);
@@ -85,8 +85,6 @@ private:
      int         mTool_msgLen    = 0;
      QByteArray  mTool_msgBody   = "";
 
-//    int dataSize;
-//    QByteArray dataArray;
     void parseData(QByteArray &recData);
     void setParameters(QJsonObject & data,QString msgType,QString cmdStr);
     //response
@@ -98,7 +96,7 @@ private:
     void sendSaveEnd();
     void DevUpdate(QJsonObject rootDat);
     void VoicUpdate(QJsonObject rootObj);
-    void responseHardUpdate(ToolCmdHead cmd,QString state);//返回數據到配置工具
+    void responseHardUpdate(ToolCmdHead cmd,QString state,QStringList);//返回數據到配置工具
     void responseDataToService(ToolCmdHead cmd,QJsonObject &sendObj);//返回數據到配置工具
     void setSendingLostsOfData(bool flag);
     void updateUser(QJsonObject &data);

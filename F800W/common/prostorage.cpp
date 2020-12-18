@@ -90,8 +90,6 @@ void ProStorage::init()
     connect(toolTcpServer,&ToolTcpServer::sigGetTempHardwareInfo,tempManager,&TempManager::getTempInfo);
     //测温模块程序升级
     connect(toolTcpServer,&ToolTcpServer::sigSendUpdateTemp,tempManager, &TempManager::sendTempProgram);
-    connect(tempManager, &TempManager::tempeatureInfo,toolTcpServer,&ToolTcpServer::onGetTempFirmSuccess);
-
     toolTcpServer->start();
 
     MqttModule *mqttClient = new MqttModule;

@@ -31,9 +31,6 @@ ToolTcpServer::ToolTcpServer()
     mTool_msgLen    = 0;
     mTool_msgBody.clear();
 
-//    dataSize = 0;
-//    dataArray.clear();
-
     void onGetDevIp(const QString &ver, const QString &name, const QString &number, const QString &devIp, const QString &devSn);
 
     m_udpServer.start();
@@ -108,11 +105,20 @@ void ToolTcpServer::sendImage()
 
 void ToolTcpServer::onGetTempResponse(QByteArray dat)
 {
-    QJsonObject jaSonObject;
-    qt_debug() << dat.toHex();
-    jaSonObject.insert("msgType","2");
-    jaSonObject.insert("data",QString(dat.toHex()));
-    ResponseDataToTool(Dev_TemCalibration_response,jaSonObject);
+    if(dat == "tempok")
+    {
+        QJsonObject jaSonObject;
+        jaSonObject.insert("msgType","1");
+        jaSonObject.insert("cmd","2");
+        ResponseDataToTool(Dev_FirmwareUpgrade_response,jaSonObject);
+    }else {
+        QJsonObject jaSonObject;
+        qt_debug() << dat.toHex();
+        jaSonObject.insert("msgType","2");
+        jaSonObject.insert("data",QString(dat.toHex()));
+        ResponseDataToTool(Dev_TemCalibration_response,jaSonObject);
+    }
+
 }
 
 void ToolTcpServer::onCaptureCamPicture(QByteArray dat)//抓取到图片的数据
@@ -126,14 +132,6 @@ void ToolTcpServer::onCamCalibration()
 {
     QJsonObject jaSonObject;
     ResponseDataToTool(Dev_CameraCalibration_response,jaSonObject);
-}
-
-void ToolTcpServer::onGetTempFirmSuccess(QByteArray )
-{
-    QJsonObject jaSonObject;
-    jaSonObject.insert("msgType","1");
-    jaSonObject.insert("cmd","2");
-    ResponseDataToTool(Dev_FirmwareUpgrade_response,jaSonObject);
 }
 
 void ToolTcpServer::onGetRealTimeLog(QString dat)
@@ -475,7 +473,7 @@ void ToolTcpServer::setParameters(QJsonObject & data,QString msgType,QString cmd
     // 安全帽开关
     if(data.contains(key_helet))
     {
-        switchCtl->m_helet = data.value(key_helet).toBool();
+        switchCtl->m_helet = data.value(key_helet).toInt();
     }
     // 口罩开关 0:表示关闭 1:提醒 2:检测
     if(data.contains(key_mask))
@@ -767,7 +765,7 @@ void ToolTcpServer::parseData(QByteArray &new_cmd)
                             if(cmdStr == "0")
                             {
                                 if(rootObj.contains("hardUpdate"))
-                                {
+                                {    setSendingLostsOfData(true);
                                     QString verStr;
                                     verStr = rootObj.value("hardUpdate").toString();
                                     QByteArray verdata = QByteArray::fromBase64(verStr.toUtf8());
@@ -795,7 +793,7 @@ void ToolTcpServer::parseData(QByteArray &new_cmd)
                             else if(cmdStr == "2")//测温固件升级
                             {
                                 if(rootObj.contains("hardUpdate"))
-                                {
+                                {   setSendingLostsOfData(true);
                                     system("rm temp.bin");
                                     QString verStr;
                                     verStr = rootObj.value("hardUpdate").toString();
@@ -814,7 +812,7 @@ void ToolTcpServer::parseData(QByteArray &new_cmd)
 
                                 system("rm base64SaveFile.txt");
                                 system("rm update.tar.xz");
-                                system("temp.bin");
+                                system("rm temp.bin");
                             }
                         }
                     }else if(m_cmd == Dev_Debugging_request)
@@ -1016,9 +1014,6 @@ void ToolTcpServer::parseData(QByteArray &new_cmd)
         }
     }
     system("sync");
-//    dataSize = 0;
-//    dataArray.clear();
-
     mTool_msgLen    = 0;
     mTool_msgBody.clear();
 }
@@ -1097,7 +1092,7 @@ void ToolTcpServer::sendSaveFileClient(QList<QStringList> fileList)
 
 void ToolTcpServer::responseClient(QString state)
 {
-    qt_debug()<<__PRETTY_FUNCTION__<<state;
+    qt_debug()<<state;
     QByteArray sendData = "";
     QJsonObject sendObj;
     sendObj.insert("state",state);
@@ -1170,7 +1165,12 @@ void ToolTcpServer::ResponseDataToTool(ToolCmdHead headCmd,QJsonObject & sendObj
 
 void ToolTcpServer::DevUpdate(QJsonObject rootObj)
 {
-   setSendingLostsOfData(true);
+
+    QString packnumber;
+    QStringList tmp;
+    tmp.clear();
+
+    setSendingLostsOfData(true);
     QJsonObject dataObj;
     dataObj = rootObj.value("hardUpdate").toObject();
     if(dataObj.contains("hardUpdate"))
@@ -1191,10 +1191,16 @@ void ToolTcpServer::DevUpdate(QJsonObject rootObj)
 //                                real_verStr = "";
                 }
                 saveFile.close();
-                responseHardUpdate(Dev_FirmwareUpgrade_response,"Success");
+
+                if(dataObj.contains("packNumber"))
+                {
+                   packnumber =  QString::number(dataObj.value("packNumber").toInt());
+                }
+                tmp << packnumber;
+                responseHardUpdate(Dev_FirmwareUpgrade_response,"Success",tmp);
             }
             else
-            {
+            {        qt_debug();
                 QFile saveFile("base64SaveFile.txt");
                 if(saveFile.open(QIODevice::ReadWrite | QIODevice::Append))
                 {
@@ -1221,7 +1227,14 @@ void ToolTcpServer::DevUpdate(QJsonObject rootObj)
                 file.close();
                 if(dataObj.contains("md5"))
                 {
-                    responseHardUpdate(Dev_FirmwareUpgrade_response,"Success");
+
+                    if(dataObj.contains("packNumber"))
+                    {
+                       packnumber = QString::number(dataObj.value("packNumber").toInt());
+                    }
+                    tmp << packnumber;
+                    responseHardUpdate(Dev_FirmwareUpgrade_response,"Success",tmp);
+
                     qt_debug();
                     QFile tarfile("update.tar.xz");
                     QByteArray data;
@@ -1236,8 +1249,7 @@ void ToolTcpServer::DevUpdate(QJsonObject rootObj)
                     if(md5 == dataObj.value("md5").toString())
                     {
 
-
-                        responseHardUpdate(Dev_FirmwareUpgrade_response,"tarxz");
+                        responseHardUpdate(Dev_FirmwareUpgrade_response,"tarxz",tmp);
 
                         //清空，其他数据进来
                         mTool_msgLen    = 0;
@@ -1265,7 +1277,7 @@ void ToolTcpServer::DevUpdate(QJsonObject rootObj)
                                    "sync");
                         }
 
-                        responseHardUpdate(Dev_FirmwareUpgrade_response,"reboot");
+                        responseHardUpdate(Dev_FirmwareUpgrade_response,"reboot",tmp);
                         msleep(1000);
                         qt_debug() << "system reboot";
                         system("reboot");
@@ -1273,7 +1285,7 @@ void ToolTcpServer::DevUpdate(QJsonObject rootObj)
                     else {
                         system("rm base64SaveFile.txt");
                         system("rm update.tar.xz");
-                        responseHardUpdate(Dev_FirmwareUpgrade_response,"error");
+                        responseHardUpdate(Dev_FirmwareUpgrade_response,"error",tmp);
                     }
                     dataShare->m_upgrade = false;
                 }
@@ -1399,15 +1411,22 @@ void ToolTcpServer::responseDataToService(ToolCmdHead cmd, QJsonObject & sendObj
     }
 }
 
-void ToolTcpServer::responseHardUpdate(ToolCmdHead cmd,QString state)
+/*
+    *@des:
+    *@param:dat,0:packNumber
+    *
+*/
+void ToolTcpServer::responseHardUpdate(ToolCmdHead cmd,QString state,QStringList dat)
 {
-
     QByteArray sendData = "";
     QJsonObject sendObj;
     sendObj.insert("result","200");
     sendObj.insert("desc","");
     sendObj.insert("data",state);
     sendObj.insert("msgType","1");
+    if(dat.length()!=0){
+          sendObj.insert("packNumber",dat.at(0).toInt());
+    }
     sendObj.insert("cmd","1");
     QJsonDocument document;
     document.setObject(sendObj);

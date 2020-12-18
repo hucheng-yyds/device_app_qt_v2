@@ -725,7 +725,8 @@ void TempManager::recvUpdateData()
     memset(join_buf, 0, 4095);
     memset(buf, 0, 4095);
     int len = read(m_fd, buf, 4095);
-  //  qt_debug() << len << sendOk;
+    //msleep(10);
+    qt_debug() << len << sendOk;//去掉會卡死，不能去掉
     //printf("%d %d\n",len, sendOk);
     if (!len)
     {
@@ -795,7 +796,9 @@ void TempManager::recvUpdateData()
         system("rm temp.bin");
         delete m_fileBuf;
         m_fileBuf = nullptr;
+        qt_debug() << "temp ok";
         QByteArray data;
+        data.append("tempok");
         emit tempeatureInfo(data);
     }
 }
