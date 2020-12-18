@@ -725,8 +725,8 @@ void TempManager::recvUpdateData()
     memset(join_buf, 0, 4095);
     memset(buf, 0, 4095);
     int len = read(m_fd, buf, 4095);
-    //msleep(10);
-    qt_debug() << len << sendOk;//去掉會卡死，不能去掉
+    msleep(1);
+    //qt_debug() << len << sendOk;//去掉會卡死，不能去掉
     //printf("%d %d\n",len, sendOk);
     if (!len)
     {
