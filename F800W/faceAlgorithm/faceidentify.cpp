@@ -369,15 +369,16 @@ void FaceIdentify::run()
                 }
             }
             m_tempFlag = false;
+            uplaodTemp = m_tempVal;
             if(switchCtl->m_fahrenheit)
             {
+                uplaodTemp = QString("%1").arg((m_tempVal.toFloat() - 32)/1.8);
                 emit tempShow(QString("%1℉").arg(m_tempVal), m_tempResult);
             }
             else
             {
                 emit tempShow(QString("%1℃").arg(m_tempVal), m_tempResult);
             }
-            uplaodTemp = m_tempVal;
 //            dataShare->m_tempFlag = false;
             msleep(150);
             qt_debug() << m_tempVal << m_tempResult;
@@ -495,11 +496,11 @@ void FaceIdentify::run()
         uploadTime = QDateTime::currentDateTime().addSecs(28800).toString("yyyy-MM-dd HH:mm:ss");
         if(4 == openDoorType)
         {
-            datas << uploadTime << m_tempVal << isSuccess << invalidReason << isStranger << m_cardNo << realName << cardNum << nation
+            datas << uploadTime << uplaodTemp << isSuccess << invalidReason << isStranger << m_cardNo << realName << cardNum << nation
                   << addr << birth;
         }
         else {
-            datas << uploadTime << m_tempVal << isSuccess << invalidReason << isStranger << m_cardNo << "" << "" << "" << "" << "";
+            datas << uploadTime << uplaodTemp << isSuccess << invalidReason << isStranger << m_cardNo << "" << "" << "" << "" << "";
         }
         if((switchCtl->m_uploadStrangerCtl || egPass) && !vi)
         {

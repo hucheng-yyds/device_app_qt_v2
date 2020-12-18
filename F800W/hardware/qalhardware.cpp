@@ -31,7 +31,7 @@ void QalHardWare::run()
     m_led.opentime=2;
     m_led.closetime=0;
     countdown_ms(0);
-//    ioctl(m_fd, WDG_SET, &m_i);
+    ioctl(m_fd, WDG_SET, &m_i);
     init();
     exec();
 }

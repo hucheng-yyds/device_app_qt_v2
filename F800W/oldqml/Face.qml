@@ -148,6 +148,15 @@ Item {
         }
     }
 
+    // 定时器 清空体温检测结果
+    Timer {
+        id: poseBlurTimer;
+        interval: 1500; running: false;
+        onTriggered: {
+            pose_blur.text = "";
+        }
+    }
+
     Rectangle {
         id: wearmaskBg
         x: 0
@@ -547,7 +556,7 @@ Item {
         }
         onDistance: {
             pose_blur.text = qsTr(text);
-            pose_blur_Timer.restart();
+            poseBlurTimer.restart();
         }
         onIcResultShow: {
             if(0 === result)
@@ -565,7 +574,17 @@ Item {
             face.visible = true;
             sleep.restart();
         }
-
+        onMaskHelmet: {
+            if(flag === 1)
+            {
+                wearHelmettxt.text = qsTr("请戴安全帽")
+            }
+            else if(flag == 0)
+            {
+                wearmasktxt.text = qsTr("请戴口罩")
+            }
+            hidemask.restart();
+        }
         onIdCardResultShow: {
             textName.text = qsTr(name)
             tips.text = qsTr(result)

@@ -66,7 +66,11 @@ void TcpClient::ConnectHost()
 
 void TcpClient::Reconnect()
 {
-    qt_debug() << "timer reconnect !";
+    qt_debug() << "timer reconnect !" << switchCtl->m_tcpAddr << switchCtl->m_tcpPort;
+    if(switchCtl->m_tcpAddr.isEmpty())
+    {
+        return;
+    }
     if (m_tcpSocket) {
         m_tcpSocket->abort();
         disconnect(m_tcpSocket,SIGNAL(error(QAbstractSocket::SocketError)),this,SLOT(ConnectError(QAbstractSocket::SocketError)));
@@ -188,6 +192,7 @@ void TcpClient::OnReadData()
     recData.clear();
     recData = m_tcpSocket->readAll();
     m_connectTimer->stop();
+    dataShare->m_netStatus = true;
     if(recData.mid(0,4) == QString("OFZL"))
     {
         /*OFLN + version(1 byte) + type(1 byte) + cmd(1byte) + msgLen(4byte) + msgBody*/
