@@ -7,6 +7,7 @@ QSemaphore g_usedSpace(0);
 FaceManager::FaceManager()
 {
     m_isIdentify = false;
+    m_remoteOPenDoor = 0;
     faceCountdown_ms(0);
 }
 
@@ -83,7 +84,7 @@ void FaceManager::run()
             {
                 dataShare->m_sync = false;
             }
-            hardware->checkOpenDoor();
+            hardware->checkCloseDoor();
             hardware->ctlWDG();
             msleep(500);
             continue;
@@ -128,6 +129,12 @@ void FaceManager::run()
                 qt_debug() << datas;
                 emit rcodeResult(datas);
             }
+        }
+        if(m_remoteOPenDoor > 0)
+        {
+            dataShare->m_offlineFlag = false;
+            backLightCount = 0;
+            saveImage();
         }
         FaceHandle *bgrHandle;
         int bgrLength = 0;
@@ -332,14 +339,48 @@ void FaceManager::sort(FaceHandle *faceHandle, int count)
     }
 }
 
+void FaceManager::saveImage()
+{
+    unsigned char *bgrImage = new unsigned char[VIDEO_WIDTH*VIDEO_HEIGHT* 3 / 2];
+    memcpy(bgrImage, (const char *)m_bgrVideoFrame->stVFrame.u64VirAddr[0], VIDEO_WIDTH * VIDEO_HEIGHT * 3 / 2);
+    cv::Mat nv21(VIDEO_HEIGHT + VIDEO_HEIGHT / 2, VIDEO_WIDTH, CV_8UC1, bgrImage);
+    cv::Mat image;
+    cv::cvtColor(nv21, image, CV_YUV2BGR_NV21);
+    if(image.empty())
+    {
+        printf("load image error!!\n");
+        return;
+    }
+    QVector<int> opts;
+    opts.push_back(cv::IMWRITE_JPEG_QUALITY);
+    opts.push_back(30);
+    opts.push_back(cv::IMWRITE_JPEG_OPTIMIZE);
+    opts.push_back(1);
+    cv::imwrite("snap.jpg", image, opts.toStdVector());
+    QString offline_path = "cp snap.jpg offline/" + QString::number(m_remoteOPenDoor) + ".jpg";
+    system(offline_path.toStdString().c_str());
+    m_remoteOPenDoor = 0;
+    delete[] bgrImage;
+    bgrImage = nullptr;
+}
+
 void FaceManager::ctlOpenDoor(int id)
 {
     hardware->ctlLed(GREEN);
     hardware->checkOpenDoor();
     QStringList datas;
     datas.clear();
-    datas << QDateTime::currentDateTime().addSecs(28800).toString("yyyy-MM-dd HH:mm:ss") << "" << "1" << "" << "0" << "" << "" << "" << "" << "" << "";
-    sqlDatabase->sqlInsertOffline(0, id, 1, 0, 0, 0, datas);
+    int offlineNmae = QDateTime::currentDateTime().toTime_t();
+    m_remoteOPenDoor = offlineNmae;
+    datas << QDateTime::currentDateTime().addSecs(28800).toString("yyyy-MM-dd HH:mm:ss") << "" << "1" << "" << "0"
+          << "" << "" << "" << "" << "" << "";
+    sleep(1);
+    QFile file("snap.jpg");
+    file.open(QIODevice::ReadWrite);
+    QString snapshot = QString::fromUtf8(file.readAll().toBase64());
+    file.close();
+    emit uploadopenlog(offlineNmae, id, snapshot, 0, 2, 1, 0, datas);
+    sqlDatabase->sqlInsertOffline(offlineNmae, id, 2, 0, 0, 0, datas);
 }
 
 void FaceManager::insertFaceGroups(int id, const QString &username, const QString &time, const QString &photoname, const QString &iphone)

@@ -16,6 +16,7 @@ SqlDatabase::SqlDatabase()
     {
         m_database = QSqlDatabase::addDatabase("QSQLITE");
         m_database.setDatabaseName("v2_datas.db");
+        system("chmod 777 v2_datas.db");
         if (!m_database.open())
         {
             qt_debug() << "Error: Failed to connect database." << m_database.lastError();

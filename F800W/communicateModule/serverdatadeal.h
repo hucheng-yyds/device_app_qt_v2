@@ -24,6 +24,8 @@ protected:
     void run();
 
 signals:
+    // 远程开门
+    void openDoor(int mid);
     // 拉取全量
     void allUserId();
     // 实时上传记录

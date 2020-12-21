@@ -890,10 +890,10 @@ void WpaGui::enableNetwork(char *ssid, char *psk, int auth)
     if (key_mgmt)
     {
         qDebug("key_mgmt %s\n",key_mgmt);
-        nc->setNetworkParam(id, "key_mgmt", key_mgmt, true);
+        nc->setNetworkParam(id, "key_mgmt", key_mgmt, false);
     }
-    nc->setNetworkParam(id, "proto", "RSN WPA WPA2", true);
-    nc->setNetworkParam(id, "pairwise", "TKIP CCMP", true);
+//    nc->setNetworkParam(id, "proto", "RSN WPA WPA2", true);
+//    nc->setNetworkParam(id, "pairwise", "TKIP CCMP", true);
     nc->setNetworkParam(id, "psk",psk ,sizeof(psk)!=64);
 	snprintf(cmd, sizeof(cmd), "ENABLE_NETWORK %d", id);
 	reply_len = sizeof(reply);

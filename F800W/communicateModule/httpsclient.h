@@ -32,6 +32,7 @@ protected:
     virtual void run();
 
 private slots:
+    void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
     void HttpLogin();
     void HttpHeartbeat();
 

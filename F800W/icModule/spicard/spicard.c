@@ -150,7 +150,7 @@ int SPI_WriteBytes_LSB_1311(int fd, u8 spireg, u8 *buf, u8 length)
 	xfer[2].len = length;
 	ret = ioctl(fd, SPI_IOC_MESSAGE(3), &xfer);
 	if (ret < 1)
-		printf("can't xfer spi message1");
+//		printf("can't xfer spi message1");
 
 #endif
 #if 1
@@ -196,7 +196,7 @@ u8 SPI_ReadByte_LSB_1311(int fd, u8 readAddress,u8 udata)
 
 	ret = ioctl(fd, SPI_IOC_MESSAGE(2), &xfer);
 	if (ret < 1){
-		printf("can't xfer spi message1");
+//		printf("can't xfer spi message1");
 	}
 #endif	
 #if 1
@@ -237,7 +237,7 @@ xfer[1].len = 1;
 
 ret = ioctl(fd, SPI_IOC_MESSAGE(2), &xfer);
 if (ret < 1){
-	printf("can't xfer spi message1");
+//	printf("can't xfer spi message1");
 }
 */
 /*
@@ -282,7 +282,7 @@ int SPI_ReadBytes_LSB_1311(int fd, u8 spireg, u8 *buf, u8 length)
 
 	ret = ioctl(fd, SPI_IOC_MESSAGE(3), &xfer);
 	if (ret < 1)
-		printf("can't xfer spi message1");
+//		printf("can't xfer spi message1");
 #endif
 #if 1
 	for(i=0;i<length;i++){

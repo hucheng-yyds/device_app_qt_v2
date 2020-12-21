@@ -118,6 +118,7 @@ void ProStorage::init()
     userRequest->start();
     OfflineRecord *offlineRecord = new OfflineRecord;
     ServerDataDeal *dataDeal = new ServerDataDeal;
+    connect(dataDeal, &ServerDataDeal::openDoor, face, &FaceManager::ctlOpenDoor);
     dataDeal->setPacket(serverList);
     RcodeModule *rcode = nullptr;
     if(switchCtl->m_rcode > 0)
@@ -129,6 +130,7 @@ void ProStorage::init()
     }
     if(1 == switchCtl->m_protocol)
     {
+        dataDeal->setHttp(httpClient);
         connect(dataDeal, &ServerDataDeal::insertFaceGroups, face, &FaceManager::insertFaceGroups);
         TcpClient *tcpClient = new TcpClient;
         tcpClient->setPacket(serverList);
@@ -140,6 +142,7 @@ void ProStorage::init()
         connect(userRequest, &UserIdRequest::insertFaceGroups, face, &FaceManager::insertFaceGroups);
         connect(identify, &FaceIdentify::uploadopenlog, tcpClient, &TcpClient::uploadopenlog);
         connect(offlineRecord, &OfflineRecord::uploadopenlog, tcpClient, &TcpClient::uploadopenlog);
+        connect(face, &FaceManager::uploadopenlog, tcpClient, &TcpClient::uploadopenlog);
         connect(dataDeal, &ServerDataDeal::newUsers, userRequest, &UserIdRequest::onNewUsers);
         connect(userRequest, &UserIdRequest::sigInsertFail, tcpClient, &TcpClient::requestInserFail);
         connect(dataDeal, &ServerDataDeal::responseServer, tcpClient, &TcpClient::responseServer);
@@ -156,6 +159,7 @@ void ProStorage::init()
         connect(dataDeal, &ServerDataDeal::insertFaceGroups, face, &FaceManager::insertFaceGroups);
         TcpMiddware *tcpMiddware = new TcpMiddware;
         tcpMiddware->setPacket(serverList);
+        connect(face, &FaceManager::uploadopenlog, tcpMiddware, &TcpMiddware::uploadopenlog);
         connect(identify, &FaceIdentify::uploadopenlog, tcpMiddware, &TcpMiddware::uploadopenlog);
         connect(offlineRecord, &OfflineRecord::uploadopenlog, tcpMiddware, &TcpMiddware::uploadopenlog);
         connect(dataDeal, &ServerDataDeal::responseServer, tcpMiddware, &TcpMiddware::responseServer);
@@ -169,6 +173,7 @@ void ProStorage::init()
     else if(3 == switchCtl->m_protocol)
     {
         dataDeal->setHttp(httpClient);
+        connect(face, &FaceManager::uploadopenlog, httpClient, &HttpsClient::httpsUploadopenlog);
         connect(identify, &FaceIdentify::uploadopenlog, httpClient, &HttpsClient::httpsUploadopenlog);
         connect(offlineRecord, &OfflineRecord::uploadopenlog, httpClient, &HttpsClient::httpsUploadopenlog);
         connect(httpClient, &HttpsClient::allUserId, userRequest, &UserIdRequest::onAlluserId);
@@ -193,6 +198,7 @@ void ProStorage::init()
         connect(dataDeal, &ServerDataDeal::allUserId, tcpClient, &V1TcpClient::requestGetAllUserID);
         connect(tcpClient, &V1TcpClient::allIC, userRequest, &UserIdRequest::onAllUsersIc);
         connect(userRequest, &UserIdRequest::insertFaceGroups, face, &FaceManager::insertFaceGroups);
+        connect(face, &FaceManager::uploadopenlog, tcpClient, &V1TcpClient::uploadopenlog);
         connect(identify, &FaceIdentify::uploadopenlog, tcpClient, &V1TcpClient::uploadopenlog);
         connect(offlineRecord, &OfflineRecord::uploadopenlog, tcpClient, &V1TcpClient::uploadOffine);
         connect(dataDeal, &ServerDataDeal::newUsers, userRequest, &UserIdRequest::onNewUsers);

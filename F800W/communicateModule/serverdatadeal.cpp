@@ -36,8 +36,8 @@ bool ServerDataDeal::checkVersion(const QString &target, const QString &current)
 
 void ServerDataDeal::upgradeFile(const QJsonObject &obj)
 {
-    if (("1" == obj["deviceType"].toString() || DEVICE_TYPE == obj["deviceType"].toString()) &&
-            checkVersion(obj["version"].toString(), VERSION))
+    qt_debug() << obj;
+    if (("1" == obj["deviceType"].toString() || DEVICE_TYPE == obj["deviceType"].toString()))
     {
         dataShare->m_upgrade = true;
         system("rm update.tar.xz");
@@ -79,7 +79,7 @@ void ServerDataDeal::upgradeFile(const QJsonObject &obj)
         else
         {
             system("rm update.tar.xz");
-            qt_debug() << "md5 error !";
+            qt_debug() << "md5 error !" << md5 << obj["md5"].toString();
         }
         dataShare->m_upgrade = false;
     }
@@ -506,17 +506,8 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
             QJsonObject jsonData = jsonObj["data"].toObject();
             if(jsonData.contains("id"))
             {
-                dataShare->m_offlineFlag = false;
-                hardware->ctlLed(GREEN);
-                hardware->checkOpenDoor();
-                QStringList datas;
-                datas.clear();
-                int offlineNmae = QDateTime::currentDateTime().toTime_t();
                 int id = jsonData.value("id").toInt();
-                datas << QDateTime::currentDateTime().addSecs(28800).toString("yyyy-MM-dd HH:mm:ss") << "" << "1" << "" << "0"
-                      << "" << "" << "" << "" << "" << "";
-                emit uploadopenlog(offlineNmae, id, "", 0, 2, 1, 0, datas);
-                sqlDatabase->sqlInsertOffline(offlineNmae, id, 2, 0, 0, 0, datas);
+                emit openDoor(id);
             }
         }
         break;

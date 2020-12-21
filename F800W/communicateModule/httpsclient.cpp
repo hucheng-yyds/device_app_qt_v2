@@ -601,30 +601,36 @@ QJsonObject HttpsClient::requestAuth(const QString &url, const QJsonObject &json
     return document.object();
 }
 
+void HttpsClient::downloadProgress(qint64 bytesReceived, qint64 bytesTotal)
+{
+    int size = (bytesReceived*100) / bytesTotal;
+    qt_debug() << "cur size:" << bytesReceived << "total size:" << bytesTotal << "propress:" << size;
+}
+
 void HttpsClient::httpsDownload(const QString &url)
 {
     QNetworkRequest request;
+    QSslConfiguration config;
+    config.setPeerVerifyMode(QSslSocket::VerifyNone);
+    config.setProtocol(QSsl::TlsV1SslV3);
+    request.setSslConfiguration(config);
     request.setUrl(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader , "application/json");
-    request.setRawHeader("TOKEN", m_strKey.toLocal8Bit());
-    qt_debug() << "httpsDownload start";
-
+    qt_debug() << "httpsDownload start" << url;
     QNetworkAccessManager manager;
     QNetworkReply *reply = manager.get(request);
     QEventLoop eventloop;
     connect(reply, &QNetworkReply::finished, &eventloop, &QEventLoop::quit);
+    connect(reply, &QNetworkReply::downloadProgress, this, &HttpsClient::downloadProgress);
     eventloop.exec(QEventLoop::ExcludeUserInputEvents);
     if (reply->error() == QNetworkReply::NoError) {
-        QString headStr = reply->header(QNetworkRequest::ContentTypeHeader).toString();
-        qt_debug() << headStr;
-        if (headStr.contains("application/octet-stream")) {
-            QFile file("update.tar.xz");
-            file.open(QIODevice::ReadWrite);
-            qt_debug() << file.write(reply->readAll());
-            file.close();
-        }
+        QFile file("update.tar.xz");
+        file.open(QIODevice::ReadWrite);
+        qt_debug() << file.write(reply->readAll());
+        file.close();
         qt_debug() << "httpsDownload success";
     } else {
+        qt_debug() << reply->readAll();
         QVariant statusCodeV = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
         qt_debug() << "get status code: " << statusCodeV.toInt();
         qt_debug() << "get status code: " << (int)reply->error();

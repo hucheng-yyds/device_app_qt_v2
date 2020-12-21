@@ -212,7 +212,7 @@ void ToolTcpServer::onNewConnect(void)
 void ToolTcpServer::OnStateChanged(QAbstractSocket::SocketState state)
 {
     QString stateStr = "";
-    qt_debug() << state;
+//    qt_debug() << state;
     switch(state)
     {
         case QAbstractSocket::HostLookupState:{

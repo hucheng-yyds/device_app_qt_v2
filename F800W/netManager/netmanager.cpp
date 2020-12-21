@@ -165,7 +165,7 @@ void NetManager::run()
                     }
                 }
                 size++;
-                if(size > 60)
+                if(size > 40)
                 {
                     size = 0;
                     qt_debug() << "===============" << value << userName << userPwd << m_wpa->state();
@@ -268,7 +268,7 @@ void NetManager::onConnected()
 void NetManager::onDisconnected()
 {
     m_wifi = false;
-    qt_debug() << "wifi disconnect";
+    qt_debug() << "wifi disconnect" << m_wpa->state();
 }
 
 void NetManager::onPskError()
