@@ -19,10 +19,5 @@ ApplicationWindow {
         id: standby
         visible: false;
     }
-
-    QRcode {
-        id:qrcode;
-        visible: false;
-    }
 }
 
