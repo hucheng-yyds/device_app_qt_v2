@@ -10,8 +10,6 @@
 #include <QDir>
 #include <QTimer>
 #include <QThread>
-#include "datashare.h"
-
 #define qt_debug() qDebug() << __FILE__ \
                             << __LINE__ \
                             << __FUNCTION__ \

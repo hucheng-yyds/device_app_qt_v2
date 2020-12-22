@@ -16,6 +16,8 @@
 #include "switch.h"
 #include "sqldatabase.h"
 #include "datashare.h"
+#include "faceinterface.h"
+
 
 ToolTcpServer::ToolTcpServer()
 {
@@ -29,9 +31,6 @@ ToolTcpServer::ToolTcpServer()
     mTool_msgLen    = 0;
     mTool_msgBody.clear();
 
-//    dataSize = 0;
-//    dataArray.clear();
-
     void onGetDevIp(const QString &ver, const QString &name, const QString &number, const QString &devIp, const QString &devSn);
 
     m_udpServer.start();
@@ -42,13 +41,84 @@ ToolTcpServer::ToolTcpServer()
     system("rm Voiceupdate.tar.xz");
 }
 
+void ToolTcpServer::get1080pImage()
+{
+//    unsigned char *m_bgrImage;
+//    int offlineNmae = 0;
+//    QString snapshot = "";
+//    cv::Mat nv21(VIDEO_HEIGHT + VIDEO_HEIGHT / 2, VIDEO_WIDTH, CV_8UC1, m_bgrImage);
+//    cv::Mat image;
+//    cv::cvtColor(nv21, image, CV_YUV2BGR_NV21);
+//    if(image.empty())
+//    {
+//        printf("load image error!!\n");
+
+//    }
+//    QVector<int> opts;
+//    opts.push_back(cv::IMWRITE_JPEG_QUALITY);
+//    opts.push_back(30);
+//    opts.push_back(cv::IMWRITE_JPEG_OPTIMIZE);
+//    opts.push_back(1);
+//    cv::imwrite("snap.jpg", image, opts.toStdVector());
+//    QFile file("snap.jpg");
+//    file.open(QIODevice::ReadWrite);
+//    snapshot = QString::fromUtf8(file.readAll().toBase64());
+//    file.close();
+//    offlineNmae = QDateTime::currentDateTime().toTime_t();
+//    QString offline_path = "cp snap.jpg offline/" + QString::number(offlineNmae) + ".jpg";
+//    system(offline_path.toStdString().c_str());
+}
+
+
+void ToolTcpServer::sendImage()
+{
+//    QByteArray sendData = "";
+//    QJsonObject sendObj;
+//    QFile file("snap1080p.jpg");
+//    QByteArray readData;
+//    QString m_fileBase64;
+//    int len = 0;
+//    if(file.open(QIODevice::ReadWrite))
+//    {
+//        readData = file.readAll();
+//        m_fileBase64 = readData.toBase64();
+//        len = m_fileBase64.length();
+//        //versionUpdate(7,QString::number(len));   //拆包升級
+//        if(len >0)
+//        {
+//            sendObj.insert("snap1080p", m_fileBase64);
+//            QJsonDocument document;
+//            document.setObject(sendObj);
+//            QByteArray stateData = document.toJson(QJsonDocument::Compact);
+//            sendData.append("OFLN");
+//            sendData.append(uchar(1));
+//            sendData.append(uchar(1));
+//            sendData.append(uchar(1));
+//            sendData.append(intToByte(stateData.length()));
+//            sendData.append(stateData);
+//            m_tcpSocket->write(sendData);
+//            m_tcpSocket->flush();
+//        }
+//    }
+//    file.close();
+}
+
 void ToolTcpServer::onGetTempResponse(QByteArray dat)
 {
-    QJsonObject jaSonObject;
-    qt_debug() << dat.toHex();
-    jaSonObject.insert("msgType","2");
-    jaSonObject.insert("data",QString(dat.toHex()));
-    ResponseDataToTool(Dev_TemCalibration_response,jaSonObject);
+    if(dat == "tempok")
+    {
+        QJsonObject jaSonObject;
+        jaSonObject.insert("msgType","1");
+        jaSonObject.insert("cmd","2");
+        ResponseDataToTool(Dev_FirmwareUpgrade_response,jaSonObject);
+    }else {
+        QJsonObject jaSonObject;
+        qt_debug() << dat.toHex();
+        jaSonObject.insert("msgType","2");
+        jaSonObject.insert("data",QString(dat.toHex()));
+        ResponseDataToTool(Dev_TemCalibration_response,jaSonObject);
+    }
+
 }
 
 void ToolTcpServer::onCaptureCamPicture(QByteArray dat)//抓取到图片的数据
@@ -136,12 +206,13 @@ void ToolTcpServer::onNewConnect(void)
         });
 
     }
+    m_heartBeat->stop();
 }
 
 void ToolTcpServer::OnStateChanged(QAbstractSocket::SocketState state)
 {
     QString stateStr = "";
-    qt_debug() << state;
+//    qt_debug() << state;
     switch(state)
     {
         case QAbstractSocket::HostLookupState:{
@@ -402,7 +473,7 @@ void ToolTcpServer::setParameters(QJsonObject & data,QString msgType,QString cmd
     // 安全帽开关
     if(data.contains(key_helet))
     {
-        switchCtl->m_helet = data.value(key_helet).toBool();
+        switchCtl->m_helet = data.value(key_helet).toInt();
     }
     // 口罩开关 0:表示关闭 1:提醒 2:检测
     if(data.contains(key_mask))
@@ -477,7 +548,10 @@ void ToolTcpServer::setParameters(QJsonObject & data,QString msgType,QString cmd
     }
     if(data.contains(key_tempCtl))
     {
-        switchCtl->m_tempCtl = data.value(key_tempCtl).toBool();
+        if(dataShare->m_tempModule)
+        {
+            switchCtl->m_tempCtl = data.value(key_tempCtl).toBool();
+        }
     }
     if(data.contains(key_loose))
     {
@@ -568,8 +642,7 @@ void ToolTcpServer::parseData(QByteArray &new_cmd)
     //for temp
     int m_cmd = cmd[0] & 0xFF;
 
-
-//    qt_debug() << m_cmd<<recData;
+    qt_debug() << m_cmd;
 
      if(m_cmd == Dev_CameraCalibration_request)
     {
@@ -597,7 +670,7 @@ void ToolTcpServer::parseData(QByteArray &new_cmd)
                 {
                      msgType = rootObj["msgType"].toString();
                      cmdStr = rootObj["cmd"].toString();
-//                     qt_debug()<< msgType << cmdStr;
+                     qt_debug()<< msgType << cmdStr;
                     if(m_cmd == Dev_Information_request)
                     {
                        if(msgType == "0") //设备配置信息
@@ -629,45 +702,48 @@ void ToolTcpServer::parseData(QByteArray &new_cmd)
                     {
                             if(msgType == "0")
                             {
-                                if(cmdStr == "0")//获取身份证登记信息
+                                if(cmdStr == "1")//获取身份证登记信息
                                 {
-
                                     QList<QStringList> fileList;
                                     QStringList infoList;
                                     infoList.clear();
                                     fileList.clear();
-                //                    QSet<int> datas = sqlDatabase->sqlSelectSaveIdentifyAll();
-                //                    if(datas.count() > 0)
-                //                    {
-                //                        foreach (int i, datas)
-                //                        {
-                //                            fileList.clear();
-                //                            infoList.append(sqlDatabase->sqlSaveIdentifySelect(i).value(1).toString());
-                //                            infoList.append(sqlDatabase->sqlSaveIdentifySelect(i).value(2).toString());
-                //                            infoList.append(sqlDatabase->sqlSaveIdentifySelect(i).value(3).toString());
-                //                            infoList.append(sqlDatabase->sqlSaveIdentifySelect(i).value(4).toString());
-                //                            infoList.append(sqlDatabase->sqlSaveIdentifySelect(i).value(5).toString());
-                //                            infoList.append(sqlDatabase->sqlSaveIdentifySelect(i).value(6).toString());
-                //                            infoList.append(sqlDatabase->sqlSaveIdentifySelect(i).value(7).toString());
-                //                            infoList.append(sqlDatabase->sqlSaveIdentifySelect(i).value(8).toString());
-                //                            fileList.append(infoList);
-                //                            infoList.clear();
-                //                            sendSaveFileClient(fileList);
-                //                            msleep(10);
-                //                        }
-                //                        msleep(100);
-                //                        sendSaveEnd();
-                //                    }
-
-                                //  ResponseDataToTool(Dev_OfflineDatExport_request,msgType,cmd,"","200","");
-                                }else if(cmd == "1")//删除身份证登记消息
+                                    QList<int> datas = sqlDatabase->sqlSelectAllOffLine();
+                                    if(datas.count() > 0)
+                                    {
+                                        foreach (int i, datas)
+                                        {
+                                            fileList.clear();
+                                            QString && nation = sqlDatabase->sqlSelectOffline(i).value(14).toString();//民族
+                                            if(nation == "")
+                                                continue;
+                                            infoList.append(sqlDatabase->sqlSelectOffline(i).value(13).toString());
+                                            infoList.append(sqlDatabase->sqlSelectOffline(i).value(11).toString());
+                                            infoList.append(QString::number(sqlDatabase->sqlSelectOffline(i).value(12).toInt()));
+                                            infoList.append(nation);
+                                            infoList.append(sqlDatabase->sqlSelectOffline(i).value(16).toString());
+                                            infoList.append(sqlDatabase->sqlSelectOffline(i).value(4).toString());
+                                            infoList.append(QString::number(sqlDatabase->sqlSelectOffline(i).value(0).toInt()));
+                                            infoList.append(sqlDatabase->sqlSelectOffline(i).value(3).toString());
+                                            qt_debug() << infoList;
+                                            fileList.append(infoList);
+                                            infoList.clear();
+                                            sendSaveFileClient(fileList);
+                                            msleep(10);
+                                        }
+                                        msleep(100);
+                                        sendSaveEnd();
+                                    }else {
+                                            qt_debug() << "no identify data !";
+                                    }
+                               }else if(cmd == "0")//删除身份证登记消息
                                 {
                                     //删除数据库
                                  //   ResponseDataToTool(Dev_OfflineDatExport_request,msgType,cmd,"","200","");
                                 }
                             }
                     }else if(m_cmd == Dev_FirmwareUpgrade_request)
-                    {    qt_debug() << "Dev_FirmwareUpgrade_request";
+                    {    //qt_debug() << "Dev_FirmwareUpgrade_request";
                         if(msgType == "0")//恢復默认设置
                         {
                             if(cmdStr == "0")
@@ -681,17 +757,17 @@ void ToolTcpServer::parseData(QByteArray &new_cmd)
                                 qt_debug()<<"";
                                 system("rm *.db");
                                 system("rm offline/*");
-                                system("killall -9 F01 && reboot");
+                                system("reboot");
 
                             }
                         }else if(msgType == "1")//升级固件
                         {
-                             if(cmdStr == "0")
+                            if(cmdStr == "0")
                             {
-                                if(rootObj.contains("versionUpdate"))
-                                {
+                                if(rootObj.contains("hardUpdate"))
+                                {    setSendingLostsOfData(true);
                                     QString verStr;
-                                    verStr = rootObj.value("versionUpdate").toString();
+                                    verStr = rootObj.value("hardUpdate").toString();
                                     QByteArray verdata = QByteArray::fromBase64(verStr.toUtf8());
                                     QFile file("F01N");
                                     if (!file.open(QFile::ReadWrite)) {
@@ -705,36 +781,38 @@ void ToolTcpServer::parseData(QByteArray &new_cmd)
                                     QJsonObject response;
                                     response.insert("msgType",msgType);
                                     response.insert("cmd",cmdStr);
-                                    ResponseDataToTool(Dev_FirmwareUpgrade_request,response);
+                                    ResponseDataToTool(Dev_FirmwareUpgrade_response,response);
                                     msleep(1000);
-                                    system("killall -9 F01 && reboot");
+                                    system("reboot");
                                 }
                             }
                             else if(cmdStr == "1")//
-                            {   qt_debug() << "Dev_FirmwareUpgrade_request2";
+                            {  // qt_debug() << "Dev_FirmwareUpgrade_request2";
                                 DevUpdate(rootObj);
                             }
                             else if(cmdStr == "2")//测温固件升级
                             {
-                                 if(rootObj.contains("versionTempUpdate"))
-                                 {
-                                     system("rm temp.bin");
-                                     QString verStr;
-                                     verStr = rootObj.value("versionTempUpdate").toString();
-                                     QByteArray verdata = QByteArray::fromBase64(verStr.toUtf8());
-                                     QFile file("temp.bin");
-                                     if (!file.open(QFile::ReadWrite)) {
-                                         qt_debug() << "open failed!";
-                                         return ;
-                                     }
-                                     file.write(verdata);
-                                     file.close();
-                                     QJsonObject response;
-                                     response.insert("msgType",msgType);
-                                     response.insert("cmd",cmdStr);
-                                     ResponseDataToTool(Dev_FirmwareUpgrade_request,response);
-                                    // emit sigSendUpdateTemp();
-                                 }
+                                if(rootObj.contains("hardUpdate"))
+                                {   setSendingLostsOfData(true);
+                                    system("rm temp.bin");
+                                    QString verStr;
+                                    verStr = rootObj.value("hardUpdate").toString();
+                                    QByteArray verdata = QByteArray::fromBase64(verStr.toUtf8());
+                                    QFile file("temp.bin");
+                                    if (!file.open(QFile::ReadWrite)) {
+                                        qt_debug() << "open failed!";
+                                        return ;
+                                    }
+                                    file.write(verdata);
+                                    file.close();
+                                    emit sigSendUpdateTemp();
+                                }
+                            }
+                            else if(cmdStr == "3"){
+
+                                system("rm base64SaveFile.txt");
+                                system("rm update.tar.xz");
+                                system("rm temp.bin");
                             }
                         }
                     }else if(m_cmd == Dev_Debugging_request)
@@ -748,7 +826,8 @@ void ToolTcpServer::parseData(QByteArray &new_cmd)
                         }
                         else if(msgType == "1")//摄像头抓取图片
                         {
-                           emit sigCaptureCamPicture();
+                            get1080pImage();
+                          // emit sigCaptureCamPicture();
                         }
                         else if(msgType == "2")//对数据库的操作
                         {
@@ -758,30 +837,11 @@ void ToolTcpServer::parseData(QByteArray &new_cmd)
                             }
                             else if(cmdStr == "1")//下发人脸
                             {
+                                qt_debug() << "upDateFace";
+                                updateUser(rootObj);
 
-                                 int id = rootObj.value("id").toInt();
-                                 int passNum = rootObj.value("passNum").toInt();
-                                 int isBack = rootObj.value("isBack").toInt();
-                                 QVariant picture = rootObj.value("picture").toInt();
-                                 QString userName = rootObj.value("userName").toString();
-                                 QString collectTimes = rootObj.value("collectTimes").toString();
-                                 QString carNum = rootObj.value("carNum").toString();
-                                 QString rightStarTime = rootObj.value("rightStarTime").toString();
-                                 QString rightEndTime = rootObj.value("rightEndTime").toString();
-                                 QString week = rootObj.value("week").toString();
-                                 QString Times = rootObj.value("Times").toString();
-                                 QString PhotoNum = rootObj.value("PhotoNum").toString();
-                                 QString picName = rootObj.value("picName").toString();
-                                 QString remark = rootObj.value("remark").toString();
-
-                                 QStringList list;
-                                 list << userName << collectTimes << carNum << rightStarTime << \
-                                 rightEndTime << week << Times << PhotoNum << picName << remark;
-                               // sqlDatabase->sqlInsert(id,passNum,isBack,picture,list);
-                                // data:从索引0依次开始 用户名、采集时间、门禁卡号、权限开始时间、权限结束时间、星期字段、一天的通行时段、手机号、图片名称、备注
-                                //void sqlInsert(int id, int passnum, int isBack, const QVariant &feature, const QStringList &data);
                             }
-                          //  ResponseDataToTool(Dev_FirmwareUpgrade_request,msgType,cmd,"","200","");
+
                         } else if(msgType == "3")//重启设备
                         {
                             QJsonObject response;
@@ -954,9 +1014,6 @@ void ToolTcpServer::parseData(QByteArray &new_cmd)
         }
     }
     system("sync");
-//    dataSize = 0;
-//    dataArray.clear();
-
     mTool_msgLen    = 0;
     mTool_msgBody.clear();
 }
@@ -965,15 +1022,16 @@ void ToolTcpServer::sendSaveEnd()
 {
     QByteArray sendData = "";
     QJsonObject jsonObj;
-    QJsonObject dataObj;
-    jsonObj.insert("readSaveEnd", "end");
+    jsonObj.insert("msgType","0");
+    jsonObj.insert("cmd","1");
+    jsonObj.insert("endFile", 1);
     QJsonDocument document;
     document.setObject(jsonObj);
     QByteArray stateData = document.toJson(QJsonDocument::Compact);
     sendData.append("OFLN");
     sendData.append(uchar(1));
     sendData.append(uchar(1));
-    sendData.append(uchar(1));
+    sendData.append(uchar(Dev_OfflineDatExport_response));
     sendData.append(intToByte(stateData.length()));
     sendData.append(stateData);
     if(m_tcpSocket)
@@ -1001,7 +1059,7 @@ void ToolTcpServer::sendSaveFileClient(QList<QStringList> fileList)
             dataObj.insert("nation", k.at(3));
             dataObj.insert("birth", k.at(4));
             dataObj.insert("temp", k.at(5));
-            QFile file(k.at(6));
+            QFile file("offline/"+k.at(6)+".jpg");
             file.open(QIODevice::ReadWrite);
             QString snaps = QString::fromUtf8(file.readAll().toBase64());
             file.close();
@@ -1010,6 +1068,10 @@ void ToolTcpServer::sendSaveFileClient(QList<QStringList> fileList)
             fileArray.append(dataObj);
         }
         jsonObj.insert("readSaveIdentifyFile", fileArray);
+        jsonObj.insert("msgType","0");
+        jsonObj.insert("cmd","1");
+        jsonObj.insert("endFile",0);
+
         QJsonDocument document;
         document.setObject(jsonObj);
         QByteArray stateData = document.toJson(QJsonDocument::Compact);
@@ -1030,7 +1092,7 @@ void ToolTcpServer::sendSaveFileClient(QList<QStringList> fileList)
 
 void ToolTcpServer::responseClient(QString state)
 {
-    qt_debug()<<__PRETTY_FUNCTION__<<state;
+    qt_debug()<<state;
     QByteArray sendData = "";
     QJsonObject sendObj;
     sendObj.insert("state",state);
@@ -1058,7 +1120,7 @@ void ToolTcpServer::sendSNtoClient()
     dat.insert("log",dataShare->m_log);
     dat.insert("sn",switchCtl->m_sn);
     dat.insert("screenCtl",switchCtl->m_screenCtl);
-
+    dat.insert("version", VERSION);
     dat.insert("msgType","0");
     dat.insert("cmd","0");
 
@@ -1103,7 +1165,12 @@ void ToolTcpServer::ResponseDataToTool(ToolCmdHead headCmd,QJsonObject & sendObj
 
 void ToolTcpServer::DevUpdate(QJsonObject rootObj)
 {
-   setSendingLostsOfData(true);
+
+    QString packnumber;
+    QStringList tmp;
+    tmp.clear();
+
+    setSendingLostsOfData(true);
     QJsonObject dataObj;
     dataObj = rootObj.value("hardUpdate").toObject();
     if(dataObj.contains("hardUpdate"))
@@ -1124,10 +1191,16 @@ void ToolTcpServer::DevUpdate(QJsonObject rootObj)
 //                                real_verStr = "";
                 }
                 saveFile.close();
-                responseHardUpdate(Dev_FirmwareUpgrade_response,"Success");
+
+                if(dataObj.contains("packNumber"))
+                {
+                   packnumber =  QString::number(dataObj.value("packNumber").toInt());
+                }
+                tmp << packnumber;
+                responseHardUpdate(Dev_FirmwareUpgrade_response,"Success",tmp);
             }
             else
-            {
+            {        qt_debug();
                 QFile saveFile("base64SaveFile.txt");
                 if(saveFile.open(QIODevice::ReadWrite | QIODevice::Append))
                 {
@@ -1154,7 +1227,14 @@ void ToolTcpServer::DevUpdate(QJsonObject rootObj)
                 file.close();
                 if(dataObj.contains("md5"))
                 {
-                    responseHardUpdate(Dev_FirmwareUpgrade_response,"Success");
+
+                    if(dataObj.contains("packNumber"))
+                    {
+                       packnumber = QString::number(dataObj.value("packNumber").toInt());
+                    }
+                    tmp << packnumber;
+                    responseHardUpdate(Dev_FirmwareUpgrade_response,"Success",tmp);
+
                     qt_debug();
                     QFile tarfile("update.tar.xz");
                     QByteArray data;
@@ -1169,8 +1249,7 @@ void ToolTcpServer::DevUpdate(QJsonObject rootObj)
                     if(md5 == dataObj.value("md5").toString())
                     {
 
-
-                        responseHardUpdate(Dev_FirmwareUpgrade_response,"tarxz");
+                        responseHardUpdate(Dev_FirmwareUpgrade_response,"tarxz",tmp);
 
                         //清空，其他数据进来
                         mTool_msgLen    = 0;
@@ -1198,15 +1277,15 @@ void ToolTcpServer::DevUpdate(QJsonObject rootObj)
                                    "sync");
                         }
 
-                        responseHardUpdate(Dev_FirmwareUpgrade_response,"reboot");
+                        responseHardUpdate(Dev_FirmwareUpgrade_response,"reboot",tmp);
                         msleep(1000);
                         qt_debug() << "system reboot";
-                        system("killall -9 F01 && reboot");
+                        system("reboot");
                     }
                     else {
                         system("rm base64SaveFile.txt");
                         system("rm update.tar.xz");
-                        responseHardUpdate(Dev_FirmwareUpgrade_response,"error");
+                        responseHardUpdate(Dev_FirmwareUpgrade_response,"error",tmp);
                     }
                     dataShare->m_upgrade = false;
                 }
@@ -1332,15 +1411,22 @@ void ToolTcpServer::responseDataToService(ToolCmdHead cmd, QJsonObject & sendObj
     }
 }
 
-void ToolTcpServer::responseHardUpdate(ToolCmdHead cmd,QString state)
+/*
+    *@des:
+    *@param:dat,0:packNumber
+    *
+*/
+void ToolTcpServer::responseHardUpdate(ToolCmdHead cmd,QString state,QStringList dat)
 {
-
     QByteArray sendData = "";
     QJsonObject sendObj;
     sendObj.insert("result","200");
     sendObj.insert("desc","");
     sendObj.insert("data",state);
     sendObj.insert("msgType","1");
+    if(dat.length()!=0){
+          sendObj.insert("packNumber",dat.at(0).toInt());
+    }
     sendObj.insert("cmd","1");
     QJsonDocument document;
     document.setObject(sendObj);
@@ -1374,3 +1460,30 @@ void ToolTcpServer::setSendingLostsOfData(bool flag)
         m_heartBeat->start();
     }
 }
+
+void ToolTcpServer::updateUser(QJsonObject &data)
+{
+    if(dataShare->m_netStatus)
+    {
+        QJsonObject response,data;
+        response.insert("msgType","2");
+        response.insert("cmd","1");
+        response.insert("desc","deviceOnLine");
+        ResponseDataToTool(Dev_Debugging_response,response);
+       qt_debug() << " device is had connected to serve!";
+        return ;
+    }
+
+    if(data.contains("data") )
+    {
+        qt_debug() << "get new person";
+        QJsonObject && jsonObj = data.value("data").toObject();
+        emit  updateUsers(jsonObj);
+        QJsonObject response,data;
+        response.insert("msgType","2");
+        response.insert("cmd","1");
+        response.insert("desc","ok");
+        ResponseDataToTool(Dev_Debugging_response,response);
+    }
+}
+

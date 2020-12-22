@@ -15,6 +15,7 @@ public:
         }
         return m_Instance;
     }
+    bool m_tempModule;
     // 储存目录前缀
     const QString m_pathPrefix = "/mnt/UDISK/";
     // 离线图片目录

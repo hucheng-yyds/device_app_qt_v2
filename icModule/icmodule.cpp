@@ -1,118 +1,151 @@
 #include "icmodule.h"
-#include "spicard.h"
-#include "libHTRC.h"
 #include "datashare.h"
+
+static int setOpt(int fd, int nSpeed, int nBits, char nEvent, int nStop)
+{
+    struct termios newtio,oldtio;
+    /*save local informion of uart,if uart port error,then about it informion be appeard*/
+    if(tcgetattr(fd,&oldtio)!=0){
+        perror("SetupSerial 1");
+        return -1;
+    }
+    bzero(&newtio,sizeof(newtio));
+    /*step 1,set fontsize*/
+    newtio.c_cflag |=CLOCAL | CREAD;
+    newtio.c_cflag &= ~CSIZE;
+    /*set bit_stop*/
+    switch(nBits)
+    {
+    case 7:
+        newtio.c_cflag |=CS7;
+        break;
+    case 8:
+        newtio.c_cflag |=CS8;
+        break;
+    default:
+        newtio.c_cflag |=CS8;
+        break;
+    }
+    /*set jo_check_bit*/
+    switch(nEvent)
+    {
+    case 'O'://j
+        newtio.c_cflag |=PARENB;
+        newtio.c_cflag |=PARODD;
+     //   newtio.c_iflag |=(INPCK | ISTRIP);
+        break;
+    case 'E'://O
+        newtio.c_cflag |= PARENB;
+        newtio.c_cflag &= ~PARODD;
+        break;
+    case 'N'://no
+//    		newtio.c_iflag &= ~INPCK ;  //
+        newtio.c_cflag &=~PARENB;
+        break;
+    }
+    /*set bps*/
+    switch(nSpeed)
+    {
+        case 2400:
+            cfsetispeed(&newtio,B2400);
+            cfsetospeed(&newtio,B2400);
+            break;
+        case 4800:
+            cfsetispeed(&newtio,B4800);
+            cfsetospeed(&newtio,B4800);
+            break;
+        case 9600:
+            cfsetispeed(&newtio,B9600);
+            cfsetospeed(&newtio,B9600);
+            break;
+        case 19200:
+            cfsetispeed(&newtio,B19200);
+            cfsetospeed(&newtio,B19200);
+            break;
+        case 115200:
+            cfsetispeed(&newtio,B115200);
+            cfsetospeed(&newtio,B115200);
+            break;
+        case 460800:
+            cfsetispeed(&newtio,B460800);
+            cfsetospeed(&newtio,B460800);
+            break;
+        default:
+            cfsetispeed(&newtio,B115200);
+            cfsetospeed(&newtio,B115200);
+            break;
+    }
+    /*set stop bit*/
+        if(nStop==1)
+            newtio.c_cflag &= ~CSTOPB;
+        else if(nStop==2)
+            newtio.c_cflag |= CSTOPB;
+    /*set waittime and mincharsize*/
+        newtio.c_cc[VTIME]=0;
+        newtio.c_cc[VMIN]=0;
+    /*process char unrece*/
+        tcflush(fd,TCIFLUSH);
+    /*action newsetinfo*/
+        if((tcsetattr(fd,TCSANOW,&newtio))!=0)
+        {
+            perror("com set error");
+            return -1;
+        }
+        printf("set done!\n");
+        return 0;
+}
 
 IcCardModule::IcCardModule()
 {
-
+    icCountdown_ms(0);
+    m_icDatas.clear();
+    m_fd = open("/dev/ttyS2", O_RDWR);
+    qt_debug() << "IcCardModule" << m_fd;
+    int flags = fcntl(m_fd,F_GETFL,0);
+    flags &= ~O_NONBLOCK;
+    fcntl(m_fd,F_SETFL,flags);
+    if(setOpt(m_fd,9600,8,'N',1) < 0)
+    {
+        perror("set_opt error");
+        return;
+    }
+    tcflush(m_fd, TCIOFLUSH);
 }
 
 void IcCardModule::run()
 {
-    uint16_t status;
-    status = OpenReader();
-
-    if (status != ST_OK)
+    QByteArray icDatas;
+    icDatas.clear();
+    while(true)
     {
-        return ;
-    }
-    CardInfo card_check;
-    status = QueryCard(&card_check);
-    if(status == ST_OK)
-    {
-        sleep(10);
-        while (1)
+        int len, fs_sel;
+        fd_set fs_read;
+        struct timeval time;
+        time.tv_sec = 0;              //set the rcv wait time
+        time.tv_usec = 1000000;    //100000us = 0.1s
+        FD_ZERO(&fs_read);        //每次循环都要清空集合，否则不能检测描述符变化
+        FD_SET(m_fd, &fs_read);    //添加描述符
+        fs_sel = select(m_fd + 1, &fs_read, nullptr, nullptr, &time);
+        if(fs_sel)
         {
-            IDCardInfo IdInfo;
-            CardInfo card;
-            status = QueryCard(&card);
-            if (status == ST_OK && card.CardType != CARD_TYPE_NONE)
-            {
-                if (card.CardType == CARD_TYPE_IDCARD)
-                {
-                    if(switchCtl->m_vi && icExpired())
-                    {
-                        emit readIcStatus(1);
-                        //读身份证全信息
-                        status = ReadIDCard("szofzn", "WYAxFsOeLTIeWlj4", nullptr, nullptr, 8885, &IdInfo);
-                        system("rm sfz.bmp");
-                        if (status == ST_OK)
-                        {
-                            FILE *fp = fopen("sfz.bmp", "w+");
-                            if (fp != nullptr)
-                            {
-                                fwrite(IdInfo.BmpPhoto, 1, IdInfo.BitmapLen, fp);
-                                fclose(fp);
-                            }
-                            icCountdown_ms(4*1000);
-                            dataShare->m_idCardDatas.clear();
-                            dataShare->m_idCardDatas << IdInfo.name << IdInfo.IdNumber << IdInfo.sex << IdInfo.Address << IdInfo.Birthday << IdInfo.nation;
-                            dataShare->m_idCardFlag = true;
-                            emit readIcStatus(2);
-                        }
-                        else
-                        {
-                            emit readIcStatus(0);
-                            dataShare->m_idCardFlag = false;
-                            hardware->playSound(tr("读卡失败").toUtf8(), "rkshibai.aac");
-                        }
-                    }
-                }
-                else
-                {
-                    dataShare->m_idCardFlag = false;
-                    if(icExpired())
-                    {
-                        QByteArray byte;
-                        for (uint8_t i = 0; i < card.CardNumbLen; i++)
-                        {
-                            byte.append(card.CardNumb[i]);
-                        }
-                        QString cardNo = QString::fromUtf8(byte.toHex()).toLower();
-                        int time = 3*1000;
-                        if(switchCtl->m_tempCtl)
-                        {
-                            time = 4*1000;
-                        }
-                        int mid = sqlDatabase->sqlSelectIcId(cardNo);
-                        icCountdown_ms(time);
-                        emit sigIcInfo(mid, cardNo);
-                    }
-                }
-                msleep(200);
-            }
-            else
-            {
-                if(dataShare->m_idCardFlag)
-                {
-                    if(icExpired())
-                    {
-                        dataShare->m_idCardFlag = false;
-                        hardware->playSound(tr("已超时").toUtf8(), "chaoshi.aac");
-                    }
-                }
-                msleep(200);
-            }
+            char buf[8];
+            len = read(m_fd, buf, 8);
+            icDatas.append(buf);
         }
-    }
-    else
-    {
-        CloseReader();
-        qt_debug() << IF_InitSPICard();
-        while (true)
+        else
         {
-            _CardInfoType buf;
-            IF_GetCardId(&buf);
-
+            // 9AD69F18 \xD2\xCF\x0E;,\x01\x9A\xD6\x9F\x18WP
+            if (icDatas.isEmpty())
+            {
+                msleep(200);
+                continue ;
+            }
+            //d2cf0e3b2c019ad69fd618d65750
+            //d2cf0e3b2c019ad69f189f579f509f
             if(icExpired())
             {
-                QByteArray byte;
-                byte.append(buf.uCardId[0]);
-                byte.append(buf.uCardId[1]);
-                byte.append(buf.uCardId[2]);
-                byte.append(buf.uCardId[3]);
-                QString cardNo = QString::fromUtf8(byte.toHex()).toLower();
+                QString cardNo = icDatas.toHex().mid(12, 8);
+                qt_debug() << icDatas << cardNo;
                 int time = 3*1000;
                 if(switchCtl->m_tempCtl)
                 {
@@ -122,7 +155,7 @@ void IcCardModule::run()
                 icCountdown_ms(time);
                 emit sigIcInfo(mid, cardNo);
             }
-            msleep(200);
+            icDatas.clear();
         }
     }
 }

@@ -58,11 +58,6 @@ void ProStorage::init()
 //    connect(idcard, &IdCardModule::readIdStatus, this, &ProStorage::readIcStatus);
 //    idcard->start();
 
-//    IcCardModule *iccard = new IcCardModule;
-//    connect(iccard, &IcCardModule::sigIcInfo, identify, &FaceIdentify::dealIcData);
-//    connect(iccard, &IcCardModule::readIcStatus, this, &ProStorage::readIcStatus);
-//    iccard->start();
-
 //    WgModule *wg = new WgModule;
 //    connect(identify, &FaceIdentify::wgOut, wg, &WgModule::wgOut);
 //    connect(wg, &WgModule::sigWgInfo, identify, &FaceIdentify::dealIcData);
@@ -77,6 +72,8 @@ void ProStorage::init()
     connect(tempManager,&TempManager::tempeatureInfo,toolTcpServer,&ToolTcpServer::onGetTempResponse);
     connect(toolTcpServer,&ToolTcpServer::sigSetAllScreenOn,tempManager,&TempManager::openAllScreenTemp);
     connect(toolTcpServer,&ToolTcpServer::sigGetTempHardwareInfo,tempManager,&TempManager::getTempInfo);
+    //测温模块程序升级
+    connect(toolTcpServer,&ToolTcpServer::sigSendUpdateTemp,tempManager, &TempManager::sendTempProgram);
 
 
     MqttModule *mqttClient = new MqttModule;
@@ -104,6 +101,10 @@ void ProStorage::init()
     }
     face->start(/*QThread::IdlePriority*/);
     identify->start();
+    IcCardModule *iccard = new IcCardModule;
+    connect(iccard, &IcCardModule::sigIcInfo, identify, &FaceIdentify::dealIcData);
+    connect(iccard, &IcCardModule::readIcStatus, this, &ProStorage::readIcStatus);
+    iccard->start();
     userRequest->start();
     OfflineRecord *offlineRecord = new OfflineRecord;
     ServerDataDeal *dataDeal = new ServerDataDeal;

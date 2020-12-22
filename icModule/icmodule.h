@@ -28,5 +28,7 @@ private:
 private:
     // 定时到达的结束时间 单位ms
     qint64 m_endTimerMs;
+    QByteArray m_icDatas;
+    int m_fd;
 };
 #endif // ICMODULE_H

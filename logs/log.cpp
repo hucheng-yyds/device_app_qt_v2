@@ -1,12 +1,12 @@
 #include "log.h"
-
+#include "datashare.h"
 QStringList Log::logList;
 
 void Log::outputMessage(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
 //    QMutexLocker locker(&mutex);
     QDateTime dateTime = QDateTime::currentDateTime().addSecs(28800);
-    QString path = dataShare->m_pathPrefix + "log/";
+    QString path = QDir::currentPath() + "/log/";
     QDir dir(path);
     if (!dir.exists()) {
         qt_debug() << path << dir.mkdir(path);
@@ -53,37 +53,37 @@ Log::Log(QObject *parent) : QObject(parent)
             }
         }
     });
-//    qInstallMessageHandler(outputMessage);
-  }
+  qInstallMessageHandler(outputMessage);
+}
 
-  void Log::onToolTcpStateChange(bool state)//true:链接上了，false:链接断开
-  {    qt_debug() << state;
-      if(!state)//
-      {
-//          timer->stop();
-//          dataShare->m_log = true;
-//         qInstallMessageHandler(outputMessage);
-      }
-  }
+void Log::onToolTcpStateChange(bool state)//true:链接上了，false:链接断开
+{    qt_debug() << state;
+    if(!state)//
+    {
+        timer->stop();
+        dataShare->m_log = true;
+       qInstallMessageHandler(outputMessage);
+    }
+}
 
-  //true 输出到文件
-  void Log::onLogFun(bool on)
-  {
-      if(on)
-      {
-          dataShare->m_log = true;
-          timer->stop();
-         qInstallMessageHandler(outputMessage);
+//true 输出到文件
+void Log::onLogFun(bool on)
+{
+    if(on)
+    {
+        dataShare->m_log = true;
+        timer->stop();
+       qInstallMessageHandler(outputMessage);
 
-      }else {
-          dataShare->m_log = false;
-          //立刻发送数据
-          foreach(auto item,Log::logList)
-          {
-              emit sigLogMsg(item);
-              logList.removeOne(item);
-          }
-          timer->start();
-       qInstallMessageHandler(outputMessageOnLine);
-      }
-  }
+    }else {
+        dataShare->m_log = false;
+        //立刻发送数据
+        foreach(auto item,Log::logList)
+        {
+            emit sigLogMsg(item);
+            logList.removeOne(item);
+        }
+        timer->start();
+        qInstallMessageHandler(outputMessageOnLine);
+    }
+}

@@ -10,6 +10,7 @@
 #include "face_sdk.h"
 #include "FaceIDAPI.h"
 #include "log.h"
+#include "datashare.h"
 
 #define sqlDatabase SqlDatabase::getInstance()
 
