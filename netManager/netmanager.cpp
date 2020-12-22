@@ -88,7 +88,9 @@ void NetManager::run()
     int netWorkMode = 7;
     int seq = 0;
     int size = 0;
+    bool status = false;
     int netStatus = false;
+    getNtp();
     while(true)
     {
         m_eth0 = get_if_miireg("eth0", 0x01);
@@ -98,10 +100,10 @@ void NetManager::run()
             seq = 0;
             if(m_eth0 <= 0)
             {
-                QString userName = switchCtl->m_wifiName;
-                QString userPwd = switchCtl->m_wifiPwd;
-                int value = m_wpa->updateStatus();
-                netWorkMode = 0;
+//                QString userName = switchCtl->m_wifiName;
+//                QString userPwd = switchCtl->m_wifiPwd;
+//                int value = m_wpa->updateStatus();
+//                netWorkMode = 0;
 //                if(value > 80)
 //                {
 //                    netWorkMode = 0;
@@ -126,35 +128,45 @@ void NetManager::run()
 //                        m_wpa->removeNetwork();
 //                    }
 //                }
-                size++;
-                if(size > 60)
+//                size++;
+//                if(size > 60)
+//                {
+//                    size = 0;
+//                    qt_debug() << "===============" << value << userName << userPwd << m_wpa->state();
+//                }
+//                if (!userName.isEmpty() && !userPwd.isEmpty() && WpaGui::TrayIconOffline == m_wpa->state())
+//                {
+//                    m_wpa->enableNetwork(userName.toUtf8().data(), userPwd.toUtf8().data(), AUTH_WPA2_PSK);
+//                }
+                if(!status)
                 {
-                    size = 0;
-                    qt_debug() << "===============" << value << userName << userPwd << m_wpa->state();
-                }
-                if (!userName.isEmpty() && !userPwd.isEmpty() && WpaGui::TrayIconOffline == m_wpa->state())
-                {
-                    m_wpa->enableNetwork(userName.toUtf8().data(), userPwd.toUtf8().data(), AUTH_WPA2_PSK);
+                    status = true;
+                    system("pppd call quectel-ppp &");
                 }
             }
             else {
-                m_wifi = false;
-                if (WpaGui::TrayIconConnected == m_wpa->state())
+                if(status)
                 {
-                    m_wpa->removeNetwork();
+                    status = false;
+                    system("killall -9 pppd");
                 }
-                if(WpaGui::TrayIconOffline != m_wpa->state())
-                {
-                    m_wpa->setState(WpaGui::TrayIconOffline);
-                    m_wpa->removeNetwork();
-                }
+//                m_wifi = false;
+//                if (WpaGui::TrayIconConnected == m_wpa->state())
+//                {
+//                    m_wpa->removeNetwork();
+//                }
+//                if(WpaGui::TrayIconOffline != m_wpa->state())
+//                {
+//                    m_wpa->setState(WpaGui::TrayIconOffline);
+//                    m_wpa->removeNetwork();
+//                }
             }
         }
         if(m_eth0 > 0)
         {
             emit networkChanged(6, dataShare->m_netStatus);
         }
-        else if(m_wifi)
+        else if(m_fourG)
         {
             emit networkChanged(netWorkMode, dataShare->m_netStatus);
         }
@@ -311,11 +323,12 @@ QString NetManager::getIP()
                     }
                     break;
                 }
-                else if(m_wifi && interface.name() == "wlan0")
+                else if(interface.name() == "ppp0")
                 {
                     QList<QNetworkAddressEntry>entryList=interface.addressEntries();
                     ipAddr = entryList.value(0).ip().toString();
-                    break;
+                    m_fourG = true;
+                    return ipAddr;
                 }
             }
         }

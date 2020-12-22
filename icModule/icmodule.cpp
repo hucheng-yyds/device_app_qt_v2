@@ -145,7 +145,7 @@ void IcCardModule::run()
             if(icExpired())
             {
                 QString cardNo = icDatas.toHex().mid(12, 8);
-                qt_debug() << icDatas << cardNo;
+                qt_debug() << icDatas.toHex() << cardNo;
                 int time = 3*1000;
                 if(switchCtl->m_tempCtl)
                 {

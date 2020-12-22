@@ -283,7 +283,8 @@ void ServerDataDeal::saveSetting(const QJsonObject &jsonData)
     }
     if(jsonData.contains("icCardShow"))
     {
-
+        int icShow = jsonData.value("icCardShow").toInt();
+        switchCtl->m_showIc = icShow > 0 ? true : false;
     }
     switchCtl->saveSwitchParam();
     system("sync");

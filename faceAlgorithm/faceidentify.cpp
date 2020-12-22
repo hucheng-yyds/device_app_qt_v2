@@ -390,7 +390,12 @@ void FaceIdentify::dealIcData(int mid, const QString &cardNo)
     }
     else {
         id = 0;
-        emit icResultShow(0, tr("未注册"), tr("未注册"));
+        QString icShow = cardNo;
+        if(!switchCtl->m_showIc)
+        {
+            icShow = tr("未注册");
+        }
+        emit icResultShow(0, icShow, icShow);
         hardware->playSound("shibai.wav");
         isSuccess = "0";
         isStranger = "1";
