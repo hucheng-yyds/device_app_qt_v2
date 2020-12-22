@@ -78,7 +78,7 @@ void ProStorage::init()
 
     MqttModule *mqttClient = new MqttModule;
     UserIdRequest *userRequest = new UserIdRequest;
-    connect(userRequest, &UserIdRequest::removeFaceGroup, face, &FaceManager::removeFaceGroup, Qt::BlockingQueuedConnection);
+    connect(userRequest, &UserIdRequest::removeFaceGroup, face, &FaceManager::removeFaceGroup);
     ServerDataList *serverList = new ServerDataList;
     mqttClient->setPacket(serverList);
     bool status = face->init();

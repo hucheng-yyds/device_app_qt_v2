@@ -9,5 +9,5 @@ FaceInterface::FaceInterface()
     m_quality = true;
     m_localFaceSync = false;
     m_irImage = new unsigned char[SOURCE_WIDTH*SOURCE_HEIGHT* 3 / 2];
-    m_bgrImage = new unsigned char[VIDEO_WIDTH*VIDEO_HEIGHT* 3 / 2];
+    m_bgrImage = new unsigned char[VIDEO_WIDTH*VIDEO_HEIGHT* 3];
 }

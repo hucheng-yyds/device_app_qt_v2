@@ -1,5 +1,5 @@
 #include "faceidentify.h"
-#include "datashare.h"
+#include <QImage>
 
 extern QSemaphore g_usedSpace;
 extern bool g_idRead;
@@ -124,7 +124,12 @@ void FaceIdentify::run()
         {
             emit startTemp();
         }
-//        qt_debug() << "ptrFaceInfo.pose:" << m_iMFaceHandle[i].pose;
+//        if (m_iMFaceHandle[i].pose > 0) {
+//            qt_debug() << "m_iMFaceHandle.pose:" << m_iMFaceHandle[i].pose;
+//        }
+//        if (!m_iMFaceHandle[i].irLiveOrNot) {
+//            qt_debug() << "m_iMFaceHandle[i].irLiveOrNot:" << m_iMFaceHandle[i].irLiveOrNot;
+//        }
 //        qt_debug() << "ptrFaceInfo.recStatus:" << m_iMFaceHandle[i].recStatus;
 //        qt_debug() << "ptrFaceInfo.recScoreVal:" << m_iMFaceHandle[i].recScoreVal;
 //        qt_debug() << "ptrFaceInfo.faceMaskOrNot:" << m_iMFaceHandle[i].faceMaskOrNot;
@@ -145,20 +150,18 @@ void FaceIdentify::run()
             judgeDate();
             QStringList value = dealOpencondition(face_id);
             QString name = value.at(0);
-            QString remark = value.at(1);
-            if(name.isEmpty())
-            {
-                authority = true;
-                emit faceResultShow(name, i, trId, tr("未授权"), tr("未授权"));
-                if(remark.isEmpty()) {
-//                            hardware->playSound(tr("未授权").toUtf8(), "authority.aac");
-                    hardware->playSound("authority.aac");
-                } else {
-//                            hardware->playSound(remark.toUtf8(), "authority.aac");
-                    hardware->playSound("authority.aac");
-                }
-            }
-            else
+//            QString remark = value.at(1);
+//            if(name.isEmpty())
+//            {
+//                authority = true;
+//                emit faceResultShow(name, i, trId, tr("未授权"), tr("未授权"));
+//                if(remark.isEmpty()) {
+//                    hardware->playSound("authority.aac");
+//                } else {
+//                    hardware->playSound("authority.aac");
+//                }
+//            }
+//            else
             {
                 if(0 == switchCtl->m_language)
                 {
@@ -243,45 +246,6 @@ void FaceIdentify::run()
                         hardware->playSound("tiwenyc.wav");
                     }
                 }
-            } else {
-//                QStringList value = dealOpencondition(face_id);
-//                QString name = value.at(0);
-//                QString remark = value.at(1);
-//                if(name.isEmpty())
-//                {
-//                    authority = true;
-//                    emit faceResultShow(name, i, trId, tr("未授权"), tr("未授权"));
-//                    if(remark.isEmpty()) {
-////                            hardware->playSound(tr("未授权").toUtf8(), "authority.aac");
-//                        hardware->playSound("authority.aac");
-//                    } else {
-////                            hardware->playSound(remark.toUtf8(), "authority.aac");
-//                        hardware->playSound("authority.aac");
-//                    }
-//                }
-//                else
-//                {
-//                    if(0 == switchCtl->m_language)
-//                    {
-//                        if(1 == switchCtl->m_nameMask)
-//                        {
-//                            if(name.size() > 3)
-//                            {
-//                                name = name.replace(0, 2, "**");
-//                            }
-//                            else if(name.size() > 1){
-//                                name = name.replace(0, 1, '*');
-//                            }
-//                        }
-//                        else if(2 == switchCtl->m_nameMask)
-//                        {
-//                            name = name.replace(0, name.size(), tr("您好"));
-//                        }
-//                    }
-//                    emit faceResultShow(name, i, trId, tr("认证通过"), m_faceInfo + name);
-//                    egPass = true;
-//                    hardware->playSound("chengong.wav");
-//                }
             }
         } else if (RETURN_RECOGING == m_iMFaceHandle[i].recStatus) {
             if (m_iMFaceHandle[i].recScoreVal < 0.75 &&
@@ -312,24 +276,29 @@ void FaceIdentify::run()
         if (egPass) {
             hardware->checkOpenDoor();
         }
-        if (switchCtl->m_uploadImageCtl)
+        if (switchCtl->m_uploadImageCtl && m_interFace->m_bgrImage)
         {
-            cv::Mat nv21(VIDEO_HEIGHT + VIDEO_HEIGHT / 2, VIDEO_WIDTH, CV_8UC1, m_interFace->m_bgrImage);
-            cv::Mat image;
-            cv::cvtColor(nv21, image, CV_YUV2BGR_NV12);
-            if(image.empty())
-            {
-                printf("load image error!!\n");
-                goto exit;
+            if (1) {
+                QImage image(m_interFace->m_bgrImage, VIDEO_WIDTH, VIDEO_HEIGHT, QImage::Format_RGB888);
+                image.rgbSwapped().save("snap.jpg", "JPG", 30);
+            } else {
+                cv::Mat nv21(VIDEO_HEIGHT + VIDEO_HEIGHT / 2, VIDEO_WIDTH, CV_8UC1, m_interFace->m_bgrImage);
+                cv::Mat image;
+                cv::cvtColor(nv21, image, CV_YUV2BGR_NV12);
+                if(image.empty()) {
+                    qDebug("load image error!!");
+                    goto exit;
+                }
+                QVector<int> opts;
+                opts.push_back(cv::IMWRITE_JPEG_QUALITY);
+                opts.push_back(30);
+                opts.push_back(cv::IMWRITE_JPEG_OPTIMIZE);
+                opts.push_back(1);
+                cv::imwrite("snap.jpg", image, opts.toStdVector());
             }
-            QVector<int> opts;
-            opts.push_back(cv::IMWRITE_JPEG_QUALITY);
-            opts.push_back(30);
-            opts.push_back(cv::IMWRITE_JPEG_OPTIMIZE);
-            opts.push_back(1);
-            cv::imwrite("snap.jpg", image, opts.toStdVector());
             QFile file("snap.jpg");
             file.open(QIODevice::ReadWrite);
+//            file.write((const char*)m_interFace->m_bgrImage);
             snapshot = QString::fromUtf8(file.readAll().toBase64());
             file.close();
             offlineNmae = QDateTime::currentDateTime().toTime_t();
@@ -457,7 +426,7 @@ QStringList FaceIdentify::dealOpencondition(int faceId)
         text << name << "";
         return text;
     }
-    qt_debug() << value;
+//    qt_debug() << value;
     int passnum = value[1].toInt();
     QString startTime = value[2].toString();
     QString expireTime = value[3].toString();

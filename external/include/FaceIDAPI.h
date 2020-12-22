@@ -112,6 +112,12 @@ enum IR_MODE
     IR_DISABLE,                        //禁止红外模块
 };
 
+enum RETURNREGSUC
+{
+    RETURN_DISABLE = 0,                //禁止返回识别成功的数据
+    RETURN_ENABLE,                    //使能返回识别成功的数据
+};
+
 enum PRINT_LEVEL
 {
     SET_LOG_OFF    = 0,                 //default
@@ -198,7 +204,10 @@ typedef struct DS_FaceIDOutData
 	unsigned int curFaceNum;            //当前帧图像检测到的人脸数目
     
     unsigned int pictureStatus;         //图片注册结果以及失败原因
-
+    
+    unsigned char *returnRegsucImg;     //返回识别成功的一帧数据
+    unsigned int returnImgW;            //返回识别成功的数据的宽
+    unsigned int returnImgH;            //返回识别成功的数据的高
 }DS_FaceIDOutData;
 
 //typedef void(*SetCameraPara)(const float sensorISPParam, const int paramType);
@@ -258,6 +267,8 @@ typedef struct DS_FaceIDParas
 
 	int reserve[16];                        //keep for use
 
+	unsigned int reRegsucessMode;           //是否开启返回识别数据线程
+
 }DS_FaceIDParas;
 
 //* 函数说明：获取版本号（用法见app.cpp）
@@ -302,5 +313,21 @@ int DS_FaceIDProcess(void *ptrAppHandle, DS_FaceIDInData* ptrFaceIDInData, DS_Fa
 * 返回值：0
 */
 int DS_SetPrintLevel(void *ptrAppHandle, int printLevel);
+
+//* 函数说明：检测线程主函数,便于应用层创建和控制优先级
+/** 输入参数：
+    ptrFaceIDHandle: 人脸FaceID句柄指针
+* 输出参数：无
+* 返回值：如果为NULL,异常
+*/
+void *DS_FaceDetition(void *ptrAppHandle);
+
+//* 函数说明：识别线程主函数,便于应用层创建和控制优先级
+/** 输入参数：
+    ptrFaceIDHandle: 人脸FaceID句柄指针
+* 输出参数：无
+* 返回值：如果为NULL,异常
+*/
+void *DS_FaceRecognition(void *ptrAppHandle);
 
 #endif

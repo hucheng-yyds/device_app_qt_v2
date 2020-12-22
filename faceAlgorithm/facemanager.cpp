@@ -1,5 +1,4 @@
 #include "facemanager.h"
-#include "datashare.h"
 
 #ifdef __cplusplus
 //#if __cplusplus
@@ -110,8 +109,6 @@ void FaceManager::run()
             status = false;
             emit faceTb("");
         }
-        memcpy(m_interFace->m_bgrImage, m_bgrVideoFrame->VFrame.mpVirAddr[0], VIDEO_WIDTH * VIDEO_HEIGHT);
-        memcpy(m_interFace->m_bgrImage + VIDEO_WIDTH * VIDEO_HEIGHT, m_bgrVideoFrame->VFrame.mpVirAddr[1], VIDEO_WIDTH * VIDEO_HEIGHT / 2);
         m_ptrAppData->ptrFaceIDInData->ptrYUVSubStream[0] = (uchar*)m_bgrVideoFrame->VFrame.mpVirAddr[0];
         m_ptrAppData->ptrFaceIDInData->ptrYUVSubStream[1] = (uchar*)m_bgrVideoFrame->VFrame.mpVirAddr[1];
         if (switchCtl->m_ir)
@@ -131,8 +128,6 @@ void FaceManager::run()
             for (int i = 0; i < m_ptrAppData->ptrFaceIDOutData->curFaceNum; ++i)
             {
                 DS_FaceInfo &ptrFaceInfo = m_ptrAppData->ptrFaceIDOutData->faceInfo[i];
-//                faceByte = QByteArray((const char*)ptrFaceInfo.ID, 16).toHex();
-//                int trID = ptrFaceInfo.trackID[0] + ptrFaceInfo.trackID[1];
 //                qt_debug() << "ptrFaceInfo.trackID:" << ptrFaceInfo.trackID;
 //                qt_debug() << "totalRegPersonsNum" << m_ptrAppData->ptrFaceIDOutData->totalRegPersonsNum;
 
@@ -161,10 +156,22 @@ void FaceManager::run()
                 if (m_interFace->m_iStop) {
                     m_interFace->m_iStop = false;
                     m_interFace->m_faceHandle << ptrFaceInfo;
-//                    Countdown t(100);
-//                    memcpy(m_interFace->m_bgrImage, m_bgrVideoFrame->VFrame.mpVirAddr[0], VIDEO_WIDTH * VIDEO_HEIGHT);
-//                    memcpy(m_interFace->m_bgrImage + VIDEO_WIDTH * VIDEO_HEIGHT, m_bgrVideoFrame->VFrame.mpVirAddr[1], VIDEO_WIDTH * VIDEO_HEIGHT / 2);
-//                    qt_debug() << "memcpy:" << t.right_ms();
+//                    qt_debug() << "m_ptrAppData->ptrFaceIDOutData->returnImg:"
+//                               << m_ptrAppData->ptrFaceIDOutData->returnImgW
+//                               << m_ptrAppData->ptrFaceIDOutData->returnImgH;
+//                    if (RETURN_RECOGING == ptrFaceInfo.recStatus) {
+//                        memcpy(m_interFace->m_bgrImage, m_bgrVideoFrame->VFrame.mpVirAddr[0], VIDEO_WIDTH * VIDEO_HEIGHT);
+//                        memcpy(m_interFace->m_bgrImage + VIDEO_WIDTH * VIDEO_HEIGHT,
+//                               m_bgrVideoFrame->VFrame.mpVirAddr[1], VIDEO_WIDTH * VIDEO_HEIGHT / 2);
+//                    } else if (RETURN_REC_SUCCESS == ptrFaceInfo.recStatus &&
+                    if (
+                               m_ptrAppData->ptrFaceIDOutData->returnImgW &&
+                               m_ptrAppData->ptrFaceIDOutData->returnImgH) {
+                        memcpy(m_interFace->m_bgrImage, m_ptrAppData->ptrFaceIDOutData->returnRegsucImg,
+                               m_ptrAppData->ptrFaceIDOutData->returnImgW * m_ptrAppData->ptrFaceIDOutData->returnImgH * 3);
+                        m_ptrAppData->ptrFaceIDOutData->returnImgW = 0;
+                        m_ptrAppData->ptrFaceIDOutData->returnImgH = 0;
+                    }
                     g_usedSpace.release();
                 }
             }
@@ -202,9 +209,17 @@ void FaceManager::run()
         static int m_count = 0;
         if (j >= 100) {
             double d_ms = m_count / 100.00;
-            qt_debug() << "m_count:" << m_count << d_ms;
+            qt_debug() << "m_count:" << m_count << d_ms << timer.right_ms();
             j = 0;
             m_count = 0;
+            Countdown t(100);
+            QFile file("YUV_IR_DATA.yuv");
+            qt_debug() << file.open(QIODevice::WriteOnly);
+            memcpy(m_interFace->m_irImage, m_irVideoFrame->VFrame.mpVirAddr[0], SOURCE_WIDTH * SOURCE_HEIGHT);
+            memcpy(m_interFace->m_irImage + SOURCE_WIDTH * SOURCE_HEIGHT, m_irVideoFrame->VFrame.mpVirAddr[1], SOURCE_WIDTH * SOURCE_HEIGHT / 2);
+            file.write((const char *)m_interFace->m_irImage, SOURCE_WIDTH * SOURCE_HEIGHT * 3 / 2);
+            file.close();
+            qt_debug() << "memcpy:" << t.right_ms();
         }
         j ++;
         m_count += timer.right_ms();
@@ -461,6 +476,7 @@ AppCall *FaceManager::DS_CreateAppCall(const char *ptrRegFilePath, const char *p
     ptrFaceIDParas->imgWidth[1] = SOURCE_WIDTH;
     ptrFaceIDParas->imgHeight[1] = SOURCE_HEIGHT;
     ptrFaceIDParas->irMode = IR_ENABLE;
+    ptrFaceIDParas->reRegsucessMode = RETURN_ENABLE;
 
     ptrAppData->ptrFaceIDInData->faceThresh[0] = -0.83f;
     ptrAppData->ptrFaceIDInData->faceThresh[1] = -0.83f;

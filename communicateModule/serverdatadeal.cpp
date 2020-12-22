@@ -815,18 +815,18 @@ void ServerDataDeal::dealFaceNewData(QJsonObject jsonObj)
             QJsonObject mids = val.toObject();
             int cmd = mids["operater"].toInt();
             int mid = mids["mid"].toInt();
-            if(3 == cmd)
-            {
+            if(3 == cmd) {
                 dataShare->m_sync = true;
                 emit removeFaceGroup(mid);
                 sqlDatabase->sqlDelete(mid);
                 sqlDatabase->sqlDeleteAuth(mid);
-            }
-            else {
+            } else {
                 datas.push_front(mid);
             }
         }
-        dataShare->m_sync = false;
+        if (datas.isEmpty()) {
+            dataShare->m_sync = false;
+        }
         emit newUsers(datas);
     }
     else {

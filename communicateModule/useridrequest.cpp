@@ -42,8 +42,15 @@ void UserIdRequest::run()
     int count = 0;
     while(true)
     {
-        if(dataShare->m_netStatus && m_startFaceDownload)
+        if(m_startFaceDownload)
         {
+            if(!dataShare->m_netStatus)
+            {
+                dataShare->m_sync = false;
+                m_startFaceDownload = false;
+                m_updateFace.clear();
+                continue ;
+            }
             int size = m_updateFace.size();
             if(size > 0)
             {
@@ -62,7 +69,6 @@ void UserIdRequest::run()
             {
                 emit allUserIc();
                 sleep(3);
-//                updateIdentifyValue();
                 dataShare->m_sync = false;
                 m_startFaceDownload = false;
             }
@@ -82,12 +88,6 @@ void UserIdRequest::run()
             msleep(50);
         }
         else {
-            if(!dataShare->m_netStatus && m_startFaceDownload)
-            {
-                dataShare->m_sync = false;
-                m_startFaceDownload = false;
-                m_updateFace.clear();
-            }
             sleep(1);
         }
     }
