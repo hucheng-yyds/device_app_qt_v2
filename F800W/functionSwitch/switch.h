@@ -143,6 +143,7 @@ public:
 private:
     // 屏参和摄像头参数 参数不要随意修改
     void setScreenDefault();
+    void setScreen();
 
 private:
     static SwitchCtl *m_Instance;

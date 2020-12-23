@@ -1,4 +1,5 @@
 #include "switch.h"
+#include <QSettings>
 
 SwitchCtl* SwitchCtl::m_Instance = nullptr;
 
@@ -76,7 +77,20 @@ SwitchCtl::SwitchCtl()
     qt_debug() << "---------------------------------------------------------" << status;
     if(!status)
     {
-        setScreenDefault();
+        if(QFile::exists("./F01.ini"))
+        {
+            QSettings *setting = new QSettings("./F01.ini", QSettings::IniFormat);
+            m_camera = setting->value("vio/camera").toInt();
+            m_screen = setting->value("vio/screen").toInt();
+            m_angle = setting->value("vio/angle").toInt();
+            m_sn = setting->value("device").toString();
+            setScreen();
+            delete setting;
+            setting = nullptr;
+        }
+        else {
+            setScreenDefault();
+        }
     }
     else {
         QJsonObject obj = readScreenParam();
@@ -335,6 +349,26 @@ QJsonObject SwitchCtl::readScreenParam()
     return obj;
 }
 
+void SwitchCtl::setScreen()
+{
+    QFile file("./screen.json");
+    if(!file.open(QIODevice::WriteOnly)) {
+        qDebug() << "File open failed!";
+    } else {
+        qDebug() <<"File open successfully!";
+    }
+    QJsonObject obj;
+    obj.insert("sn", m_sn);
+    obj.insert("angle", m_angle);
+    obj.insert("camera", m_camera);
+    obj.insert("screen", m_screen);
+    QJsonDocument jdoc(obj);
+    file.seek(0);
+    file.write(jdoc.toJson());
+    file.flush();
+    file.close();
+}
+
 void SwitchCtl::setScreenDefault()
 {
     QFile file("./screen.json");
@@ -346,7 +380,7 @@ void SwitchCtl::setScreenDefault()
     QJsonObject obj;
     m_angle = 1;
     m_camera = 22;
-    m_screen = 4;
+    m_screen = 3;
     obj.insert("sn", "");
     obj.insert("angle", m_angle);
     obj.insert("camera", m_camera);

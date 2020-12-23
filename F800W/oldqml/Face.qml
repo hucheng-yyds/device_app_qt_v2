@@ -7,6 +7,7 @@ Item {
     property var focusingList: [focusing];
     property bool isEg;
     property bool isTemp;
+    property bool sleepCtl: false;
     property int sleepTime : 5000;
 
     Focusing {
@@ -212,8 +213,8 @@ Item {
         id: wearHelmettip
         x: 340
         y: 527
-        source: "image/wearmasktip.png"
-        visible: wearmaskBg.visible
+        source: "image/helmet.png"
+        visible: wearHelmetBg.visible
     }
 
     Text {
@@ -246,7 +247,7 @@ Item {
     // 主界面界面显示时间
     Text {
         id: date
-        x: 290
+        x: 360
         y: 9
         width: 219
         color: "#fffffe"
@@ -427,8 +428,11 @@ Item {
         id: sleep;
         interval: sleepTime; running: false;
         onTriggered: {
-            standby.visible = true;
-            face.visible = false;
+            if(!sleepCtl)
+            {
+                standby.visible = true;
+                face.visible = false;
+            }
         }
     }
 
@@ -645,6 +649,8 @@ Item {
             standby.g_hours = hour;
             standby.g_minutes = min;
             date.text = digitalClock;
+            sleepTime = sleeptime;
+            sleepCtl = sleepctl;
         }
     }
 }

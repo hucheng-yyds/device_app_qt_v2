@@ -282,7 +282,7 @@ void ServerDataDeal::saveSetting(const QJsonObject &jsonData)
     }
     if(jsonData.contains("usernameMasking"))
     {
-        int nameShow = jsonData.value("icCardShow").toInt();
+        int nameShow = jsonData.value("usernameMasking").toInt();
         switchCtl->m_nameMask = nameShow;
     }
     if(jsonData.contains("icCardShow"))
