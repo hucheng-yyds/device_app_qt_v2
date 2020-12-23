@@ -321,8 +321,8 @@ Item {
         id: sleep;
         interval: sleepTime; running: false;
         onTriggered: {
-            standby.visible = true;
-            face.visible = false;
+//            standby.visible = true;
+//            face.visible = false;
         }
     }
 

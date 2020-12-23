@@ -177,6 +177,7 @@ void ProStorage::init()
     }
     offlineRecord->start();
     mqttClient->start();
+    sleep(1);
     emit syncSuccess(switchCtl->m_faceDoorCtl, switchCtl->m_tempCtl);
 }
 

@@ -344,22 +344,22 @@ void FaceIdentify::dealIcData(int mid, const QString &cardNo)
     QString isStranger = "0";
     if(id > 0)
     {
-        QStringList value = dealOpencondition(id);
-        QString name = value.at(0);
-        QString remark = value.at(1);
-        if(name.isEmpty())
-        {
-            emit icResultShow(1, tr("未授权"), tr("未授权"));
-            if(remark.isEmpty())
-            {
-                hardware->playSound("authority.wav");
-            }
-            else {
-                hardware->playSound("authority.wav");
-            }
-            isSuccess = "0";
-        }
-        else
+//        QStringList value = dealOpencondition(id);
+        QString name = sqlDatabase->sqlSelect(id).value(1).toString();
+//        QString remark = value.at(1);
+//        if(name.isEmpty())
+//        {
+//            emit icResultShow(1, tr("未授权"), tr("未授权"));
+//            if(remark.isEmpty())
+//            {
+//                hardware->playSound("authority.wav");
+//            }
+//            else {
+//                hardware->playSound("authority.wav");
+//            }
+//            isSuccess = "0";
+//        }
+//        else
         {
             if(0 == switchCtl->m_language)
             {

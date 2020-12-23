@@ -36,8 +36,7 @@ bool ServerDataDeal::checkVersion(const QString &target, const QString &current)
 
 void ServerDataDeal::upgradeFile(const QJsonObject &obj)
 {
-    if (("1" == obj["deviceType"].toString() || DEVICE_TYPE == obj["deviceType"].toString()) &&
-            checkVersion(obj["version"].toString(), VERSION))
+    if (("1" == obj["deviceType"].toString() || DEVICE_TYPE == obj["deviceType"].toString()))
     {
         system("rm update.tar.xz");
         m_httpsClient->httpsDownload(obj["downloadUrl"].toString());

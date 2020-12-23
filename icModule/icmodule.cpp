@@ -99,7 +99,7 @@ IcCardModule::IcCardModule()
 {
     icCountdown_ms(0);
     m_icDatas.clear();
-    m_fd = open("/dev/ttyS2", O_RDWR);
+    m_fd = open("/dev/ttyS3", O_RDWR);
     qt_debug() << "IcCardModule" << m_fd;
     int flags = fcntl(m_fd,F_GETFL,0);
     flags &= ~O_NONBLOCK;

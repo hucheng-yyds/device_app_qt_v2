@@ -7,8 +7,8 @@ ApplicationWindow {
     id: root;
     color: "transparent";
     visible: true
-    width: 600
-    height: 1024
+    width: 720
+    height: 1280
     title: qsTr("Hello World")
 
     Face {

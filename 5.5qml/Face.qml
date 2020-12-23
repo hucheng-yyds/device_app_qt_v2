@@ -2,8 +2,8 @@ import QtQuick 2.0
 
 Item {
     id: item1
-    width: 600
-    height: 1024
+    width: root.width
+    height: root.height
     property var focusingList: [focusing];
     property bool isEg;
     property bool isTemp;
@@ -35,14 +35,14 @@ Item {
 
     Image {
         id: netStatus
-        x: 555
+        x: 670
         y: 11
-        source: "image/eth0_nosig.png";
+        source: "image/net_nosig.png";
     }
 
     Image {
         id: network
-        x: 510
+        x: 620
         y: 11
         source: "";
     }
@@ -431,14 +431,14 @@ Item {
         id: pngShow
         visible: true
         x: 0
-        y: 859
+        y: 1090
         source: "image/show.png"
     }
     AnimatedImage {
         id: gifShow
         visible: pngShow.visible
         x: 0
-        y: 859
+        y: 1090
         source: "./gifs/show.gif"
                 playing: true
 //                playing: false
@@ -447,14 +447,14 @@ Item {
         id: pngRun
         visible: false
         x: 0
-        y: 859
+        y: 1090
         source: "image/run.png"
     }
     AnimatedImage {
         id: gifRun
         visible: pngRun.visible
         x: 0
-        y: 859
+        y: 1090
         source: "./gifs/run.gif"
         playing: true
 //                playing: false
@@ -464,7 +464,7 @@ Item {
     Text {
         id: corporateName
         x: 134
-        y: 898
+        y: 1129
         width: 289
         color: "#fffffe"
         font {
@@ -479,8 +479,8 @@ Item {
     Rectangle {
         id: devIndoBg
         x: 0
-        y: 986
-        width: 600
+        y: 1242
+        width: 720
         height: 38
         opacity: 0.5
         color: "#000000"
@@ -490,7 +490,7 @@ Item {
     Text {
         id: sn;
         x: 11
-        y: 990
+        y: 1246
         font {
             pixelSize: 20
             family: "multi-language"
@@ -503,8 +503,8 @@ Item {
     // 显示ip
     Text {
         id: ip;
-        x: 300
-        y: 990
+        x: 400
+        y: 1246
         font {
             pixelSize: 20
             family: "multi-language"
@@ -518,8 +518,8 @@ Item {
 
     Text {
         id: version;
-        x: 518
-        y: 990
+        x: 620
+        y: 1246
         width: 79
         font {
             pixelSize: 20
@@ -553,15 +553,15 @@ Item {
         id: sleep;
         interval: sleepTime; running: false;
         onTriggered: {
-            standby.visible = true;
-            face.visible = false;
+//            standby.visible = true;
+//            face.visible = false;
         }
     }
 
     // 检测结果显示
     Rectangle {
         id: resultTextBg
-        y: 807
+        y: 1007
         visible: resultText.text.length
         color: "#000000"
         radius: 20
@@ -591,11 +591,11 @@ Item {
             sync.visible = false;
             isEg = eg;
             isTemp = temp;
-            if (eg) {
-                iconFace.source = "image/icon_face.png"
-            } else {
-                iconFace.source = "image/icon_temp.png"
-            }
+//            if (eg) {
+//                iconFace.source = "image/icon_face.png"
+//            } else {
+//                iconFace.source = "image/icon_temp.png"
+//            }
             image_head.visible = isTemp
             sleep.restart();
             console.log("onSyncSuccess");
