@@ -420,7 +420,7 @@ AppCall *FaceManager::DS_CreateAppCall(const char *ptrRegFilePath, const char *p
     ptrFaceIDParas->imgHeight[0] = VIDEO_HEIGHT;
     ptrFaceIDParas->imgWidth[1] = SOURCE_WIDTH;
     ptrFaceIDParas->imgHeight[1] = SOURCE_HEIGHT;
-    ptrFaceIDParas->irMode = IR_ENABLE;
+    ptrFaceIDParas->irMode = IR_DISABLE;
     ptrFaceIDParas->reRegsucessMode = RETURN_ENABLE;
 
     memcpy(ptrFaceIDParas->ptrRegFilePath, ptrRegFilePath, strlen(ptrRegFilePath)+1);
@@ -522,6 +522,7 @@ int FaceManager::DS_SetGetAppCall(AppCall *ptrAppData)
 
 bool FaceManager::init()
 {
+    qt_debug() << system("./setGamma.sh") << "./setGamma.sh";;
     QDir dir(dataShare->m_offlinePath);
     if (!dir.exists()) {
         qt_debug() << dir.mkpath(dataShare->m_offlinePath);

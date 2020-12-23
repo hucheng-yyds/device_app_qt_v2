@@ -10,10 +10,10 @@
 #include "sqldatabase.h"
 #include "Countdown.h"
 
-#define VIDEO_WIDTH     360
-#define VIDEO_HEIGHT    640
-#define SOURCE_WIDTH    480
-#define SOURCE_HEIGHT   640
+#define VIDEO_WIDTH     960
+#define VIDEO_HEIGHT    540
+#define SOURCE_WIDTH    640
+#define SOURCE_HEIGHT   360
 
 typedef struct App_Call
 {

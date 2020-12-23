@@ -123,6 +123,7 @@ enum PRINT_LEVEL
     SET_LOG_OFF    = 0,                 //default
     SET_LOG_DEBUG,
     SET_LOG_INFO,
+    SET_SAVE_DEBUG_DATA,
 };
 
 typedef struct DS_FaceInfo
