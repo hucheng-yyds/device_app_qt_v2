@@ -106,8 +106,8 @@ void QalHardWare::ctlWhite(int ctl)
 
 void QalHardWare::ctlIrWhite(int ctl)
 {
-//    ctlIr(ctl);
-//    ctlWhite(ctl);
+    ctlIr(ctl);
+    ctlWhite(ctl);
 }
 
 void QalHardWare::ctlBacklight(int value)
