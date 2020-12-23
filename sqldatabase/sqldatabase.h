@@ -7,7 +7,6 @@
 #include <QThread>
 #include <QMutex>
 #include <QDebug>
-#include "face_sdk.h"
 #include "FaceIDAPI.h"
 #include "log.h"
 #include "datashare.h"
@@ -29,8 +28,6 @@ public:
         }
         return m_Instance;
     }
-    // 人脸入库接口
-//    FaceGroupHandle m_groupHandle;
     // 失败入库id
     QSet<int> m_localFaceFail;
     // 当前所有人脸id

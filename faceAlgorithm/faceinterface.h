@@ -1,10 +1,10 @@
 #ifndef FACEINTERFACE_H
 #define FACEINTERFACE_H
 #include <QSemaphore>
+#include <QRect>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
-//#include "hi_comm_video.h"
 #include "switch.h"
 #include "qalhardware.h"
 #include "sqldatabase.h"
@@ -14,12 +14,6 @@
 #define VIDEO_HEIGHT    640
 #define SOURCE_WIDTH    480
 #define SOURCE_HEIGHT   640
-
-struct MFaceHandle{
-    FaceRect rect;
-    int track_id;
-    int index;
-};
 
 typedef struct App_Call
 {
@@ -37,6 +31,7 @@ public:
     explicit FaceInterface();
     AppCall *m_ptrAppData;
     QVector<DS_FaceInfo> m_faceHandle;
+    QSemaphore m_usedSpace;
     int m_count;
     bool m_iStop;
     bool m_quality;

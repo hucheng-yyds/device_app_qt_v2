@@ -1,8 +1,6 @@
 #include "faceidentify.h"
 #include <QImage>
 
-extern QSemaphore g_usedSpace;
-extern bool g_idRead;
 FaceIdentify::FaceIdentify()
 {
     m_interFace = nullptr;
@@ -95,7 +93,7 @@ void FaceIdentify::run()
 //        msleep(20);
 //    }
     while(1) {
-        g_usedSpace.acquire();
+        m_interFace->m_usedSpace.acquire();
         int i = 0;
         QVector<DS_FaceInfo> &m_iMFaceHandle = m_interFace->m_faceHandle;
         int trId = m_iMFaceHandle[i].trackID;
@@ -541,26 +539,3 @@ void FaceIdentify::setFaceInter(FaceInterface *inter)
 {
     m_interFace = inter;
 }
-
-//bool FaceIdentify::identifyExpired()
-//{
-//    QDateTime origin_time = QDateTime::fromString("1970-01-01 08:00:00","yyyy-MM-dd hh:mm:ss");
-//    QDateTime current_date_time =QDateTime::currentDateTime();
-//    qint64 now = origin_time.msecsTo(current_date_time);
-//    if(now >= m_endTimerMs)
-//    {
-//        return true;
-//    }
-//    else
-//    {
-//        return false;
-//    }
-//}
-
-//void FaceIdentify::identifyCountdown_ms(int ms)
-//{
-//    QDateTime origin_time = QDateTime::fromString("1970-01-01 08:00:00","yyyy-MM-dd hh:mm:ss");
-//    QDateTime current_date_time =QDateTime::currentDateTime();
-//    qint64 now = origin_time.msecsTo(current_date_time);
-//    m_endTimerMs = now + ms;
-//}

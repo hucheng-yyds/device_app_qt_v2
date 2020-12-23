@@ -12,8 +12,6 @@ extern int AW_MPI_ISP_SetLocalExposureArea(ISP_DEV IspDev, SIZE_S Res, RECT_S Ro
 //#endif /* __cplusplus */
 #endif  /* __cplusplus */
 
-QSemaphore g_usedSpace(0);
-
 FaceManager::FaceManager()
 {
     m_isIdentify = false;
@@ -86,8 +84,7 @@ void FaceManager::run()
                 continue;
             }
         }
-        if(dataShare->m_sync)
-        {
+        if(dataShare->m_sync) {
             status = true;
 //            hardware->ctlWDG();
             emit faceTb(tr("正在同步中..."));
@@ -98,7 +95,6 @@ void FaceManager::run()
             }
             qt_debug() << "dataShare->m_sync:" << dataShare->m_sync;
             hardware->checkCloseDoor();
-//            hardware->ctlWDG();
             msleep(500);
             continue;
         } else {
@@ -123,7 +119,7 @@ void FaceManager::run()
         DS_SetGetAppCall(m_ptrAppData);
 //        qt_debug() << "Get People Num " << m_ptrAppData->ptrFaceIDOutData->curFaceNum << m_ptrAppData->ptrFaceIDOutData->curStatus;
         if (m_ptrAppData->ptrFaceIDOutData->curFaceNum > 0) {
-            sort(nullptr, 0);
+            sort();
             m_ptrAppData->ptrFaceIDOutData->curFaceNum = 1;
             for (int i = 0; i < m_ptrAppData->ptrFaceIDOutData->curFaceNum; ++i)
             {
@@ -132,23 +128,18 @@ void FaceManager::run()
 //                qt_debug() << "totalRegPersonsNum" << m_ptrAppData->ptrFaceIDOutData->totalRegPersonsNum;
 
 //                int offset = 10;
-//                FaceRect rect;
-//                rect.left = ptrFaceInfo.XMin;
-//                rect.right = ptrFaceInfo.XMax;
-//                rect.top = ptrFaceInfo.YMin;
-//                rect.bottom = ptrFaceInfo.YMax;
-//                offset = (rect.right - rect.left) / 20;
-//                if (((qAbs(saveLeft[i] - rect.left) > offset) ||
-//                     (qAbs(saveTop[i] - rect.top) > offset)) &&
-//                        ((qAbs(saveRight[i] - rect.right) > offset) ||
-//                         (qAbs(saveBottom[i] - rect.bottom) > offset))) {
-//                    saveLeft[i] = rect.left /*- (rect.left % offset)*/;
-//                    saveTop[i] = rect.top /*- (rect.top % offset)*/;
-//                    saveRight[i] = rect.right /*- (rect.right % offset)*/;
-//                    saveBottom[i] = rect.bottom /*- (rect.bottom % offset)*/;
+//                offset = (ptrFaceInfo.XMax - ptrFaceInfo.XMin) / 20;
+//                if (((qAbs(saveLeft[i] - ptrFaceInfo.XMin) > offset) ||
+//                     (qAbs(saveTop[i] - ptrFaceInfo.YMin) > offset)) &&
+//                        ((qAbs(saveRight[i] - ptrFaceInfo.XMax) > offset) ||
+//                         (qAbs(saveBottom[i] - ptrFaceInfo.YMax) > offset))) {
+//                    saveLeft[i] = ptrFaceInfo.XMin;
+//                    saveTop[i] = ptrFaceInfo.YMin;
+//                    saveRight[i] = ptrFaceInfo.XMax;
+//                    saveBottom[i] = ptrFaceInfo.YMax;
 //                }
                 emit showFaceFocuse(saveLeft[i] * 1.66, saveTop[i] * 1.6, saveRight[i] * 1.66, saveBottom[i] * 1.6, i, ptrFaceInfo.trackID);
-//                qDebug() << qAbs(saveLeft[i] - rect.left) << offset;
+//                qt_debug() << qAbs(saveLeft[i] - ptrFaceInfo.XMin) << offset;
                 /*动态曝光测试接口*/
 //                SIZE_S awSize = {ptrFaceInfo.XMax - ptrFaceInfo.XMin, ptrFaceInfo.YMax - ptrFaceInfo.YMin};
 //                RECT_S awRect = {ptrFaceInfo.XMin, ptrFaceInfo.YMin, awSize.Width, awSize.Height};
@@ -159,20 +150,13 @@ void FaceManager::run()
 //                    qt_debug() << "m_ptrAppData->ptrFaceIDOutData->returnImg:"
 //                               << m_ptrAppData->ptrFaceIDOutData->returnImgW
 //                               << m_ptrAppData->ptrFaceIDOutData->returnImgH;
-//                    if (RETURN_RECOGING == ptrFaceInfo.recStatus) {
-//                        memcpy(m_interFace->m_bgrImage, m_bgrVideoFrame->VFrame.mpVirAddr[0], VIDEO_WIDTH * VIDEO_HEIGHT);
-//                        memcpy(m_interFace->m_bgrImage + VIDEO_WIDTH * VIDEO_HEIGHT,
-//                               m_bgrVideoFrame->VFrame.mpVirAddr[1], VIDEO_WIDTH * VIDEO_HEIGHT / 2);
-//                    } else if (RETURN_REC_SUCCESS == ptrFaceInfo.recStatus &&
-                    if (
-                               m_ptrAppData->ptrFaceIDOutData->returnImgW &&
-                               m_ptrAppData->ptrFaceIDOutData->returnImgH) {
+                    if (m_ptrAppData->ptrFaceIDOutData->returnImgW && m_ptrAppData->ptrFaceIDOutData->returnImgH) {
                         memcpy(m_interFace->m_bgrImage, m_ptrAppData->ptrFaceIDOutData->returnRegsucImg,
                                m_ptrAppData->ptrFaceIDOutData->returnImgW * m_ptrAppData->ptrFaceIDOutData->returnImgH * 3);
                         m_ptrAppData->ptrFaceIDOutData->returnImgW = 0;
                         m_ptrAppData->ptrFaceIDOutData->returnImgH = 0;
                     }
-                    g_usedSpace.release();
+                    m_interFace->m_usedSpace.release();
                 }
             }
             if (m_ptrAppData->ptrFaceIDOutData->curStatus == RETURN_SAVE_REGINFO_SUCCESS ||
@@ -207,12 +191,20 @@ void FaceManager::run()
         static Countdown timer;
         static int j = 0;
         static int m_count = 0;
-        if (j >= 100) {
+        if (j > 100) {
             double d_ms = m_count / 100.00;
             qt_debug() << "m_count:" << m_count << d_ms << timer.right_ms();
             j = 0;
             m_count = 0;
             Countdown t(100);
+            {
+                QFile file("YUV_BGR_DATA.yuv");
+                qt_debug() << file.open(QIODevice::WriteOnly);
+                memcpy(m_interFace->m_bgrImage, m_bgrVideoFrame->VFrame.mpVirAddr[0], VIDEO_WIDTH * VIDEO_HEIGHT);
+                memcpy(m_interFace->m_bgrImage + VIDEO_WIDTH * VIDEO_HEIGHT, m_bgrVideoFrame->VFrame.mpVirAddr[1], VIDEO_WIDTH * VIDEO_HEIGHT / 2);
+                file.write((const char *)m_interFace->m_bgrImage, VIDEO_WIDTH * VIDEO_HEIGHT * 3 / 2);
+                file.close();
+            }
             QFile file("YUV_IR_DATA.yuv");
             qt_debug() << file.open(QIODevice::WriteOnly);
             memcpy(m_interFace->m_irImage, m_irVideoFrame->VFrame.mpVirAddr[0], SOURCE_WIDTH * SOURCE_HEIGHT);
@@ -228,10 +220,10 @@ void FaceManager::run()
     }
 }
 
-bool FaceManager::filter(const FaceRect &rect)
+bool FaceManager::filter(const QRect &rect)
 {
     bool pass = true;
-    int width = rect.right - rect.left;
+    int width = rect.width();
     if (switchCtl->m_tempCtl)
     {
         if (width > 400)
@@ -250,7 +242,7 @@ bool FaceManager::filter(const FaceRect &rect)
             else
             {
                 dis = width > 250;
-                region = rect.left > 92 && rect.top > 281 && rect.right < 708 && rect.bottom < 861;
+                region = rect.left() > 92 && rect.top() > 281 && rect.right() < 708 && rect.bottom() < 861;
             }
             pass = dis && region;
             if (region && !dis)
@@ -270,7 +262,7 @@ bool FaceManager::filter(const FaceRect &rect)
     return pass;
 }
 
-void FaceManager::sort(FaceHandle *faceHandle, int count)
+void FaceManager::sort()
 {
     for (int i=0; i<m_ptrAppData->ptrFaceIDOutData->curFaceNum-1; ++i)  //比较n-1轮
     {
@@ -289,53 +281,6 @@ void FaceManager::sort(FaceHandle *faceHandle, int count)
             }
         }
     }
-//    int i, j;
-//    int waitTime = switchCtl->m_identifyWaitTime;
-//    MFaceHandle buf;
-//    FaceRect rect0 ,rect1;
-//    m_sMFaceHandle.clear();
-//    m_isIdentify = true;
-//    for (i = 0; i < count; i ++)
-//    {
-//        getFaceRect(faceHandle[i], &rect0);
-//        if (filter(rect0))
-//        {
-//            buf.rect = rect0;
-//            buf.track_id = m_trackId[i];
-//            buf.index = i;
-//            m_sMFaceHandle << buf;
-//        }
-//    }
-//    if (m_sMFaceHandle.isEmpty())
-//    {
-//        m_isIdentify = false;
-//    }
-//    m_sMFaceHandle.resize(1);
-
-//    if (m_sMFaceHandle.at(0).track_id && !m_interFace->m_iFaceHandle)
-//    {
-//        if (m_sMFaceHandle.at(0).track_id == m_interFace->m_faceHandle.at(0).track_id)
-//        {
-//            if (!faceExpired())
-//            {
-//                if (m_interFace->m_quality && !m_interFace->m_iStop)
-//                {
-//                    if(!(dataShare->m_idCardFlag && switchCtl->m_vi))
-//                    {
-//                        m_isIdentify = false;
-//                    }
-//                }
-//            }
-//            else
-//            {
-//                faceCountdown_ms(waitTime*1000);
-//            }
-//        }
-//        else
-//        {
-//            faceCountdown_ms(waitTime*1000);
-//        }
-//    }
 }
 
 void FaceManager::ctlOpenDoor(int id)
@@ -478,11 +423,6 @@ AppCall *FaceManager::DS_CreateAppCall(const char *ptrRegFilePath, const char *p
     ptrFaceIDParas->irMode = IR_ENABLE;
     ptrFaceIDParas->reRegsucessMode = RETURN_ENABLE;
 
-    ptrAppData->ptrFaceIDInData->faceThresh[0] = -0.83f;
-    ptrAppData->ptrFaceIDInData->faceThresh[1] = -0.83f;
-    ptrAppData->ptrFaceIDInData->faceThresh[2] = -0.81f;
-    ptrAppData->ptrFaceIDInData->faceThresh[3] = -0.83f;
-
     memcpy(ptrFaceIDParas->ptrRegFilePath, ptrRegFilePath, strlen(ptrRegFilePath)+1);
     memcpy(ptrFaceIDParas->ptrModelFileAbsDir, ptrModelFileAbsDir, strlen(ptrModelFileAbsDir) + 1);
     memcpy(ptrFaceIDParas->ptrFaceImgFilePath, ptrFaceImgFilePath, strlen(ptrFaceImgFilePath) + 1);
@@ -602,10 +542,9 @@ bool FaceManager::init()
     m_ptrAppData->ptrFaceIDInData->faceThresh[1] = -0.83;
     m_ptrAppData->ptrFaceIDInData->faceThresh[2] = -0.75;
     m_ptrAppData->ptrFaceIDInData->faceThresh[3] = -0.81;
-//    m_ptrAppData->ptrFaceIDInData->recFaceMode = REC_ALL_FACE;
     m_ptrAppData->ptrFaceIDInData->recFaceMode = REC_MAX_FACE;
-    m_ptrAppData->ptrFaceIDInData->minRecFaceW = 70;
-    m_ptrAppData->ptrFaceIDInData->maxRecFaceW = std::min(VIDEO_WIDTH, VIDEO_HEIGHT) - 30;
+    m_ptrAppData->ptrFaceIDInData->minRecFaceW = 0;
+    m_ptrAppData->ptrFaceIDInData->maxRecFaceW = 0;
     sqlDatabase->sqlSelectAllUserId();
     return true;
 }
@@ -636,26 +575,3 @@ bool FaceManager::init()
 //    emit faceTb(tr(""));
 //    updateIdentifyValue();
 //}
-
-bool FaceManager::faceExpired()
-{
-    QDateTime origin_time = QDateTime::fromString("1970-01-01 08:00:00","yyyy-MM-dd hh:mm:ss");
-    QDateTime current_date_time =QDateTime::currentDateTime();
-    qint64 now = origin_time.msecsTo(current_date_time);
-    if(now >= m_endTimerMs)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-void FaceManager::faceCountdown_ms(int ms)
-{
-    QDateTime origin_time = QDateTime::fromString("1970-01-01 08:00:00","yyyy-MM-dd hh:mm:ss");
-    QDateTime current_date_time =QDateTime::currentDateTime();
-    qint64 now = origin_time.msecsTo(current_date_time);
-    m_endTimerMs = now + ms;
-}

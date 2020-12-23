@@ -23,10 +23,7 @@ private:
     bool idCardFaceComparison(char *feature_result);
     // 处理开门权限
     QStringList dealOpencondition(int faceId);
-    // 是否已到定时的时长，是返回true，否返回false
-    bool identifyExpired();
-    // 设置定时时长。 从当前时间开始的定时时长，单位ms
-    void identifyCountdown_ms(int ms);
+    // 根据时间切换播报问候语
     void judgeDate();
 
 signals:

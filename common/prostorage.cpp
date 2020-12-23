@@ -121,7 +121,6 @@ void ProStorage::init()
         connect(tcpClient, &TcpClient::updateUsers, userRequest, &UserIdRequest::onUpdateUsers);
         connect(dataDeal, &ServerDataDeal::allUserId, tcpClient, &TcpClient::requestGetAllUserID);
         connect(tcpClient, &TcpClient::allUserIc, userRequest, &UserIdRequest::onAllUsersIc);
-        connect(tcpClient, &TcpClient::newUserId, userRequest, &UserIdRequest::onNewUsers);
         connect(userRequest, &UserIdRequest::insertFaceGroups, face, &FaceManager::insertFaceGroups);
         connect(identify, &FaceIdentify::uploadopenlog, tcpClient, &TcpClient::uploadopenlog);
         connect(offlineRecord, &OfflineRecord::uploadopenlog, tcpClient, &TcpClient::uploadopenlog);
