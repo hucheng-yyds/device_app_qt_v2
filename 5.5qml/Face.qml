@@ -553,8 +553,8 @@ Item {
         id: sleep;
         interval: sleepTime; running: false;
         onTriggered: {
-//            standby.visible = true;
-//            face.visible = false;
+            standby.visible = true;
+            face.visible = false;
         }
     }
 
@@ -578,8 +578,8 @@ Item {
             family: "multi-language"
         }
         color: "#16DFEC"
-        anchors.left: resultTextBg.left
-        anchors.leftMargin: 25
+        anchors.horizontalCenter: resultTextBg.horizontalCenter
+//        anchors.leftMargin: 25
         anchors.verticalCenter: resultTextBg.verticalCenter
         style: Text.Raised
     }

@@ -61,12 +61,13 @@ void FaceManager::onBreathingLight()
 {
 //    hardware->ctlLed(OFF);
 //    hardware->ctlBLN(ON);
-    hardware->ctlIrWhite(OFF);
+    hardware->ctlWhite(OFF);
 
 }
 
 void FaceManager::run()
 {
+    hardware->ctlIr(ON);
     while (1) {
         m_bgrVideoFrame = nullptr;
         IF_GetData(&m_bgrVideoFrame, VIDEO_WIDTH, VIDEO_HEIGHT);
@@ -138,7 +139,7 @@ void FaceManager::run()
 //                    saveRight[i] = ptrFaceInfo.XMax;
 //                    saveBottom[i] = ptrFaceInfo.YMax;
 //                }
-                hardware->ctlIrWhite(ON);
+                hardware->ctlWhite(ON);
                 emit showFaceFocuse(saveLeft[i] * 1.66, saveTop[i] * 1.6, saveRight[i] * 1.66, saveBottom[i] * 1.6, i, ptrFaceInfo.trackID);
 //                qt_debug() << qAbs(saveLeft[i] - ptrFaceInfo.XMin) << offset;
                 /*动态曝光测试接口*/
