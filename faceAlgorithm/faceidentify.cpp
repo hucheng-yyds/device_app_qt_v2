@@ -148,8 +148,8 @@ void FaceIdentify::run()
 //                }
 //            }
             judgeDate();
-            QStringList value = dealOpencondition(face_id);
-            QString name = value.at(0);
+//            QStringList value = dealOpencondition(face_id);
+            QString name = sqlDatabase->sqlSelect(face_id).value(1).toString();
 //            QString remark = value.at(1);
 //            if(name.isEmpty())
 //            {
