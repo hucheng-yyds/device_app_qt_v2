@@ -13,6 +13,7 @@ QalHardWare::QalHardWare()
     moveToThread(this);
     IF_Vol_Set(100);
     IF_PCMAUDIO_Init();
+    m_doorStatus = false;
 }
 
 void QalHardWare::setVolume(int vol)
@@ -116,7 +117,8 @@ void QalHardWare::ctlBacklight(int value)
 
 void QalHardWare::checkCloseDoor()
 {
-    if (expired()) {
+    if (expired() && m_doorStatus) {
+        m_doorStatus = false;
         system("echo 0 > /sys/gpio/relay");
     }
 }
@@ -124,6 +126,7 @@ void QalHardWare::checkCloseDoor()
 void QalHardWare::checkOpenDoor()
 {
     if (expired()) {
+        m_doorStatus = true;
         system("echo 1 > /sys/gpio/relay");
         countdown_ms(switchCtl->m_doorDelayTime * 1000);
     }

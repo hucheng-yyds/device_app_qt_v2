@@ -112,6 +112,7 @@ private:
     // 定时到达的结束时间 单位ms
     qint64 m_endTimerMs;
     QMutex m_mutex;
+    bool m_doorStatus;
 };
 
 
