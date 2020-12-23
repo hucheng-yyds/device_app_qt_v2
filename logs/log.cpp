@@ -6,7 +6,7 @@ void Log::outputMessage(QtMsgType type, const QMessageLogContext &context, const
 {
 //    QMutexLocker locker(&mutex);
     QDateTime dateTime = QDateTime::currentDateTime().addSecs(28800);
-    QString path = QDir::currentPath() + "/log/";
+    QString path = dataShare->m_pathPrefix + "log/";
     QDir dir(path);
     if (!dir.exists()) {
         qt_debug() << path << dir.mkdir(path);
@@ -35,8 +35,8 @@ void Log::outputMessage(QtMsgType type, const QMessageLogContext &context, const
 
 void Log::outputMessageOnLine(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
-      QString tmp = (msg);
-      Log::logList << tmp;
+    QString tmp = (msg);
+    Log::logList << tmp;
 }
 
 Log::Log(QObject *parent) : QObject(parent)
@@ -53,16 +53,17 @@ Log::Log(QObject *parent) : QObject(parent)
             }
         }
     });
-//  qInstallMessageHandler(outputMessage);
+//    qInstallMessageHandler(outputMessage);
 }
 
 void Log::onToolTcpStateChange(bool state)//true:链接上了，false:链接断开
-{    qt_debug() << state;
+{
+    qt_debug() << state;
     if(!state)//
     {
         timer->stop();
         dataShare->m_log = true;
-//       qInstallMessageHandler(outputMessage);
+//        qInstallMessageHandler(outputMessage);
     }
 }
 
@@ -73,9 +74,11 @@ void Log::onLogFun(bool on)
     {
         dataShare->m_log = true;
         timer->stop();
-       qInstallMessageHandler(outputMessage);
+        qInstallMessageHandler(outputMessage);
 
-    }else {
+    }
+    else
+    {
         dataShare->m_log = false;
         //立刻发送数据
         foreach(auto item,Log::logList)

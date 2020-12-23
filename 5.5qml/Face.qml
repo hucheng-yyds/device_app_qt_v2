@@ -35,14 +35,14 @@ Item {
 
     Image {
         id: netStatus
-        x: 539
+        x: 555
         y: 11
         source: "image/eth0_nosig.png";
     }
 
     Image {
         id: network
-        x: 690
+        x: 510
         y: 11
         source: "";
     }
@@ -503,7 +503,7 @@ Item {
     // 显示ip
     Text {
         id: ip;
-        x: 257
+        x: 300
         y: 990
         font {
             pixelSize: 20
@@ -693,11 +693,11 @@ Item {
         onShowDeviceInfo:{
             isTemp = tempCtl;
             image_head.visible = isTemp
-            version.text = qsTr("T" + ver);
+            version.text = qsTr("V" + ver);
             corporateName.text = qsTr(name);
             people.text = qsTr(number);
-            ip.text = qsTr("ip: " + devIp);
-            sn.text = qsTr("sn: " + devSn);
+            ip.text = qsTr("IP: " + devIp);
+            sn.text = qsTr("SN: " + devSn);
         }
         onIcResultShow: {
             pngRun.visible = true

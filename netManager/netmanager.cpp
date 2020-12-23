@@ -94,6 +94,7 @@ void NetManager::run()
     while(true)
     {
         m_eth0 = get_if_miireg("eth0", 0x01);
+//        qt_debug() << "============================================" << m_eth0;
         if(seq > 2)
         {
             ip = getIP();
@@ -141,6 +142,7 @@ void NetManager::run()
                 if(!status)
                 {
                     status = true;
+                    system("killall -9 wpa_supplicant && ifconfig wlan0 down");
                     system("pppd call quectel-ppp &");
                 }
             }
@@ -168,7 +170,7 @@ void NetManager::run()
         }
         else if(m_fourG)
         {
-            emit networkChanged(netWorkMode, dataShare->m_netStatus);
+            emit networkChanged(3, dataShare->m_netStatus);
         }
         else
         {
