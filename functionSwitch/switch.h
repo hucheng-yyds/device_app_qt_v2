@@ -8,7 +8,7 @@
 
 #define switchCtl SwitchCtl::getInstance()
 
-#define VERSION     "1.0.0"
+#define VERSION     "1.0.0.002"
 #define DEVICE_TYPE "F700B"
 
 class SwitchCtl

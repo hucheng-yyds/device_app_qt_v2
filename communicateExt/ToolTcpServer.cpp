@@ -587,6 +587,10 @@ void ToolTcpServer::setParameters(QJsonObject & data,QString msgType,QString cmd
     {
         switchCtl->m_ic = data.value(key_ic).toBool();
     }
+    if(data.contains(key_wifi_ctl))
+    {
+        switchCtl->m_wifiCtl = data.value(key_wifi_ctl).toBool();
+    }
     if(data.contains(key_wifi_name))
     {
         switchCtl->m_wifiName = data.value(key_wifi_name).toString();
