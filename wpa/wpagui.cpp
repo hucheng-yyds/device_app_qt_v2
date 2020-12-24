@@ -42,7 +42,7 @@ WpaGui::WpaGui()
     ctrl_conn = nullptr;
     monitor_conn = nullptr;
     msgNotifier = nullptr;
-	ctrl_iface_dir = strdup("/tmp/wpa_supplicant");
+    ctrl_iface_dir = strdup("/tmp/wpa_supplicant");
     ctrl_iface = strdup("wlan0");
 
 	parse_argv();

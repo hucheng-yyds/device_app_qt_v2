@@ -422,7 +422,7 @@ AppCall *FaceManager::DS_CreateAppCall(const char *ptrRegFilePath, const char *p
     ptrFaceIDParas->imgHeight[0] = VIDEO_HEIGHT;
     ptrFaceIDParas->imgWidth[1] = SOURCE_WIDTH;
     ptrFaceIDParas->imgHeight[1] = SOURCE_HEIGHT;
-    ptrFaceIDParas->irMode = IR_DISABLE;
+    ptrFaceIDParas->irMode = IR_ENABLE;
     ptrFaceIDParas->reRegsucessMode = RETURN_ENABLE;
 
     memcpy(ptrFaceIDParas->ptrRegFilePath, ptrRegFilePath, strlen(ptrRegFilePath)+1);

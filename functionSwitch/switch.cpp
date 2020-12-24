@@ -69,6 +69,7 @@ SwitchCtl::SwitchCtl()
         m_screenCtl = userObj.value("screenCtl").toBool();
         m_closeScreenTime = userObj.value("closeScreenTime").toInt();
 
+        m_wifiCtl = wifiObj.value("wifiCtl").toBool();
         m_wifiName = wifiObj.value("wifiName").toString();
         m_wifiPwd = wifiObj.value("wifiPwd").toString();
     }
@@ -148,6 +149,7 @@ void SwitchCtl::saveSwitchParam()
     userObj.insert("screenCtl", m_screenCtl);
     userObj.insert("closeScreenTime", m_closeScreenTime);
 
+    wifiObj.insert("wifiCtl", m_wifiCtl);
     wifiObj.insert("wifiName", m_wifiName);
     wifiObj.insert("wifiPwd", m_wifiPwd);
 
@@ -234,6 +236,7 @@ void SwitchCtl::setSwitchDefault()
     m_screenCtl = false;
     m_closeScreenTime = 5;
 
+    m_wifiCtl = false;
     m_wifiName = "";
     m_wifiPwd = "";
 
@@ -284,6 +287,7 @@ void SwitchCtl::setSwitchDefault()
     userObj.insert("screenCtl", m_screenCtl);
     userObj.insert("closeScreenTime", m_closeScreenTime);
 
+    wifiObj.insert("wifiCtl", m_wifiCtl);
     wifiObj.insert("wifiName", m_wifiName);
     wifiObj.insert("wifiPwd", m_wifiPwd);
 

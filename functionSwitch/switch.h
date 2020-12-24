@@ -135,6 +135,8 @@ public:
     // tcp后台登录的密码
     QString m_passwd;
 
+    // wifi模式
+    bool m_wifiCtl;
     // wifi用户名
     QString m_wifiName;
     // wifi密码

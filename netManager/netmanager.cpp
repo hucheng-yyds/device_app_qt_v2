@@ -56,8 +56,8 @@ void getNtp()
 {
     qt_debug() <<"connectToHosts--------------";
     QTcpSocket *socket = new QTcpSocket();
-    socket->connectToHost("time.nist.gov", 13);
-    qt_debug() <<"--------------connectToHosts";
+    socket->connectToHost("132.163.97.1", 13);
+    qt_debug() <<"----------------------------------------------------------------------------------connectToHosts";
     if (socket->waitForConnected())
     {   if (socket->waitForReadyRead())
         {
@@ -74,6 +74,11 @@ void getNtp()
 
 NetManager::NetManager()
 {
+    if(switchCtl->m_wifiCtl)
+    {
+//        system("wpa_supplicant -B -Dnl80211 -iwlan0 -c/etc/wpa_supplicant.conf &");
+//        system("udhcpc -i wlan0 &");
+    }
     m_fourG = false;
     m_wifi = false;
     m_wpa = new WpaGui;
@@ -90,6 +95,7 @@ void NetManager::run()
     int size = 0;
     bool status = false;
     int netStatus = false;
+    m_wifiStatus = false;
     getNtp();
     while(true)
     {
@@ -101,67 +107,78 @@ void NetManager::run()
             seq = 0;
             if(m_eth0 <= 0)
             {
-//                QString userName = switchCtl->m_wifiName;
-//                QString userPwd = switchCtl->m_wifiPwd;
-//                int value = m_wpa->updateStatus();
-//                netWorkMode = 0;
-//                if(value > 80)
-//                {
-//                    netWorkMode = 0;
-//                }
-//                else if(value > 60)
-//                {
-//                    netWorkMode = 1;
-//                }
-//                else if(value > 20){
-//                    netWorkMode = 2;
-//                }
-//                else {
-//                    dataShare->m_netStatus = false;
-//                    m_wifi = false;
-//                    if (WpaGui::TrayIconConnected == m_wpa->state())
-//                    {
-//                        m_wpa->removeNetwork();
-//                    }
-//                    if(WpaGui::TrayIconOffline != m_wpa->state())
-//                    {
-//                        m_wpa->setState(WpaGui::TrayIconOffline);
-//                        m_wpa->removeNetwork();
-//                    }
-//                }
-//                size++;
-//                if(size > 60)
-//                {
-//                    size = 0;
-//                    qt_debug() << "===============" << value << userName << userPwd << m_wpa->state();
-//                }
-//                if (!userName.isEmpty() && !userPwd.isEmpty() && WpaGui::TrayIconOffline == m_wpa->state())
-//                {
-//                    m_wpa->enableNetwork(userName.toUtf8().data(), userPwd.toUtf8().data(), AUTH_WPA2_PSK);
-//                }
-                if(!status)
+                if(switchCtl->m_wifiCtl)
                 {
-                    status = true;
-                    system("killall -9 wpa_supplicant && ifconfig wlan0 down");
-                    system("pppd call quectel-ppp &");
+                    QString userName = switchCtl->m_wifiName;
+                    QString userPwd = switchCtl->m_wifiPwd;
+                    int value = m_wpa->updateStatus();
+                    netWorkMode = 0;
+                    if(value > 80)
+                    {
+                        netWorkMode = 0;
+                    }
+                    else if(value > 60)
+                    {
+                        netWorkMode = 1;
+                    }
+                    else if(value > 20){
+                        netWorkMode = 2;
+                    }
+                    else {
+                        dataShare->m_netStatus = false;
+                        m_wifi = false;
+                        if (WpaGui::TrayIconConnected == m_wpa->state())
+                        {
+                            m_wpa->removeNetwork();
+                        }
+                        if(WpaGui::TrayIconOffline != m_wpa->state())
+                        {
+                            m_wpa->setState(WpaGui::TrayIconOffline);
+                            m_wpa->removeNetwork();
+                        }
+                    }
+                    size++;
+                    if(size > 60)
+                    {
+                        size = 0;
+                        qt_debug() << "===============" << value << userName << userPwd << m_wpa->state();
+                    }
+                    if (!userName.isEmpty() && !userPwd.isEmpty() && WpaGui::TrayIconOffline == m_wpa->state() && !m_wifiStatus)
+                    {
+//                        m_wifiStatus = true;
+                        m_wpa->enableNetwork(userName.toUtf8().data(), userPwd.toUtf8().data(), AUTH_WPA2_PSK);
+                    }
+                }
+                else {
+                    if(!status)
+                    {
+                        status = true;
+                        system("killall -9 wpa_supplicant && ifconfig wlan0 down");
+                        system("pppd call quectel-ppp &");
+                    }
                 }
             }
             else {
-                if(status)
+                if(switchCtl->m_wifiCtl)
                 {
-                    status = false;
-                    system("killall -9 pppd");
+                    m_wifi = false;
+                    if (WpaGui::TrayIconConnected == m_wpa->state())
+                    {
+                        m_wpa->removeNetwork();
+                    }
+                    if(WpaGui::TrayIconOffline != m_wpa->state())
+                    {
+                        m_wpa->setState(WpaGui::TrayIconOffline);
+                        m_wpa->removeNetwork();
+                    }
                 }
-//                m_wifi = false;
-//                if (WpaGui::TrayIconConnected == m_wpa->state())
-//                {
-//                    m_wpa->removeNetwork();
-//                }
-//                if(WpaGui::TrayIconOffline != m_wpa->state())
-//                {
-//                    m_wpa->setState(WpaGui::TrayIconOffline);
-//                    m_wpa->removeNetwork();
-//                }
+                else {
+                    if(status)
+                    {
+                        status = false;
+                        system("killall -9 pppd");
+                    }
+                }
             }
         }
         if(m_eth0 > 0)
@@ -200,12 +217,14 @@ void NetManager::run()
 
 void NetManager::onConnected()
 {
+    m_wifiStatus = true;
     m_wifi = true;
     qt_debug() << "wifi connect success";
 }
 
 void NetManager::onDisconnected()
 {
+    m_wifiStatus = false;
     m_wifi = false;
     qt_debug() << "wifi disconnect";
 }
@@ -324,6 +343,12 @@ QString NetManager::getIP()
                         addressEntryList.clear();
                     }
                     break;
+                }
+                else if(switchCtl->m_wifiCtl && interface.name() == "wlan0")
+                {
+                    QList<QNetworkAddressEntry>entryList=interface.addressEntries();
+                    ipAddr = entryList.value(0).ip().toString();
+                    return ipAddr;
                 }
                 else if(interface.name() == "ppp0")
                 {

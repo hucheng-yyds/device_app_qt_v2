@@ -37,5 +37,6 @@ private:
 
 private:
     WpaGui *m_wpa;
+    bool m_wifiStatus;
 };
 #endif // NETMANAGER_H
