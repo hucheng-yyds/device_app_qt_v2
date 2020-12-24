@@ -50,12 +50,12 @@ Item {
     Rectangle {
         id: tbsBg
         x: 0
-        y: 60
+        y: 0
         visible: tbs.text.length
         color: "#000000"
         opacity: 0.5
         width: parent.width
-        height: 960
+        height: parent.height
     }
 
     Text {
