@@ -49,6 +49,7 @@ private:
     bool m_tempFlag;
     QString m_tempVal;
     QString m_faceInfo;
+    int m_wavSeq;
     int m_tempResult;
     QString m_cardNo;
     bool m_cardWork;

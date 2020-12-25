@@ -58,14 +58,17 @@ void FaceIdentify::judgeDate()
     QString curTime = QDateTime::currentDateTime().addSecs(28800).toString("HH:mm:ss");
     if(curTime.compare("01:00:00") > 0 && curTime.compare("12:00:00") < 0)
     {
+        m_wavSeq = 0;
         m_faceInfo = tr("早上好，");
     }
     else if(curTime.compare("12:00:00") > 0 && curTime.compare("18:30:00") < 0)
     {
+        m_wavSeq = 1;
         m_faceInfo = tr("下午好，");
     }
     else
     {
+        m_wavSeq = 2;
         m_faceInfo = tr("晚上好，");
     }
 }
@@ -106,6 +109,7 @@ void FaceIdentify::run()
         QStringList datas;
         bool authority = false;
         bool egPass = false;
+        QString playFile = "chengong.wav";
         bool tempPass = false;
         QString isSuccess = "0";
         QString isStranger = "0";
@@ -180,7 +184,19 @@ void FaceIdentify::run()
                 }
                 emit faceResultShow(name, i, trId, tr("认证通过"), m_faceInfo + name);
                 egPass = true;
-                hardware->playSound("chengong.wav");
+                if(0 == m_wavSeq)
+                {
+                    playFile = "zschengong.wav";
+                }
+                else if(1 == m_wavSeq)
+                {
+                    playFile = "zwchengong.wav";
+                }
+                else
+                {
+                    playFile = "wschengong.wav";
+                }
+                hardware->playSound(playFile.toUtf8());
             }
             if(tempCtl && !authority) {
                 emit showStartTemp();
@@ -257,7 +273,7 @@ void FaceIdentify::run()
 //                }
                 emit faceResultShow(tr("未注册"), i, trId, tr("未注册"), tr("未注册"));
                 isStranger = "1";
-                emit faceResultShow(tr("未注册"), i, trId, tr("请联系管理员"), tr("未注册"));
+//                emit faceResultShow(tr("未注册"), i, trId, tr("请联系管理员"), tr("未注册"));
                 egPass = false;
                 face_id = 0;
                 hardware->playSound("shibai.wav");

@@ -10,6 +10,11 @@ Item {
     property bool isResultz:false;
     property bool isResulty:false;
     property int sleepTime : 5000;
+    property bool fouscing : false;
+    property int x_f: 0;
+    property int y_f: 0;
+    property int h_f: 0;
+    property int w_f: 0;
 
     Focusing {
         id: focusing;
@@ -68,6 +73,35 @@ Item {
         }
         color: "#fffffe"
         style: Text.Raised
+    }
+
+    Image {
+        id: face_1
+        x: x_f
+        y: y_f
+        source: "image/face_1.png"
+        visible: fouscing
+    }
+    Image {
+        id: face_2
+        x: x_f + w_f
+        y: y_f
+        source: "image/face_2.png"
+        visible: fouscing
+    }
+    Image {
+        id: face_3
+        x: x_f
+        y: y_f + h_f
+        source: "image/face_3.png"
+        visible: fouscing
+    }
+    Image {
+        id: face_4
+        x: x_f + w_f
+        y: y_f + h_f
+        source: "image/face_4.png"
+        visible: fouscing
     }
 
     Image {
@@ -680,11 +714,17 @@ Item {
 //                focusingList[index].focusingVisible = true;
 //                focusingList[index].trackId = trackId;
 //            }
+            x_f = left - 20;
+            y_f = top - 30;
+            w_f = right - left + 50;
+            h_f = bottom - top + 30;
+            fouscing = true;
             standby.visible = false;
             face.visible = true;
             sleep.restart();
         }
         onHideFaceFocuse:{
+            fouscing = false;
             for (var i = 0; i < focusingList.length; i ++) {
                 focusingList[i].focusingVisible = false;
                 focusingList[i].trackId = 0;
