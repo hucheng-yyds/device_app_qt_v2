@@ -51,27 +51,27 @@ void ServerDataDeal::upgradeFile(const QJsonObject &obj)
         QString md5 = QCryptographicHash::hash(data, QCryptographicHash::Md5).toHex();
         if (md5 == obj["md5"].toString()) {
             system("tar -xvf update.tar.xz && rm update.tar.xz");
-            if (QFile::exists("hi3516dv300_smp_image")) {
-                char* mac = switchCtl->m_sn.toUtf8().data();
-                if (mac[7] >= 'A') {
-                    mac[7] -= '7';
-                    mac[7] &= 0xE;
-                    mac[7] += '7';
-                } else {
-                    mac[7] -= '0';
-                    mac[7] &= 0xE;
-                    mac[7] += '0';
-                }
-                system("echo " + QByteArray(mac) + " > /dev/mmcblk0p6");
-                system("dd if=hi3516dv300_smp_image/u-boot-hi3516dv300.bin of=/dev/mmcblk0p1 &&"
-                       "dd if=hi3516dv300_smp_image/uImage_hi3516dv300_smp of=/dev/mmcblk0p2 &&"
-                       "rm hi3516dv300_smp_image -rf &&"
-                       "sync");
-            }
-            if(QFile::exists("updateAlgorithm"))
-            {
-                system("rm updateAlgorithm ofzl.db ofzluser.db userdata.db ofzldata.db");
-            }
+//            if (QFile::exists("hi3516dv300_smp_image")) {
+//                char* mac = switchCtl->m_sn.toUtf8().data();
+//                if (mac[7] >= 'A') {
+//                    mac[7] -= '7';
+//                    mac[7] &= 0xE;
+//                    mac[7] += '7';
+//                } else {
+//                    mac[7] -= '0';
+//                    mac[7] &= 0xE;
+//                    mac[7] += '0';
+//                }
+//                system("echo " + QByteArray(mac) + " > /dev/mmcblk0p6");
+//                system("dd if=hi3516dv300_smp_image/u-boot-hi3516dv300.bin of=/dev/mmcblk0p1 &&"
+//                       "dd if=hi3516dv300_smp_image/uImage_hi3516dv300_smp of=/dev/mmcblk0p2 &&"
+//                       "rm hi3516dv300_smp_image -rf &&"
+//                       "sync");
+//            }
+//            if(QFile::exists("updateAlgorithm"))
+//            {
+//                system("rm updateAlgorithm ofzl.db ofzluser.db userdata.db ofzldata.db");
+//            }
             system("killall -9 F01 && reboot");
         }
         else
