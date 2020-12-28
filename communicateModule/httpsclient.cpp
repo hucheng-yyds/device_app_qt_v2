@@ -440,8 +440,6 @@ void HttpsClient::HttpLogin()
             HttpsGetAllUserId();
             m_loginTimer->stop();
             m_heartbeatTimer->start();
-            system("ntpclient -s -d -c 1 -i 5 -h " + switchCtl->m_ntpAddr.toUtf8() +" > /dev/null");
-            system("hwclock -w");
             dataShare->m_netStatus = true;
             qt_debug() << "login success";
             return ;

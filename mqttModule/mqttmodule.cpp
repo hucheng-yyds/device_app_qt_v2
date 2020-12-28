@@ -1,18 +1,17 @@
 #include <QQueue>
 #include "mqttmodule.h"
 
-QQueue<QByteArray> g_payload;
-bool g_recvDataOk = false;
+ServerDataList* MqttModule::m_packet = NULL;
 
 MqttModule::MqttModule()
 {
-    m_serverUrl = "tcp://master.api.officelinking.com:61883";
+    m_serverUrl = "tcp://120.78.136.198:61883";
     m_topic = "device/" + switchCtl->m_sn;
 }
 
 void MqttModule::setPacket(ServerDataList *dataList)
 {
-    m_packet = dataList;
+    MqttModule::m_packet = dataList;
 }
 
 static void deliveryComplete(void* context, MQTTClient_deliveryToken dt)
@@ -22,14 +21,11 @@ static void deliveryComplete(void* context, MQTTClient_deliveryToken dt)
 
 static int messageArrived(void* context, char* topicName, int topicLen, MQTTClient_message* m)
 {
-    if(!g_recvDataOk)
-    {
-        g_payload.enqueue(QByteArray((char*)m->payload, (int)m->payloadlen));
-        g_recvDataOk = true;
-    }
-    else {
-        qDebug() << "messageArrived";
-    }
+    QByteArray message((char*)m->payload, (int)m->payloadlen);
+    qt_debug() << message;
+    FacePacketNode_t *packetNode = new FacePacketNode_t;
+    packetNode->datas = message;
+    MqttModule::m_packet->PushLogPacket(packetNode);
     MQTTClient_free(topicName);
     MQTTClient_freeMessage(&m);
     return 1;
@@ -37,8 +33,6 @@ static int messageArrived(void* context, char* topicName, int topicLen, MQTTClie
 
 void MqttModule::run()
 {
-    QString name = "admin";
-    QString psd = "ofzl";
     bool status = false;
     char **urls = (char **)malloc(sizeof(char*) * 5);
     urls[0] = (char *)malloc(m_serverUrl.size() + 1);
@@ -48,8 +42,8 @@ void MqttModule::run()
     opts.keepAliveInterval = 20;
     opts.connectTimeout = 30;
     opts.cleansession = 1;
-    opts.username = "admin";//name.toUtf8();
-    opts.password = "ofzl";//psd.toUtf8();
+    opts.username = "admin";
+    opts.password = "ofzl";
     opts.serverURIs = urls;
     opts.MQTTVersion = MQTTVERSION_DEFAULT;
     opts.will = &wopts;
@@ -93,10 +87,7 @@ void MqttModule::run()
             sleep(1);
         }
         int ret = MQTTClient_isConnected(m_mqttClient);
-        if(ret > 0)
-        {
-        }
-        else {
+        if(ret <= 0) {
             qt_debug() << "mqtt reconnect";
             int rc = MQTTClient_unsubscribe(m_mqttClient, m_topic.toUtf8());
             rc = MQTTClient_disconnect(m_mqttClient, 0);
@@ -122,13 +113,6 @@ void MqttModule::run()
                 continue;
             }
             sleep(5);
-        }
-        if(g_recvDataOk)
-        {
-            FacePacketNode_t *packetNode = new FacePacketNode_t;
-            packetNode->datas = g_payload.dequeue();
-            m_packet->PushLogPacket(packetNode);
-            g_recvDataOk = false;
         }
         msleep(500);
     }

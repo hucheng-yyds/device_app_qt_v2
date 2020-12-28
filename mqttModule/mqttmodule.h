@@ -34,6 +34,7 @@ public:
     };
     Q_ENUM(MqttCmd)
     explicit MqttModule();
+    static ServerDataList *m_packet;
     void setPacket(ServerDataList *dataList);
 
 protected:
@@ -43,6 +44,6 @@ private:
     MQTTClient m_mqttClient;
     QString m_serverUrl;
     QString m_topic;
-    ServerDataList *m_packet;
+
 };
 #endif // MQTTMODULE_H

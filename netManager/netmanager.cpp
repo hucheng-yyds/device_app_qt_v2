@@ -70,6 +70,8 @@ void getNtp()
     }
     socket->close();
     delete socket;
+//    system("ntpclient -s -d -c 1 -i 5 -h "+ switchCtl->m_ntpAddr.toUtf8() +" > /dev/null");
+    system("hwclock -w");
 }
 
 NetManager::NetManager()

@@ -99,8 +99,6 @@ void V1TcpClient::ConnectHost()
     else
     {
         qt_debug()<<"ip connnect suc";
-        system("ntpclient -s -d -c 1 -i 5 -h "+ switchCtl->m_ntpAddr.toUtf8() +" > /dev/null");
-        system("hwclock -w");
         m_requestTimer->stop();
         if(!m_heartbeatTimer->isActive())
         {

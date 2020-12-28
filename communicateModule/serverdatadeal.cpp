@@ -845,7 +845,7 @@ void ServerDataDeal::run()
             QJsonDocument document = QJsonDocument::fromJson(data->datas, &jsonError);
             if (jsonError.error != QJsonParseError::NoError) {
                 qt_debug() << "jsonError.error" << jsonError.error;
-                return;
+                continue ;
             }
             QJsonObject jsonObj = document.object();
             dealJsonData(jsonObj);
