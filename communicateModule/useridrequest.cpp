@@ -401,7 +401,7 @@ void UserIdRequest::onAllUsersIc(const QJsonArray &jsonArr)
     {
         QJsonObject obj = val.toObject();
         int mid = obj.value("mid").toInt();
-        QString cardNo = obj.value("cardNo").toString();
+        QString cardNo = obj.value("cardNo").toString().toLower();
         sqlDatabase->sqlInsertIc(mid, cardNo);
     }
     emit sigInsertFail();

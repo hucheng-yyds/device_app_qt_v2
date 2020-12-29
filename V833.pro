@@ -37,7 +37,7 @@ LIBS += -L$$PWD/external/lib/opencv
 #LIBS += $$PWD/external/lib/libcurl.a
 
 #LIBS += -lmsc -lpaho-embed-mqtt3c -lcrypto -lssl
-#LIBS += -l100UD -lusb-1.0 -lidr220s_reader
+#LIBS += -l100UD -lusb-1.0 -ltermbhf
 LIBS += -lcrypto -lssl
 LIBS += -lopencv_core -lopencv_imgcodecs -lopencv_imgproc
 LIBS += -lyxface -lcnn

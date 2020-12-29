@@ -112,10 +112,26 @@ IcCardModule::IcCardModule()
     tcflush(m_fd, TCIOFLUSH);
 }
 
+void hexdump(const char *notice, void *buffer, int len)
+{
+    int i=0;
+    unsigned char *ptr=(unsigned char *)buffer;
+    printf("[%s][lentgh=%d]",notice,len);
+    for(i = 0; i < len; i ++)
+    {
+        printf("0x%.2X ",*(ptr+i));
+//        data[i + c*8] = *(ptr+i);
+    }
+    printf("\n");
+}
+
 void IcCardModule::run()
 {
     QByteArray icDatas;
     icDatas.clear();
+    uchar data[256];
+    memset(data, 0, 256);
+    int join_len = 0;
     while(true)
     {
         int len, fs_sel;
@@ -130,31 +146,46 @@ void IcCardModule::run()
         {
             char buf[8];
             len = read(m_fd, buf, 8);
-            icDatas.append(buf);
+            for (int i = 0; i < len; i ++) {
+                data[join_len] = buf[i];
+                join_len++;
+            }
         }
         else
         {
             // 9AD69F18 \xD2\xCF\x0E;,\x01\x9A\xD6\x9F\x18WP
-            if (icDatas.isEmpty())
+            if (join_len == 0)
             {
                 msleep(200);
                 continue ;
             }
+            hexdump("serial read",data,20);
             //d2cf0e3b2c019ad69fd618d65750
             //d2cf0e3b2c019ad69f189f579f509f
             if(icExpired())
-            {
-                QString cardNo = icDatas.toHex().mid(12, 8);
-                qt_debug() << icDatas.toHex() << cardNo;
-                int time = 3*1000;
-                if(switchCtl->m_tempCtl)
+            {//0xD2 0xCF 0x0E 0x3B 0x2C 0x00 0x01 0x20 0x0C 0xE4 0x42 0x00 0x00 0x00 0x00 0x1A 0xF3
+                if(0xD2 == data[0] && 0xCF == data[1] && 17 == join_len)
                 {
-                    time = 4*1000;
+                    QByteArray ba;
+                    ba.resize(4);
+                    for(int i = 0;i < 4;i++)
+                    {
+                        ba[i] = data[7+i];
+                    }
+                    QString cardNo = ba.toHex().toLower();
+                    qt_debug() << cardNo;
+                    int time = 3*1000;
+                    if(switchCtl->m_tempCtl)
+                    {
+                        time = 4*1000;
+                    }
+                    int mid = sqlDatabase->sqlSelectIcId(cardNo);
+                    icCountdown_ms(time);
+                    emit sigIcInfo(mid, cardNo);
                 }
-                int mid = sqlDatabase->sqlSelectIcId(cardNo);
-                icCountdown_ms(time);
-                emit sigIcInfo(mid, cardNo);
             }
+            memset(data, 0, 256);
+            join_len = 0;
             icDatas.clear();
         }
     }

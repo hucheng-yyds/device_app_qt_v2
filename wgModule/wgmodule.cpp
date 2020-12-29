@@ -35,7 +35,7 @@ void WgModule::run()
                 data[3] = wgd.buf[5];
             }
             data = data.toHex();
-            QString cardNo = QString::fromUtf8(data).mid(0, 8);
+            QString cardNo = QString::fromUtf8(data).mid(0, 8).toLower();
             int time = 3*1000;
             if(switchCtl->m_tempCtl)
             {

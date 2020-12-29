@@ -201,7 +201,7 @@ void TcpClient::OnReadData()
         }
         if(m_msgData.size() == m_msgLength)
         {
-            parseData(m_cmdType,m_msgData);
+            parseData(m_cmdType, m_msgData);
         }
         if(m_msgData.size() > m_msgLength)
         { // 解决粘包的问题

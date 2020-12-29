@@ -10,7 +10,7 @@
 #define WG_DATA_W       1
 #define WG_DATA_WR      _IOR(WG_CMD_MAGE, 3, char)
 struct weigen_d{
-    int type;              //  26 34 34A
+    int type;              //  26:0x03 32:0x14 34:0x04 34A
     char buf[8];          //  data
 };
 

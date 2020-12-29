@@ -358,6 +358,7 @@ void FaceIdentify::dealIcData(int mid, const QString &cardNo)
     m_cardNo = cardNo;
     QString isSuccess = "0";
     QString isStranger = "0";
+    QString playFile = "chengong.wav";
     if(id > 0)
     {
 //        QStringList value = dealOpencondition(id);
@@ -377,6 +378,7 @@ void FaceIdentify::dealIcData(int mid, const QString &cardNo)
 //        }
 //        else
         {
+            judgeDate();
             if(0 == switchCtl->m_language)
             {
                 if(1 == switchCtl->m_nameMask)
@@ -396,7 +398,19 @@ void FaceIdentify::dealIcData(int mid, const QString &cardNo)
                 }
             }
             emit icResultShow(1, name, m_faceInfo + name);
-            hardware->playSound("chengong.wav");
+            if(0 == m_wavSeq)
+            {
+                playFile = "zschengong.wav";
+            }
+            else if(1 == m_wavSeq)
+            {
+                playFile = "zwchengong.wav";
+            }
+            else
+            {
+                playFile = "wschengong.wav";
+            }
+            hardware->playSound(playFile.toUtf8());
             hardware->checkOpenDoor();
             isSuccess = "1";
         }

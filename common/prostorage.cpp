@@ -75,7 +75,6 @@ void ProStorage::init()
     //测温模块程序升级
     connect(toolTcpServer,&ToolTcpServer::sigSendUpdateTemp,tempManager, &TempManager::sendTempProgram);
 
-
     MqttModule *mqttClient = new MqttModule;
     UserIdRequest *userRequest = new UserIdRequest;
     connect(userRequest, &UserIdRequest::removeFaceGroup, face, &FaceManager::removeFaceGroup);
