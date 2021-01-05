@@ -59,6 +59,8 @@ signals:
     void sigSetAllScreenOn(bool);//打開或關閉全屏測溫
     void updateUsers(QJsonObject &obj);// 发送单个人员入库
     void sigSendUpdateTemp();//测温模块升级
+    void sigUpdateSleepTime(int time,bool screenCtl);//配置息屏時間（s）
+    void sigSaveImage();
 public slots:
 //    void onToolCmdResponse(ToolCmds cmd ,QByteArray dat);//其他的模块通过这个接口反馈消息到配置工具
     void onGetTempResponse(QByteArray dat);//测温模块的反馈接口

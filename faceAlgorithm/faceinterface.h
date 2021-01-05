@@ -34,6 +34,8 @@ public:
     QSemaphore m_usedSpace;
     int m_count;
     bool m_iStop;
+    bool m_success;
+    bool m_trackId;
     bool m_quality;
     bool m_localFaceSync;
     unsigned char *m_irImage;

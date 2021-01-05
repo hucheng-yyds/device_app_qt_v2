@@ -6,15 +6,10 @@ Item {
     height: root.height
     property var focusingList: [focusing];
     property bool isEg;
-    property bool isTemp;
     property bool isResultz:false;
     property bool isResulty:false;
     property int sleepTime : 5000;
     property bool fouscing : false;
-    property int x_f: 0;
-    property int y_f: 0;
-    property int h_f: 0;
-    property int w_f: 0;
 
     Focusing {
         id: focusing;
@@ -37,21 +32,6 @@ Item {
         color: "#fffffe"
         style: Text.Raised
     }
-
-    Image {
-        id: netStatus
-        x: 670
-        y: 11
-        source: "image/net_nosig.png";
-    }
-
-    Image {
-        id: network
-        x: 620
-        y: 11
-        source: "";
-    }
-
     Rectangle {
         id: tbsBg
         x: 0
@@ -76,341 +56,35 @@ Item {
     }
 
     Image {
-        id: face_1
-        x: x_f
-        y: y_f
-        source: "image/face_1.png"
-        visible: fouscing
-    }
-    Image {
-        id: face_2
-        x: x_f + w_f
-        y: y_f
-        source: "image/face_2.png"
-        visible: fouscing
-    }
-    Image {
-        id: face_3
-        x: x_f
-        y: y_f + h_f
-        source: "image/face_3.png"
-        visible: fouscing
-    }
-    Image {
-        id: face_4
-        x: x_f + w_f
-        y: y_f + h_f
-        source: "image/face_4.png"
-        visible: fouscing
+        id: netStatus
+        x: 670
+        y: 11
+        source: "image/net_nosig.png";
     }
 
     Image {
-        id: image_head
-        x: 1
-        y: 2
-        width: 600
-        height: 844
-        source: "image/head_temp.png"
-        visible: false
+        id: network
+        x: 620
+        y: 11
+        source: "";
     }
 
     Rectangle {
-        id: tempBg
-        x: 250
-        y: 490
-        visible: false
-        color: "#FEFFFF"
-        radius: 30
-        width: 300
-        height: 300
-    }
-
-    // 体温正常显示绿色框
-    Image {
-        id: tempNormal
-        x: 325
-        y: 517
-        source: "image/tiwenzhc.png"
-        visible: isResultz
-    }
-
-    // 体温异常显示红色框
-    Image {
-        id: tempUnusual
-        x: 325
-        y: 517
-        source: "image/tiwenyc.png"
-        visible: isResulty
-    }
-
-    // 体温偏低
-    Image {
-        id: tempLow
-        x: 325
-        y: 517
-        source: "image/tiwenlow.png"
-        visible: tempInfoLow.visible
-    }
-
-    // 测温失败
-    Image {
-        id: tempError
-        x: 325
-        y: 517
-        source: "image/cwshibai.png"
-        visible: tempInfoError.visible
-    }
-
-    // 显示测温失败提示信息
-    Text {
-        id: tempInfoError
-        x: 298
-        y: 688
-        width: 205
-        height: 70
-        visible: false
-        font {
-            pixelSize: 30
-            family: "multi-language"
-        }
-        color: "#9E9E9E"
-//        wrapMode: Text.WordWrap
-        text: qsTr("测温中请勿\n大幅度晃动头部")
-        anchors.horizontalCenter: parent.horizontalCenter
-        verticalAlignment: Text.AlignVCenter
-        horizontalAlignment: Text.AlignHCenter
-    }
-
-    // 显示测温偏低提示信息
-    Text {
-        id: tempInfoLow
-        x: 328
-        y: 688
-        width: 144
-        height: 70
-        visible: false
-        font {
-            pixelSize: 30
-            family: "multi-language"
-        }
-        color: "#9E9E9E"
-        text: qsTr("检查是否\n受风力影响")
-        anchors.horizontalCenter: parent.horizontalCenter
-        verticalAlignment: Text.AlignVCenter
-        horizontalAlignment: Text.AlignHCenter
-    }
-
-    // 显示测温中提示信息
-    Text {
-        id: temping
-        x: 333
-        y: 686
-        width: 135
-        height: 34
-        visible: false
-        font {
-            pixelSize: 36
-            family: "multi-language"
-        }
-        color: "#3F3F3F"
-        text: qsTr("测温中...")
-        anchors.horizontalCenter: parent.horizontalCenter
-        verticalAlignment: Text.AlignVCenter
-        horizontalAlignment: Text.AlignHCenter
-    }
-
-    Text {
-        id: tempingInfo
-        x: 297
-        y: 737
-        width: 135
-        height: 30
-        visible: temping.visible
-        font {
-            pixelSize: 30
-            family: "multi-language"
-        }
-        color: "#9E9E9E"
-        text: qsTr("请勿离开测温区")
-        anchors.horizontalCenter: parent.horizontalCenter
-        verticalAlignment: Text.AlignVCenter
-        horizontalAlignment: Text.AlignHCenter
-    }
-
-    AnimatedImage {
-        id: cewening
-        visible: temping.visible
-        x: 325
-        y: 517
-        source: "./gifs/cewen.gif"
-//        playing: true
-        playing: false
-    }
-
-
-
-    // 显示体温检测结果
-    Text {
-        id: tempResult
-        x: 320
-        y: 700
-        visible: false
-        font {
-            pixelSize: 54
-            family: "multi-language"
-        }
-        color: isResultz ? "#3F3F3F" : "#E5533D"
-        text: qsTr("")
-        anchors.horizontalCenter: parent.horizontalCenter
-        verticalAlignment: Text.AlignVCenter
-        horizontalAlignment: Text.AlignHCenter
-    }
-    // 定时器 清空体温检测结果
-    Timer {
-        id: pose_blur_Timer;
-        interval: 2000; running: false;
-        onTriggered: {
-            tempBg.visible = false;
-            isResultz = false;
-            isResulty = false;
-            tempResult.visible = false;
-            tempInfoError.visible = false;
-            tempInfoLow.visible = false;
-            idCard.visible = false;
-            cardFail.visible = false;
-            cardSuccess.visible = false;
-            kansxt.visible = false;
-        }
-    }
-
-    // 显示读卡中提示信息
-    Text {
-        id: reading
-        x: 333
-        y: 686
-        width: 135
-        height: 34
-        visible: false
-        font {
-            pixelSize: 36
-            family: "multi-language"
-        }
-        color: "#3F3F3F"
-        text: qsTr("读卡中...")
-        anchors.horizontalCenter: parent.horizontalCenter
-        verticalAlignment: Text.AlignVCenter
-        horizontalAlignment: Text.AlignHCenter
-    }
-
-    Text {
-        id: readingInfo
-        x: 297
-        y: 737
-        width: 135
-        height: 30
-        visible: reading.visible
-        font {
-            pixelSize: 30
-            family: "multi-language"
-        }
-        color: "#9E9E9E"
-        text: qsTr("请勿离开读卡区")
-        anchors.horizontalCenter: parent.horizontalCenter
-        verticalAlignment: Text.AlignVCenter
-        horizontalAlignment: Text.AlignHCenter
-    }
-
-    AnimatedImage {
-        id: readingGif
-        visible: reading.visible
-        x: 325
-        y: 517
-        source: "./gifs/reading.gif"
-        //        playing: true
-                playing: false
-    }
-
-    // 人证失败
-    Image {
-        id: cardFail
-        x: 325
-        y: 517
-        source: "image/icFail.png"
-        visible: false
-    }
-
-    // 人证成功
-    Image {
-        id: cardSuccess
-        x: 325
-        y: 517
-        source: "image/icSuccess.png"
-        visible: false
-    }
-
-    // 刷身份证
-    Image {
-        id: idCard
-        x: 325
-        y: 517
-        source: "image/idCard.png"
-        visible: false
-    }
-
-    // 提醒刷身份证信息
-    Text {
-        id: idCardRead
-        x: 327
-        y: 688
-        width: 144
-        height: 70
-        visible: idCard.visible
-        font {
-            pixelSize: 30
-            family: "multi-language"
-        }
-        color: "#9E9E9E"
-        text: qsTr("请将身份证\n放置读卡区")
-        anchors.horizontalCenter: parent.horizontalCenter
-        verticalAlignment: Text.AlignVCenter
-        horizontalAlignment: Text.AlignHCenter
-    }
-
-    // 看摄像头
-    AnimatedImage {
-        id: kansxtGif
-        visible: kansxt.visible
-        x: 325
-        y: 517
-        source: "./gifs/kansxt.gif"
-        //        playing: true
-                playing: false
-    }
-
-    // 看摄像头信息
-    Text {
-        id: kansxt
-        x: 342
-        y: 688
-        width: 144
-        height: 70
-        visible: idCard.visible
-        font {
-            pixelSize: 30
-            family: "multi-language"
-        }
-        color: "#9E9E9E"
-        text: qsTr("请将人脸\n正对设备")
-        anchors.horizontalCenter: parent.horizontalCenter
-        verticalAlignment: Text.AlignVCenter
-        horizontalAlignment: Text.AlignHCenter
+        id: dateBg
+        x: 0
+        y: 1033
+        visible: true
+        color: "#2D72FF"
+//        opacity: 0.75
+        width: parent.width
+        height: 204
     }
 
     // 主界面界面显示时间
     Text {
         id: date
-        x: 30
-        y: 16
+        x: 215
+        y: 1172
         height: 35
         width: 283
         color: "#fffffe"
@@ -424,8 +98,8 @@ Item {
 
     Text {
         id: times
-        x: 29
-        y: 58
+        x: 214
+        y: 1025
         width: 292
         height: 81
         color: "#fffffe"
@@ -440,17 +114,17 @@ Item {
     // 显示当前入库人数
     Image {
         id: image_people
-        x: 0
-        y: 201
-        width: 68
-        height: 41
-        source: "image/public_people.png"
+        x: 37
+        y: 96
+        width: 30
+        height: 30
+        source: "image/number.png"
     }
 
     Text {
         id: people;
-        x: 70
-        y: 200
+        x: 75
+        y: 90
         font {
             pixelSize: 30
             family: "multi-language"
@@ -460,64 +134,19 @@ Item {
         style: Text.Raised
     }
 
-
-    Image {
-        id: pngShow
-        visible: true
-        x: 0
-        y: 1090
-        source: "image/show.png"
-    }
-    AnimatedImage {
-        id: gifShow
-        visible: pngShow.visible
-        x: 0
-        y: 1090
-        source: "./gifs/show.gif"
-                playing: true
-//                playing: false
-    }
-    Image {
-        id: pngRun
-        visible: false
-        x: 0
-        y: 1090
-        source: "image/run.png"
-    }
-    AnimatedImage {
-        id: gifRun
-        visible: pngRun.visible
-        x: 0
-        y: 1090
-        source: "./gifs/run.gif"
-        playing: true
-//                playing: false
-    }
-
     // 显示设备名称
     Text {
         id: corporateName
-        x: 134
-        y: 1129
+        x: 35
+        y: 11
         width: 289
         color: "#fffffe"
         font {
-//            bold: "Medium"
-            pixelSize: 42
+            pixelSize: 48
             family: "multi-language"
         }
         text: qsTr("")
         style: Text.Raised
-    }
-
-    Rectangle {
-        id: devIndoBg
-        x: 0
-        y: 1242
-        width: 720
-        height: 38
-        opacity: 0.5
-        color: "#000000"
     }
 
     // 显示设备sn码
@@ -537,7 +166,7 @@ Item {
     // 显示ip
     Text {
         id: ip;
-        x: 400
+        x: 350
         y: 1246
         font {
             pixelSize: 20
@@ -573,15 +202,6 @@ Item {
         }
     }
 
-    Timer {
-        id: gifChange;
-        interval: 1000; running: false;
-        onTriggered: {
-            pngRun.visible = false
-            pngShow.visible = true
-        }
-    }
-
     // 定时器待机界面启动
     Timer {
         id: sleep;
@@ -595,27 +215,47 @@ Item {
     // 检测结果显示
     Rectangle {
         id: resultTextBg
-        y: 1007
+        y: 828
         visible: resultText.text.length
-        color: "#000000"
-        radius: 20
-        opacity: 0.5
+        color: "#202020"
+        radius: 90
+        opacity: 0.75
         anchors.horizontalCenter: parent.horizontalCenter
-        width: 380
-        height: 77
+        width: 660
+        height: 183
     }
 
     Text {
         id: resultText
         font {
-            pixelSize: 42
+            pixelSize: 78
             family: "multi-language"
         }
-        color: "#16DFEC"
+        color: "#2D72FF"
         anchors.horizontalCenter: resultTextBg.horizontalCenter
-//        anchors.leftMargin: 25
         anchors.verticalCenter: resultTextBg.verticalCenter
         style: Text.Raised
+    }
+
+    Image {
+        id: faceShow
+        x: 0
+        y: 0
+        visible: false
+        width: 720
+        height: 1012
+        source: "image/face.png"
+    }
+
+    Image {
+        cache: false;
+        id: iconFace
+        x: 200
+        y: 644
+        visible: true
+        width: 500
+        height: 500
+        source: ""
     }
 
     Connections {
@@ -624,21 +264,15 @@ Item {
         onSyncSuccess: {
             sync.visible = false;
             isEg = eg;
-            isTemp = temp;
-//            if (eg) {
-//                iconFace.source = "image/icon_face.png"
-//            } else {
-//                iconFace.source = "image/icon_temp.png"
-//            }
-            image_head.visible = isTemp
             sleep.restart();
             console.log("onSyncSuccess");
         }
         onFaceTb: {
-            for (var i = 0; i < focusingList.length; i ++) {
-                focusingList[i].focusingVisible = false;
-                focusingList[i].trackId = 0;
-            }
+//            for (var i = 0; i < focusingList.length; i ++) {
+//                focusingList[i].focusingVisible = false;
+//                focusingList[i].trackId = 0;
+//            }
+            faceShow.visible = false;
             tbs.text = qsTr(text);
             standby.visible = false;
             face.visible = true;
@@ -680,12 +314,8 @@ Item {
         }
 
         onFaceResultShow:{
-            kansxt.visible = false;
             resultText.text = qsTr(showInfo)
-            pngRun.visible = true
-            pngShow.visible = false
             hideName.restart()
-            gifChange.restart()
             sleep.restart()
         }
         onShowFaceFocuse:{
@@ -714,36 +344,42 @@ Item {
 //                focusingList[index].focusingVisible = true;
 //                focusingList[index].trackId = trackId;
 //            }
-            x_f = left - 20;
-            y_f = top - 30;
-            w_f = right - left + 50;
-            h_f = bottom - top + 30;
-            fouscing = true;
             standby.visible = false;
             face.visible = true;
             sleep.restart();
         }
+        onShowFaceResult: {
+            faceShow.visible = true;
+            standby.visible = false;
+            face.visible = true;
+            sleep.restart();
+            console.log("==================================================")
+        }
         onHideFaceFocuse:{
-            fouscing = false;
-            for (var i = 0; i < focusingList.length; i ++) {
-                focusingList[i].focusingVisible = false;
-                focusingList[i].trackId = 0;
-            }
+            faceShow.visible = false;
+//            for (var i = 0; i < focusingList.length; i ++) {
+//                focusingList[i].focusingVisible = false;
+//                focusingList[i].trackId = 0;
+//            }
         }
         onShowDeviceInfo:{
-            isTemp = tempCtl;
-            image_head.visible = isTemp
             version.text = qsTr("V" + ver);
             corporateName.text = qsTr(name);
             people.text = qsTr(number);
             ip.text = qsTr("IP: " + devIp);
             sn.text = qsTr("SN: " + devSn);
         }
+        onShowIr: {
+            iconFace.source = ""
+            iconFace.source = "image/face_small.png";
+        }
+//        onSaveImage:{
+//            item1.grabToImage(function(result) {
+//                result.saveToFile("something.png");
+//            });
+//        }
         onIcResultShow: {
-            pngRun.visible = true
-            pngShow.visible = false
             hideName.restart()
-            gifChange.restart()
             sleep.restart()
             if(2 === result)
             {
@@ -760,122 +396,6 @@ Item {
             hideName.restart()
             standby.visible = false;
             face.visible = true;
-            sleep.restart();
-        }
-
-        onIdCardResultShow: {
-            pose_blur_Timer.restart();
-            tempBg.visible = true;
-            reading.visible = false;
-            kansxt.visible = false;
-            if(2 === flag)
-            {
-                cardFail.visible = false;
-                resultText.text = showInfo;
-                cardSuccess.visible = true;
-                tempResult.text = qsTr(result)
-                tempResult.visible = true;
-            }
-            else if(1 === flag)
-            {
-                resultText.text = showInfo;
-                cardSuccess.visible = false;
-                cardFail.visible = true;
-                tempResult.text = qsTr(result)
-                tempResult.visible = true;
-            }
-            else if(0 === flag)
-            {
-                resultText.text = showInfo;
-                cardSuccess.visible = false;
-                cardFail.visible = false;
-                tempResult.visible = false;
-                idCard.visible = true;
-            }
-            hideName.restart()
-            standby.visible = false;
-            face.visible = true;
-            sleep.restart();
-        }
-        onReadIcStatus: {
-            pose_blur_Timer.restart();
-            idCard.visible = false;
-            resultText.text = "";
-            cardSuccess.visible = false;
-            tempResult.visible = false;
-            tempBg.visible = true;
-            if(1 === flag)
-            {
-                kansxt.visible = false;
-                tempResult.visible = false;
-                cardFail.visible = false;
-                reading.visible = true;
-            }
-            else if(2 === flag)
-            {
-                reading.visible = false;
-                kansxt.visible = true;
-            }
-            else if(0 === flag)
-            {
-                kansxt.visible = false;
-                reading.visible = false;
-                cardFail.visible = true;
-                tempResult.text = qsTr("请重新刷卡");
-                tempResult.visible = true;
-            }
-            standby.visible = false;
-            face.visible = true;
-            sleep.restart();
-        }
-        onShowStartTemp: {
-            idCard.visible = false;
-            cardFail.visible = false;
-            cardSuccess.visible = false;
-            pose_blur_Timer.restart();
-            isResultz = false;
-            isResulty = false;
-            tempInfoLow.visible = false;
-            tempInfoError.visible = false;
-            tempResult.visible = false;
-            tempBg.visible = true;
-            temping.visible = true;
-        }
-        onTempShow: {
-            pngRun.visible = true
-            pngShow.visible = false
-            gifChange.restart()
-            temping.visible = false
-            pose_blur_Timer.restart();
-            if (result === 0) {
-                isResultz = false;
-                isResulty = true;
-                tempInfoLow.visible = false;
-                tempInfoError.visible = false;
-                tempResult.text = tempVal;
-                tempResult.visible = true;
-            } else if (result === 1) {
-                isResultz = true;
-                isResulty = false;
-                tempInfoLow.visible = false;
-                tempInfoError.visible = false;
-                tempResult.text = tempVal;
-                tempResult.visible = true;
-            } else if(result === -1)
-            {
-                isResultz = false;
-                isResulty = false;
-                tempInfoLow.visible = true;
-                tempInfoError.visible = false;
-                tempResult.visible = false;
-            }
-            else {
-                isResultz = false;
-                isResulty = false;
-                tempInfoLow.visible = false;
-                tempInfoError.visible = true;
-                tempResult.visible = false;
-            }
             sleep.restart();
         }
         onTimeSync: {

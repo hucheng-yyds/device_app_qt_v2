@@ -64,6 +64,10 @@ signals:
     void readIcStatus(int flag);
     // 口罩和安全帽显示
     void maskHelmet(int flag);
+    // 检测人脸结果显示
+    void showFaceResult();
+    void showIr();
+    void saveImage();
 
 private:
     // 功能模块初始化

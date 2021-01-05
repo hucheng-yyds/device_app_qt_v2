@@ -111,7 +111,8 @@ void ToolTcpServer::onGetTempResponse(QByteArray dat)
         jaSonObject.insert("msgType","1");
         jaSonObject.insert("cmd","2");
         ResponseDataToTool(Dev_FirmwareUpgrade_response,jaSonObject);
-    }else {
+    }
+    else {
         QJsonObject jaSonObject;
         qt_debug() << dat.toHex();
         jaSonObject.insert("msgType","2");
@@ -145,7 +146,7 @@ void ToolTcpServer::onGetRealTimeLog(QString dat)
 
 void ToolTcpServer::onGetTempHardwareInfo(QJsonObject dat )
 {
-   ResponseDataToTool(Dev_TemCalibration_response,dat);
+    ResponseDataToTool(Dev_TemCalibration_response,dat);
 }
 
 static int bytesToInt(QByteArray bytes)
@@ -360,19 +361,19 @@ void ToolTcpServer::setParameters(QJsonObject & data,QString msgType,QString cmd
     if(data.contains(key_manual_config))
     {
         bool on = data.value(key_manual_config).toBool();
-        if(!on){
+        if(!on){ //手動
             switchCtl->m_ipMode = false;
             if(data.contains(key_manual_ip)&&
                     data.contains(key_manual_netmask)&&
                       data.contains(key_manual_route)&&
                     data.contains(key_manual_dns)){
 
-                    if(data.value(key_manual_config).toString()!=""&&
+                    if(data.value(key_manual_ip).toString()!=""&&
                             data.value(key_manual_netmask).toString()!=""&&
                                 data.value(key_manual_route).toString()!=""&&
                             data.value(key_manual_dns).toString()!=""){
 
-                        switchCtl->m_manualIp = data.value(key_manual_config).toString();
+                        switchCtl->m_manualIp = data.value(key_manual_ip).toString();
                         switchCtl->m_manualGateway =data.value(key_manual_netmask).toString();
                         switchCtl->m_manualNetmask =data.value(key_manual_route).toString();
                         switchCtl->m_manualDns =data.value(key_manual_dns).toString();
@@ -386,6 +387,12 @@ void ToolTcpServer::setParameters(QJsonObject & data,QString msgType,QString cmd
         }
     }
 
+    if(data.contains(key_screenCtl))
+    {
+        switchCtl->m_screenCtl = data.value(key_screenCtl).toBool();
+        emit  sigUpdateSleepTime(switchCtl->m_closeScreenTime,switchCtl->m_screenCtl);
+    }
+
     // 定时息屏时间 单位秒最小3秒钟
     if(data.contains(key_closeScreenTime))
     {
@@ -394,6 +401,7 @@ void ToolTcpServer::setParameters(QJsonObject & data,QString msgType,QString cmd
         {
             switchCtl->m_closeScreenTime = 3;//s
         }
+        emit  sigUpdateSleepTime(switchCtl->m_closeScreenTime,switchCtl->m_screenCtl);
     }
     // 后台通信协议开关 true:tcp协议，false:http协议
     if(data.contains(key_protocol))
@@ -507,6 +515,7 @@ void ToolTcpServer::setParameters(QJsonObject & data,QString msgType,QString cmd
     }
     if(data.contains(key_language))
     {
+//        emit sigSaveImage();
         switchCtl->m_language = data.value(key_language).toInt();
     }
     if(data.contains(key_devName))
@@ -574,10 +583,7 @@ void ToolTcpServer::setParameters(QJsonObject & data,QString msgType,QString cmd
     {
         switchCtl->m_idcardValue = data.value(key_idcardValue).toDouble();
     }
-    if(data.contains(key_screenCtl))
-    {
-        switchCtl->m_screenCtl = data.value(key_screenCtl).toBool();
-    }
+
 
     if(data.contains(key_log))
     {
@@ -586,10 +592,6 @@ void ToolTcpServer::setParameters(QJsonObject & data,QString msgType,QString cmd
     if(data.contains(key_ic))
     {
         switchCtl->m_ic = data.value(key_ic).toBool();
-    }
-    if(data.contains(key_wifi_ctl))
-    {
-        switchCtl->m_wifiCtl = data.value(key_wifi_ctl).toBool();
     }
     if(data.contains(key_wifi_name))
     {
@@ -648,10 +650,11 @@ void ToolTcpServer::parseData(QByteArray &new_cmd)
 
     qt_debug() << m_cmd;
 
-     if(m_cmd == Dev_CameraCalibration_request)
+    if(m_cmd == Dev_CameraCalibration_request)
     {
          emit sigCamCalibration();
-    }else  if(m_cmd == Dev_HeartBeat_request)
+    }
+    else if(m_cmd == Dev_HeartBeat_request)
     {
          setSendingLostsOfData(false);
          sendHeartBeat();
@@ -761,7 +764,7 @@ void ToolTcpServer::parseData(QByteArray &new_cmd)
                                 qt_debug()<<"";
                                 system("rm *.db");
                                 system("rm offline/*");
-                                system("killall -9 F01 && reboot");
+                                system("reboot");
 
                             }
                         }else if(msgType == "1")//升级固件
@@ -787,7 +790,7 @@ void ToolTcpServer::parseData(QByteArray &new_cmd)
                                     response.insert("cmd",cmdStr);
                                     ResponseDataToTool(Dev_FirmwareUpgrade_response,response);
                                     msleep(1000);
-                                    system("killall -9 F01 && reboot");
+                                    system("reboot");
                                 }
                             }
                             else if(cmdStr == "1")//
@@ -813,7 +816,7 @@ void ToolTcpServer::parseData(QByteArray &new_cmd)
                                 }
                             }
                             else if(cmdStr == "3"){
-
+                                dataShare->m_upgrade = false;
                                 system("rm base64SaveFile.txt");
                                 system("rm update.tar.xz");
                                 system("rm temp.bin");
@@ -853,12 +856,8 @@ void ToolTcpServer::parseData(QByteArray &new_cmd)
                             response.insert("cmd",cmdStr);
                             ResponseDataToTool(Dev_Debugging_response,response);
                             msleep(1000);
-                            system("killall -9 F01 && reboot");
+                            system("reboot");
                         }
-                    }
-                    else if(m_cmd == Dev_CameraCalibration_request)
-                    {
-                        emit sigCamCalibration();
                     }
                     else if(m_cmd == Dev_Voice_File_request)
                     {
@@ -927,7 +926,7 @@ void ToolTcpServer::parseData(QByteArray &new_cmd)
                             }
                             else if(cmdStr == "1")//下发整个语言包
                             {
-                               setSendingLostsOfData(true);
+                                setSendingLostsOfData(true);
                                 VoicUpdate(rootObj);
 
                             }
@@ -1262,29 +1261,29 @@ void ToolTcpServer::DevUpdate(QJsonObject rootObj)
 
                         system("tar -xvf update.tar.xz && rm update.tar.xz");
                         system("rm base64SaveFile.txt");
-//                        if (QFile::exists("hi3516dv300_smp_image")) {
-//                            char* mac ;
-//                            mac = switchCtl->m_sn.toUtf8().data();
-//                             if (mac[7] >= 'A') {
-//                                mac[7] -= '7';
-//                                mac[7] &= 0xE;
-//                                mac[7] += '7';
-//                            } else {
-//                                mac[7] -= '0';
-//                                mac[7] &= 0xE;
-//                                mac[7] += '0';
-//                            }
-//                            system("echo " + QByteArray(mac) + " > /dev/mmcblk0p6");
-//                            system("dd if=hi3516dv300_smp_image/u-boot-hi3516dv300.bin of=/dev/mmcblk0p1 &&"
-//                                   "dd if=hi3516dv300_smp_image/uImage_hi3516dv300_smp of=/dev/mmcblk0p2 &&"
-//                                   "rm hi3516dv300_smp_image -rf &&"
-//                                   "sync");
-//                        }
+                        if (QFile::exists("hi3516dv300_smp_image")) {
+                            char* mac ;
+                            mac = switchCtl->m_sn.toUtf8().data();
+                             if (mac[7] >= 'A') {
+                                mac[7] -= '7';
+                                mac[7] &= 0xE;
+                                mac[7] += '7';
+                            } else {
+                                mac[7] -= '0';
+                                mac[7] &= 0xE;
+                                mac[7] += '0';
+                            }
+                            system("echo " + QByteArray(mac) + " > /dev/mmcblk0p6");
+                            system("dd if=hi3516dv300_smp_image/u-boot-hi3516dv300.bin of=/dev/mmcblk0p1 &&"
+                                   "dd if=hi3516dv300_smp_image/uImage_hi3516dv300_smp of=/dev/mmcblk0p2 &&"
+                                   "rm hi3516dv300_smp_image -rf &&"
+                                   "sync");
+                        }
 
                         responseHardUpdate(Dev_FirmwareUpgrade_response,"reboot",tmp);
                         msleep(1000);
                         qt_debug() << "system reboot";
-                        system("killall -9 F01 && reboot");
+                        system("reboot");
                     }
                     else {
                         system("rm base64SaveFile.txt");

@@ -1,4 +1,6 @@
 #include "facemanager.h"
+#include <QImage>
+#include <QPixmap>
 
 #ifdef __cplusplus
 //#if __cplusplus
@@ -14,6 +16,8 @@ extern int AW_MPI_ISP_SetLocalExposureArea(ISP_DEV IspDev, SIZE_S Res, RECT_S Ro
 
 FaceManager::FaceManager()
 {
+    countdown_ms(0);
+    faceCountdown_ms(0);
     m_isIdentify = false;
 }
 
@@ -65,8 +69,28 @@ void FaceManager::onBreathingLight()
 
 }
 
+void FaceManager::saveImage(int x, int y, int w, int h)
+{   system("rm qml/image/face_small.png snap_face.jpg");
+    cv::Mat nv21(SOURCE_HEIGHT + SOURCE_HEIGHT / 2, SOURCE_WIDTH, CV_8UC1, m_interFace->m_irImage);
+    cv::Mat image;
+    cv::cvtColor(nv21, image, CV_YUV2BGR_NV21);
+    QVector<int> opts;
+    opts.push_back(cv::IMWRITE_JPEG_QUALITY);
+    opts.push_back(30);
+    opts.push_back(cv::IMWRITE_JPEG_OPTIMIZE);
+    opts.push_back(1);
+    cv::imwrite("snap_face.jpg", image, opts.toStdVector());
+    QPixmap img;
+    img.load("snap_face.jpg");
+    QPixmap img1 = img.copy(x, y, w, h);
+    img1.save("face_small.png", "PNG");
+    system("mv face_small.png qml/image");
+    emit showIr();
+}
+
 void FaceManager::run()
 {
+    bool status = false;
     hardware->ctlIr(ON);
     while (1) {
         m_bgrVideoFrame = nullptr;
@@ -86,17 +110,18 @@ void FaceManager::run()
             }
         }
         if(dataShare->m_sync) {
-            status = true;
-//            hardware->ctlWDG();
+            if(!status)
+            {
+                hardware->ctlWhite(OFF);
+                hardware->checkCloseDoor();
+                status = true;
+            }
             emit faceTb(tr("正在同步中..."));
-            hardware->ctlWhite(OFF);
             if(!dataShare->m_netStatus)
             {
                 dataShare->m_sync = false;
             }
-            qt_debug() << "dataShare->m_sync:" << dataShare->m_sync;
-            hardware->checkCloseDoor();
-            msleep(500);
+            sleep(2);
             continue;
         } else {
             m_ptrAppData->ptrFaceIDInData->FuncFlag = CTRL_RECOGNITION;
@@ -139,14 +164,44 @@ void FaceManager::run()
 //                    saveRight[i] = ptrFaceInfo.XMax;
 //                    saveBottom[i] = ptrFaceInfo.YMax;
 //                }
+                backLightCount = 0;
                 hardware->ctlWhite(ON);
-                emit showFaceFocuse(saveLeft[i] * 1.66, saveTop[i] * 1.6, saveRight[i] * 1.66, saveBottom[i] * 1.6, i, ptrFaceInfo.trackID);
+//                emit showFaceFocuse(saveLeft[i] * 1.66, saveTop[i] * 1.6, saveRight[i] * 1.66, saveBottom[i] * 1.6, i, ptrFaceInfo.trackID);
 //                qt_debug() << qAbs(saveLeft[i] - ptrFaceInfo.XMin) << offset;
                 /*动态曝光测试接口*/
 //                SIZE_S awSize = {ptrFaceInfo.XMax - ptrFaceInfo.XMin, ptrFaceInfo.YMax - ptrFaceInfo.YMin};
 //                RECT_S awRect = {ptrFaceInfo.XMin, ptrFaceInfo.YMin, awSize.Width, awSize.Height};
 //                AW_MPI_ISP_SetLocalExposureArea(0 ,awSize ,awRect);
-                if (m_interFace->m_iStop) {
+//                int width = ptrFaceInfo.XMax - ptrFaceInfo.XMin;
+//                if(width < 80)
+//                {
+//                    memcpy(m_interFace->m_irImage, m_irVideoFrame->VFrame.mpVirAddr[0], SOURCE_WIDTH * SOURCE_HEIGHT);
+//                    memcpy(m_interFace->m_irImage + SOURCE_WIDTH * SOURCE_HEIGHT, m_irVideoFrame->VFrame.mpVirAddr[1], SOURCE_WIDTH * SOURCE_HEIGHT / 2);
+//                    saveImage(ptrFaceInfo.XMin, ptrFaceInfo.XMax, 500, 500);
+//                }
+//                qt_debug() << "=============================" << width << ptrFaceInfo.rgbLiveOrNot << ptrFaceInfo.irLiveOrNot << ptrFaceInfo.trackID;
+                int trackId = ptrFaceInfo.trackID;
+                if(trackId == m_interFace->m_trackId)
+                {
+                    if(m_interFace->m_success && !faceExpired())
+                    {
+                        m_interFace->m_iStop = false;
+                    }
+                }
+                else {
+//                    emit showFaceFocuse(saveLeft[i] * 1.66, saveTop[i] * 1.6, saveRight[i] * 1.66, saveBottom[i] * 1.6, i, ptrFaceInfo.trackID);
+                    m_interFace->m_trackId = trackId;
+                }
+                if(/*!m_interFace->m_success && width < 100 &&*/ expired() )
+                {
+                    countdown_ms(3000);
+                    emit showFaceResult();
+//                    hardware->playSound("hello.wav");
+                }
+                if (m_interFace->m_iStop)
+                {
+                    m_interFace->m_success = false;
+                    faceCountdown_ms(switchCtl->m_identifyWaitTime*1000);
                     m_interFace->m_iStop = false;
                     m_interFace->m_faceHandle << ptrFaceInfo;
 //                    qt_debug() << "m_ptrAppData->ptrFaceIDOutData->returnImg:"
@@ -173,7 +228,10 @@ void FaceManager::run()
             if (m_ptrAppData->ptrFaceIDOutData->curStatus == RETURN_CLEAR_RECOGNITION_SUCCESS) m_ptrAppData->ptrFaceIDInData->FuncFlag = CTRL_RECOGNITION;
         } else {
 //            m_interFace->m_iStop = true;
-            emit hideFaceFocuse();
+            if(expired())
+            {
+                emit hideFaceFocuse();
+            }
             backLightCount++;
             if(backLightCount > 100)
             {
@@ -297,8 +355,10 @@ void FaceManager::ctlOpenDoor(int id)
 
 void FaceManager::insertFaceGroups(int id, const QString &username, const QString &time, const QString &photoname, const QString &iphone)
 {
-//    int count;
-//    return ;
+    QDateTime origin_time = QDateTime::fromString("1970-01-01 08:00:00","yyyy-MM-dd hh:mm:ss");
+    QDateTime current_date_time =QDateTime::currentDateTime();
+    qint64 old = origin_time.msecsTo(current_date_time);
+    qt_debug() << "111111111111111111111111111111111111111" << old;
     QString file = QString::number(id) + ".jpg";
     auto image = cv::imread(file.toStdString());
     if (image.empty() || (image.cols > 1920) || (image.rows > 1920))
@@ -371,7 +431,11 @@ void FaceManager::insertFaceGroups(int id, const QString &username, const QStrin
             sqlDatabase->sqlDeleteFail(id);
         }
     }
+    origin_time = QDateTime::fromString("1970-01-01 08:00:00","yyyy-MM-dd hh:mm:ss");
+    current_date_time =QDateTime::currentDateTime();
+    qint64 now = origin_time.msecsTo(current_date_time);
     QFile::remove(file);
+    qt_debug() << "222222222222222222222222222222222222222222222222" << now << now - old;
 }
 
 void FaceManager::removeFaceGroup(int id)
@@ -387,6 +451,64 @@ void FaceManager::removeFaceGroup(int id)
 //    if (m_ptrAppData->ptrFaceIDOutData->curStatus == RETURN_DELETE_SUCCESS) {
 //        sqlDatabase->sqlDelete(id);
 //    }
+}
+
+void FaceManager::clearFaceGroup()
+{
+    foreach(int id, sqlDatabase->m_localFaceSet)
+    {
+        removeFaceGroup(id);
+    }
+    sqlDatabase->sqlDeleteAll();
+    sqlDatabase->sqlDeleteAllIc();
+    sqlDatabase->sqlDeleteAllAuth();
+}
+
+
+bool FaceManager::faceExpired()
+{
+    QDateTime origin_time = QDateTime::fromString("1970-01-01 08:00:00","yyyy-MM-dd hh:mm:ss");
+    QDateTime current_date_time =QDateTime::currentDateTime();
+    qint64 now = origin_time.msecsTo(current_date_time);
+    if(now >= m_endTimerMs)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+void FaceManager::faceCountdown_ms(int ms)
+{
+    QDateTime origin_time = QDateTime::fromString("1970-01-01 08:00:00","yyyy-MM-dd hh:mm:ss");
+    QDateTime current_date_time =QDateTime::currentDateTime();
+    qint64 now = origin_time.msecsTo(current_date_time);
+    m_endTimerMs = now + ms;
+}
+
+bool FaceManager::expired()
+{
+    QDateTime origin_time = QDateTime::fromString("1970-01-01 08:00:00","yyyy-MM-dd hh:mm:ss");
+    QDateTime current_date_time =QDateTime::currentDateTime();
+    qint64 now = origin_time.msecsTo(current_date_time);
+    if(now >= m_checkTimerMs)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+void FaceManager::countdown_ms(int ms)
+{
+    QDateTime origin_time = QDateTime::fromString("1970-01-01 08:00:00","yyyy-MM-dd hh:mm:ss");
+    QDateTime current_date_time =QDateTime::currentDateTime();
+    qint64 now = origin_time.msecsTo(current_date_time);
+    m_checkTimerMs = now + ms;
 }
 
 AppCall *FaceManager::DS_CreateAppCall(const char *ptrRegFilePath, const char *ptrModelFileAbsDir, const char *ptrFaceImgFilePath)
@@ -484,27 +606,27 @@ int FaceManager::DS_ReleaseAppCall(AppCall *ptrAppData)
     if (ptrAppData->ptrFaceIDParas)
     {
         free(ptrAppData->ptrFaceIDParas);
-        ptrAppData->ptrFaceIDParas = NULL;
+        ptrAppData->ptrFaceIDParas = nullptr;
     }
     if (ptrAppData->ptrFaceIDInData)
     {
         free(ptrAppData->ptrFaceIDInData);
-        ptrAppData->ptrFaceIDInData = NULL;
+        ptrAppData->ptrFaceIDInData = nullptr;
     }
     if (ptrAppData->ptrFaceIDOutData)
     {
         ptrAppData->ptrFaceIDOutData->faceInfo.clear();
         free(ptrAppData->ptrFaceIDOutData);
-        ptrAppData->ptrFaceIDOutData = NULL;
+        ptrAppData->ptrFaceIDOutData = nullptr;
     }
 
-    pthread_join(detect_pid, NULL);
+    pthread_join(detect_pid, nullptr);
     pthread_attr_destroy(&detect_attr);
-    pthread_join(identify_pid, NULL);
+    pthread_join(identify_pid, nullptr);
     pthread_attr_destroy(&identify_attr);
 
     free(ptrAppData);
-    ptrAppData = NULL;
+    ptrAppData = nullptr;
 
     return ret;
 }

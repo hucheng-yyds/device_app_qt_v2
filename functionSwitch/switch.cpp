@@ -43,6 +43,7 @@ SwitchCtl::SwitchCtl()
         m_tcpTimeout = serverObj.value("tcpTimeout").toInt();
         m_ntpAddr = serverObj.value("ntpAddr").toString();
         m_passwd = serverObj.value("passwd").toString();
+        m_appScret = serverObj.value("appScret").toString();
 
         m_tempComp = userObj.value("tempComp").toDouble();
         m_warnValue = userObj.value("warnValue").toDouble();
@@ -118,6 +119,7 @@ void SwitchCtl::saveSwitchParam()
     serverObj.insert("httpAddr", m_httpAddr);
     serverObj.insert("ntpAddr", m_ntpAddr);
     serverObj.insert("passwd", m_passwd);
+    serverObj.insert("appScret", m_appScret);
 
     netObj.insert("ipMode", m_ipMode);
     netObj.insert("manualIp", m_manualIp);
@@ -195,7 +197,7 @@ void SwitchCtl::setSwitchDefault()
     m_loose = false;
     m_ir = true;
     m_vi = false;
-    m_identifyWaitTime = 3;
+    m_identifyWaitTime = 2;
     m_idcardValue = 60;
     m_ipMode = true;
     m_manualIp = "192.168.100.2";
@@ -210,6 +212,7 @@ void SwitchCtl::setSwitchDefault()
     m_tcpTimeout = 8;
     m_ntpAddr = "120.25.108.11";
     m_passwd = "";
+    m_appScret = "U2FsdGVkX19VU8Q";
 
     m_tempComp = 0.0;
     m_warnValue = 37.3;
@@ -256,6 +259,7 @@ void SwitchCtl::setSwitchDefault()
     serverObj.insert("httpAddr", m_httpAddr);
     serverObj.insert("ntpAddr", m_ntpAddr);
     serverObj.insert("passwd", m_passwd);
+    serverObj.insert("appScret", m_appScret);
 
     netObj.insert("ipMode", m_ipMode);
     netObj.insert("manualIp", m_manualIp);

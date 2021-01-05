@@ -48,7 +48,7 @@
 #define key_screenCtl                       "screenCtl"             // 息屏模式开关 true:常亮 false:定时息屏
 
 
-#define key_wifi_ctl                       "wifiCtl"
+
 #define key_wifi_name                       "wifiName"
 #define key_wifi_pwd                        "wifiPwd"
 

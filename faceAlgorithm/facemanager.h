@@ -24,6 +24,7 @@ public slots:
     // 人员图片入库
     void insertFaceGroups(int id, const QString &username, const QString &time, const QString &photoname, const QString &iphone);
     void removeFaceGroup(int id);
+    void clearFaceGroup();
 
 private:
     AppCall* DS_CreateAppCall(const char* ptrRegFilePath, const char* ptrModelFileAbsDir, const char* ptrFaceImgFilePath);
@@ -35,18 +36,30 @@ private:
     void sort();
     // 待机状态下打开蓝色呼吸灯
     void onBreathingLight();
+    void saveImage(int x, int y, int w, int h);
     // 本地人脸数据入库
     void localFaceInsert();
     // 根据人脸底库更新阈值
     void updateIdentifyValue();
+    // 是否已到定时的时长，是返回true，否返回false
+    bool faceExpired();
+    // 设置定时时长。 从当前时间开始的定时时长，单位ms
+    void faceCountdown_ms(int ms);
+    // 是否已到定时的时长，是返回true，否返回false
+    bool expired();
+    // 设置定时时长。 从当前时间开始的定时时长，单位ms
+    void countdown_ms(int ms);
 
 signals:
     // 显示人脸框 ui界面显示
     void showFaceFocuse(int left, int top, int right, int bottom, int index, int trackId);
+    // 检测人脸结果显示
+    void showFaceResult();
     // 隐藏人脸框 控制ui界面消失人脸框
     void hideFaceFocuse();
     // 人员同步和升级状态显示
     void faceTb(const QString &text);
+    void showIr();
 
 private:
     VIDEO_FRAME_INFO_S *m_bgrVideoFrame;
@@ -63,6 +76,7 @@ private:
     int saveRight[5];
     int saveBottom[5];
     int backLightCount = 0;
-    bool status = false;
+    qint64 m_endTimerMs;
+    qint64 m_checkTimerMs;
 };
 #endif // FACEMANAGER_H

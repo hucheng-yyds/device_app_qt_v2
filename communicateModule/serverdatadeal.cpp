@@ -640,6 +640,7 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
     case MqttModule::UserData: {
         if(1 == switchCtl->m_protocol || 4 == switchCtl->m_protocol)
         {
+            qt_debug() << jsonObj;
             QJsonObject jsonData = jsonObj["data"].toObject();
             dealFaceNewData(jsonData);
         }
@@ -654,7 +655,7 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
     }
     case MqttModule::ServerSyncEnd:
     {
-        if(4 == switchCtl->m_protocol)
+        if(!dataShare->m_sync && 4 == switchCtl->m_protocol)
         {
             emit allUserId();
         }
@@ -684,11 +685,14 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
     }
     case MqttModule::Bind:
     {
-        sqlDatabase->sqlDeleteAll();
-        sqlDatabase->sqlDeleteAllAuth();
-        sqlDatabase->sqlDeleteAllFail();
-        sqlDatabase->sqlDeleteAllIc();
-        emit allUserId();
+        if(!dataShare->m_sync)
+        {
+            sqlDatabase->sqlDeleteAll();
+            sqlDatabase->sqlDeleteAllAuth();
+            sqlDatabase->sqlDeleteAllFail();
+            sqlDatabase->sqlDeleteAllIc();
+            emit allUserId();
+        }
         break;
     }
     case MqttModule::DeviceUpdate:
@@ -703,6 +707,7 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
     case MqttModule::Unbind:
     {
         system("rm *.db");
+        system("rm /mnt/UDISK/regInfo/*");
         sleep(1);
         system("killall -9 F01 && reboot");
         break;
@@ -810,12 +815,14 @@ void ServerDataDeal::dealFaceNewData(QJsonObject jsonObj)
     {
         QJsonArray dataArr = jsonObj.value("updatePerson").toArray();
         QJsonArray datas;
+        bool status = false;
         foreach(QJsonValue val, dataArr)
         {
             QJsonObject mids = val.toObject();
             int cmd = mids["operater"].toInt();
             int mid = mids["mid"].toInt();
             if(3 == cmd) {
+                status = true;
                 dataShare->m_sync = true;
                 emit removeFaceGroup(mid);
                 sqlDatabase->sqlDelete(mid);
@@ -824,7 +831,8 @@ void ServerDataDeal::dealFaceNewData(QJsonObject jsonObj)
                 datas.push_front(mid);
             }
         }
-        if (datas.isEmpty()) {
+        if (status && datas.isEmpty())
+        {
             dataShare->m_sync = false;
         }
         emit newUsers(datas);

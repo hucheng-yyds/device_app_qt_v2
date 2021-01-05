@@ -39,6 +39,8 @@ signals:
     void insertFaceGroups(int id, const QString &username, const QString &time, const QString &photoname, const QString &iphone);
     // 删除算法
     void removeFaceGroup(int id);
+    // 清空人脸
+    void clearFaceGroup();
 
 private:
     // 更新算法阈值

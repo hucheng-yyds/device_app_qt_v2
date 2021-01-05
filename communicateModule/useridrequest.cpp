@@ -319,8 +319,8 @@ void UserIdRequest::tcpUpdateUsers(const QJsonObject &jsonObj)
     else {
         sqlDatabase->sqlInsertAuth(id, passNum, isBlack, datas);
     }
-    m_faceSyncStatus = true;
     m_updateFace.remove(id);
+    m_faceSyncStatus = true;
 }
 
 void UserIdRequest::onUpdateUsers(const QJsonObject &jsonObj)
@@ -363,6 +363,7 @@ void UserIdRequest::onAlluserId(const QJsonArray &jsonArr)
                 QString updateTime = sqlDatabase->sqlSelectAllUserTime(id);
                 if(updateTime.compare(newTime) != 0)
                 {
+                    qt_debug() << newTime << updateTime;
                     emit removeFaceGroup(id);
                     sqlDatabase->sqlDelete(id);
                     m_updateFace.insert(id);
@@ -376,13 +377,12 @@ void UserIdRequest::onAlluserId(const QJsonArray &jsonArr)
         }
         foreach(int i, localFaceSet)
         {
+            emit removeFaceGroup(i);
             sqlDatabase->sqlDelete(i);
         }
     }
     else {
-        sqlDatabase->sqlDeleteAll();
-        sqlDatabase->sqlDeleteAllIc();
-        sqlDatabase->sqlDeleteAllAuth();
+        emit clearFaceGroup();
     }
     int count = m_updateFace.size();
     if(count > 0)

@@ -134,6 +134,8 @@ public:
     bool m_ic;
     // tcp后台登录的密码
     QString m_passwd;
+    // 星云秘钥
+    QString m_appScret;
 
     // wifi模式
     bool m_wifiCtl;

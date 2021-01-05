@@ -136,7 +136,9 @@ void FaceIdentify::run()
 //        qt_debug() << "ptrFaceInfo.recScoreVal:" << m_iMFaceHandle[i].recScoreVal;
 //        qt_debug() << "ptrFaceInfo.faceMaskOrNot:" << m_iMFaceHandle[i].faceMaskOrNot;
 
-        if (RETURN_REC_SUCCESS == m_iMFaceHandle[i].recStatus) {
+        if (RETURN_REC_SUCCESS == m_iMFaceHandle[i].recStatus)
+        {
+            m_interFace->m_success = true;
             dataShare->m_offlineFlag = false;
             /*不同人脸识别间隔判断*/
 //            if (identify->track_id.value(i) != trId) {
@@ -182,20 +184,21 @@ void FaceIdentify::run()
                         name = name.replace(0, name.size(), tr("您好"));
                     }
                 }
-                emit faceResultShow(name, i, trId, tr("认证通过"), m_faceInfo + name);
+                emit faceResultShow(name, i, trId, tr("认证通过"), tr("您好，") + name);
                 egPass = true;
-                if(0 == m_wavSeq)
-                {
-                    playFile = "zschengong.wav";
-                }
-                else if(1 == m_wavSeq)
-                {
-                    playFile = "zwchengong.wav";
-                }
-                else
-                {
-                    playFile = "wschengong.wav";
-                }
+//                if(0 == m_wavSeq)
+//                {
+//                    playFile = "zschengong.wav";
+//                }
+//                else if(1 == m_wavSeq)
+//                {
+//                    playFile = "zwchengong.wav";
+//                }
+//                else
+//                {
+//                    playFile = "wschengong.wav";
+//                }
+                playFile = "chengong.wav";
                 hardware->playSound(playFile.toUtf8());
             }
             if(tempCtl && !authority) {
@@ -271,7 +274,8 @@ void FaceIdentify::run()
 //                    qt_debug() << "22222222222sid:" << trId;
 //                    goto exit;
 //                }
-                emit faceResultShow(tr("未注册"), i, trId, tr("未注册"), tr("未注册"));
+                m_interFace->m_success = true;
+                emit faceResultShow(tr("认证失败"), i, trId, tr("认证失败"), tr("认证失败"));
                 isStranger = "1";
 //                emit faceResultShow(tr("未注册"), i, trId, tr("请联系管理员"), tr("未注册"));
                 egPass = false;
@@ -329,6 +333,7 @@ void FaceIdentify::run()
             {
             }
             else {
+                qt_debug() << "上传did" << offlineNmae;
                 if(dataShare->m_netStatus)
                 {
                     emit uploadopenlog(offlineNmae, face_id, snapshot, isOver, 1, tempCtl, 0, datas);

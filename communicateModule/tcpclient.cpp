@@ -17,7 +17,7 @@ void TcpClient::run()
     m_requestTimer->setInterval(30000);
     m_requestTimer->setSingleShot(true);
     m_connectTimer = new QTimer();
-    m_connectTimer->setInterval(5000);
+    m_connectTimer->setInterval(10000);
     m_connectTimer->setSingleShot(true);
     connect(m_heartbeatTimer, &QTimer::timeout, this, &TcpClient::requestHeartbeat);
     connect(m_connectTimer, &QTimer::timeout, this, &TcpClient::Reconnect);
@@ -272,6 +272,8 @@ void TcpClient::pareRegister(const QJsonObject &jsonObj)
         {
             m_heartbeatTimer->start();
         }
+        switchCtl->m_passwd = jsonObj.value("data").toObject().value("passwd").toString();
+        switchCtl->saveSwitchParam();
         requestLogin();
     }
 }
@@ -407,7 +409,7 @@ void TcpClient::requestRegister()
     QDateTime origin_time = QDateTime::fromString("1970-01-01 08:00:00","yyyy-MM-dd hh:mm:ss");
     QDateTime current_date_time = QDateTime::currentDateTime().addSecs(28800);
     QString timestamp = QString("%1").arg(origin_time.secsTo(current_date_time));
-    QString sign = sn + rec_passwd + timestamp + PACKET_HEAD;
+    QString sign = sn + timestamp + switchCtl->m_appScret;
     QByteArray hash = QCryptographicHash::hash(sign.toLatin1(), QCryptographicHash::Md5);
     QJsonObject dataObj, obj;
     sign = hash.toHex();
@@ -430,7 +432,7 @@ void TcpClient::requestLogin()
     QDateTime origin_time = QDateTime::fromString("1970-01-01 08:00:00","yyyy-MM-dd hh:mm:ss");
     QDateTime current_date_time = QDateTime::currentDateTime().addSecs(28800);
     QString timestamp = QString("%1").arg(origin_time.secsTo(current_date_time));
-    QString sign = sn + rec_passwd + timestamp + PACKET_HEAD;
+    QString sign = sn + rec_passwd + timestamp;
     QByteArray hash = QCryptographicHash::hash(sign.toLatin1(), QCryptographicHash::Md5);
     QJsonObject dataObj, obj;
     sign = hash.toHex();

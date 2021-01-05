@@ -41,6 +41,8 @@ void ProStorage::init()
     FaceManager *face = new FaceManager;
     connect(face, &FaceManager::showFaceFocuse, this, &ProStorage::showFaceFocuse);
     connect(face, &FaceManager::hideFaceFocuse, this, &ProStorage::hideFaceFocuse);
+    connect(face, &FaceManager::showFaceResult, this, &ProStorage::showFaceResult);
+    connect(face, &FaceManager::showIr, this, &ProStorage::showIr);
     connect(face, &FaceManager::faceTb, this, &ProStorage::faceTb);
     face->setFaceInter(interFace);
     FaceIdentify *identify = new FaceIdentify;
@@ -74,10 +76,12 @@ void ProStorage::init()
     connect(toolTcpServer,&ToolTcpServer::sigGetTempHardwareInfo,tempManager,&TempManager::getTempInfo);
     //测温模块程序升级
     connect(toolTcpServer,&ToolTcpServer::sigSendUpdateTemp,tempManager, &TempManager::sendTempProgram);
+//    connect(toolTcpServer, &ToolTcpServer::sigSaveImage, this, &ProStorage::saveImage);
 
     MqttModule *mqttClient = new MqttModule;
     UserIdRequest *userRequest = new UserIdRequest;
     connect(userRequest, &UserIdRequest::removeFaceGroup, face, &FaceManager::removeFaceGroup);
+    connect(userRequest, &UserIdRequest::clearFaceGroup, face, &FaceManager::clearFaceGroup);
     ServerDataList *serverList = new ServerDataList;
     mqttClient->setPacket(serverList);
     bool status = face->init();
