@@ -69,6 +69,17 @@ Item {
         source: "";
     }
 
+//    Rectangle {
+//        id: dateBg123
+//        x: 270
+//        y: 280
+//        visible: true
+//        color: "#FF72FF"
+//        opacity: 0.75
+//        width: 190
+//        height: 380
+//    }
+
     Rectangle {
         id: dateBg
         x: 0

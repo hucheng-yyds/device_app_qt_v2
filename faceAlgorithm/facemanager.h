@@ -27,6 +27,9 @@ public slots:
     void clearFaceGroup();
 
 private:
+    void saveImageIr(const QString &path);
+    void saveImageBgr(const QString &path);
+    void autoIRExposure(uchar *bgrYData);
     AppCall* DS_CreateAppCall(const char* ptrRegFilePath, const char* ptrModelFileAbsDir, const char* ptrFaceImgFilePath);
     int DS_ReleaseAppCall(AppCall *ptrAppData);
     int DS_SetGetAppCall(AppCall *ptrAppData);

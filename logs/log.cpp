@@ -1,6 +1,16 @@
 #include "log.h"
 #include "datashare.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include<stdio.h>
+#include<stdlib.h>
+#include<unistd.h>
+
 QStringList Log::logList;
+
+int m_fd = -1;
+int m_fileSize = 0;
 
 void Log::outputMessage(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
@@ -11,8 +21,6 @@ void Log::outputMessage(QtMsgType type, const QMessageLogContext &context, const
     if (!dir.exists()) {
         qt_debug() << path << dir.mkdir(path);
     }
-    QString name = dateTime.toString("yyyy-MM-dd") + "log.txt";
-    QString filename = path + name;
     QStringList filesList = dir.entryList(QDir::Files|QDir::Readable, QDir::Time|QDir::Reversed);
     if (filesList.size() > 50) {
         for(int i = 0;i < 8;i++)
@@ -20,16 +28,22 @@ void Log::outputMessage(QtMsgType type, const QMessageLogContext &context, const
             qt_debug() << QFile::remove(path + filesList[i]) << filesList.size();
         }
     }
-    QFile file(filename);
-    if (file.size() > 1048576) {
-        qt_debug() << file.rename(path + dateTime.toString("yyyy-MM-dd-HHmm") + "log.txt");
-        file.setFileName(filename);
+    if(-1 == m_fd || m_fileSize > 2097152)
+    {
+        m_fileSize = 0;
+        close(m_fd);
+        usleep(10*1000);
+        QString name = dateTime.toString("yyyy-MM-dd-HH-mm-ss") + "log.txt";
+        QString filename = path + name;
+        m_fd = open((char *)filename.toUtf8().data(), O_WRONLY | O_CREAT);
     }
-    file.open(QIODevice::WriteOnly | QIODevice::Append);
-    QTextStream text_stream(&file);
-    text_stream << msg << "\n";
-    file.flush();
-    file.close();
+    QString msgData = msg + "\n";
+    if(m_fd > 0)
+    {
+        int wLen = write(m_fd, msgData.toUtf8().data(), msgData.size());
+        m_fileSize += wLen;
+    }
+    sync();
 }
 
 
@@ -53,7 +67,7 @@ Log::Log(QObject *parent) : QObject(parent)
             }
         }
     });
-//    qInstallMessageHandler(outputMessage);
+    qInstallMessageHandler(outputMessage);
 }
 
 void Log::onToolTcpStateChange(bool state)//true:链接上了，false:链接断开
@@ -63,7 +77,9 @@ void Log::onToolTcpStateChange(bool state)//true:链接上了，false:链接断�
     {
         timer->stop();
         dataShare->m_log = true;
-//        qInstallMessageHandler(outputMessage);
+        close(m_fd);
+        m_fd = -1;
+        qInstallMessageHandler(outputMessage);
     }
 }
 
@@ -74,8 +90,9 @@ void Log::onLogFun(bool on)
     {
         dataShare->m_log = true;
         timer->stop();
+        close(m_fd);
+        m_fd = -1;
         qInstallMessageHandler(outputMessage);
-
     }
     else
     {
@@ -88,5 +105,7 @@ void Log::onLogFun(bool on)
         }
         timer->start();
         qInstallMessageHandler(outputMessageOnLine);
+        close(m_fd);
+        m_fd = -1;
     }
 }

@@ -198,6 +198,7 @@ void FaceIdentify::run()
 //                {
 //                    playFile = "wschengong.wav";
 //                }
+                msleep(100);
                 playFile = "chengong.wav";
                 hardware->playSound(playFile.toUtf8());
             }
