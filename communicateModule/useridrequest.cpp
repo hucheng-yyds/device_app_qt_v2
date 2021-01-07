@@ -225,15 +225,15 @@ void UserIdRequest::tcpUpdateUsers(const QJsonObject &jsonObj)
             photoName = value.at(4).toString();
         }
     }
-    QFile file(QString::number(id) + ".jpg");
-    file.open(QIODevice::ReadWrite);
-    file.write(QByteArray::fromBase64(photo.toUtf8()));
-    file.close();
-    if(value.size() > 0)
+    if(status)
     {
         sqlDatabase->sqlUpdate(id, name, edittime, photoName, mobile);
     }
     else {
+        QFile file(QString::number(id) + ".jpg");
+        file.open(QIODevice::ReadWrite);
+        file.write(QByteArray::fromBase64(photo.toUtf8()));
+        file.close();
         emit insertFaceGroups(id, name, edittime, photoName, mobile);
     }
     status = false;
@@ -409,6 +409,10 @@ void UserIdRequest::onAllUsersIc(const QJsonArray &jsonArr)
 
 void UserIdRequest::onNewUsers(const QJsonArray &jsonArr)
 {
+    if(m_startFaceDownload)
+    {
+        return;
+    }
     foreach(QJsonValue val, jsonArr)
     {
         m_updateFace.insert(val.toInt());

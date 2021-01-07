@@ -22,7 +22,7 @@ void Log::outputMessage(QtMsgType type, const QMessageLogContext &context, const
         qt_debug() << path << dir.mkdir(path);
     }
     QStringList filesList = dir.entryList(QDir::Files|QDir::Readable, QDir::Time|QDir::Reversed);
-    if (filesList.size() > 50) {
+    if (filesList.size() > 30) {
         for(int i = 0;i < 8;i++)
         {
             qt_debug() << QFile::remove(path + filesList[i]) << filesList.size();
@@ -67,7 +67,7 @@ Log::Log(QObject *parent) : QObject(parent)
             }
         }
     });
-    qInstallMessageHandler(outputMessage);
+//    qInstallMessageHandler(outputMessage);
 }
 
 void Log::onToolTcpStateChange(bool state)//true:链接上了，false:链接断开
@@ -79,7 +79,7 @@ void Log::onToolTcpStateChange(bool state)//true:链接上了，false:链接断�
         dataShare->m_log = true;
         close(m_fd);
         m_fd = -1;
-        qInstallMessageHandler(outputMessage);
+//        qInstallMessageHandler(outputMessage);
     }
 }
 

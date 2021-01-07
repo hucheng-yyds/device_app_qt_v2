@@ -277,14 +277,16 @@ void FaceManager::run()
 //                    memcpy(m_interFace->m_irImage, m_irVideoFrame->VFrame.mpVirAddr[0], SOURCE_WIDTH * SOURCE_HEIGHT);
 //                    memcpy(m_interFace->m_irImage + SOURCE_WIDTH * SOURCE_HEIGHT, m_irVideoFrame->VFrame.mpVirAddr[1], SOURCE_WIDTH * SOURCE_HEIGHT / 2);
 //                    saveImage(ptrFaceInfo.XMin, ptrFaceInfo.XMax, 500, 500);
-//                }
-//                qt_debug() << "=============================" << width << ptrFaceInfo.rgbLiveOrNot << ptrFaceInfo.irLiveOrNot << ptrFaceInfo.trackID;
+//                }                
                 int trackId = ptrFaceInfo.trackID;
                 if(trackId == m_interFace->m_trackId)
                 {
                     if(m_interFace->m_success && !faceExpired())
                     {
                         m_interFace->m_iStop = false;
+                    }
+                    else if(faceExpired()){
+                        m_interFace->m_iStop = true;
                     }
                 }
                 else {
@@ -448,10 +450,10 @@ void FaceManager::ctlOpenDoor(int id)
 
 void FaceManager::insertFaceGroups(int id, const QString &username, const QString &time, const QString &photoname, const QString &iphone)
 {
-    QDateTime origin_time = QDateTime::fromString("1970-01-01 08:00:00","yyyy-MM-dd hh:mm:ss");
-    QDateTime current_date_time =QDateTime::currentDateTime();
-    qint64 old = origin_time.msecsTo(current_date_time);
-    qt_debug() << "111111111111111111111111111111111111111" << old;
+//    QDateTime origin_time = QDateTime::fromString("1970-01-01 08:00:00","yyyy-MM-dd hh:mm:ss");
+//    QDateTime current_date_time =QDateTime::currentDateTime();
+//    qint64 old = origin_time.msecsTo(current_date_time);
+//    qt_debug() << "111111111111111111111111111111111111111" << old;
     QString file = QString::number(id) + ".jpg";
     auto image = cv::imread(file.toStdString());
     if (image.empty() || (image.cols > 1920) || (image.rows > 1920))
@@ -524,11 +526,11 @@ void FaceManager::insertFaceGroups(int id, const QString &username, const QStrin
             sqlDatabase->sqlDeleteFail(id);
         }
     }
-    origin_time = QDateTime::fromString("1970-01-01 08:00:00","yyyy-MM-dd hh:mm:ss");
-    current_date_time =QDateTime::currentDateTime();
-    qint64 now = origin_time.msecsTo(current_date_time);
+//    origin_time = QDateTime::fromString("1970-01-01 08:00:00","yyyy-MM-dd hh:mm:ss");
+//    current_date_time =QDateTime::currentDateTime();
+//    qint64 now = origin_time.msecsTo(current_date_time);
     QFile::remove(file);
-    qt_debug() << "222222222222222222222222222222222222222222222222" << now << now - old;
+//    qt_debug() << "222222222222222222222222222222222222222222222222" << now << now - old;
 }
 
 void FaceManager::removeFaceGroup(int id)
@@ -654,7 +656,7 @@ AppCall *FaceManager::DS_CreateAppCall(const char *ptrRegFilePath, const char *p
 
     const char *ptrVersionID = DS_GetFaceIDVersion(ptrAppData->ptrFaceHandle);
     qDebug("GetCurrentVersionID %s\n", ptrVersionID);
-//    DS_SetPrintLevel(ptrAppData->ptrFaceHandle, SET_SAVE_DEBUG_DATA);
+    DS_SetPrintLevel(ptrAppData->ptrFaceHandle, SET_LOG_DEBUG);
 
 //    struct sched_param detect_param, identify_param;
 

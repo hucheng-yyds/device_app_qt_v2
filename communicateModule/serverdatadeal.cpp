@@ -640,7 +640,7 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
     case MqttModule::UserData: {
         if(1 == switchCtl->m_protocol || 4 == switchCtl->m_protocol)
         {
-            qt_debug() << jsonObj;
+//            qt_debug() << jsonObj;
             QJsonObject jsonData = jsonObj["data"].toObject();
             dealFaceNewData(jsonData);
         }
@@ -706,8 +706,10 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
     }
     case MqttModule::Unbind:
     {
-        system("rm *.db");
+        system("rm /mnt/UDISK/*.db");
         system("rm /mnt/UDISK/regInfo/*");
+        system("rm /mnt/UDISK/offline/*");
+        system("sync");
         sleep(1);
         system("killall -9 F01 && reboot");
         break;
@@ -751,8 +753,9 @@ void ServerDataDeal::dealJsonData(QJsonObject jsonObj)
     case MqttModule::FactorySetup:
     {
         switchCtl->setSwitchDefault();
-        system("rm *.db");
-        system("rm offline/*");
+        system("rm /mnt/UDISK/*.db");
+        system("rm /mnt/UDISK/regInfo/*");
+        system("rm /mnt/UDISK/offline/*");
         system("sync");
         system("killall -9 F01 && reboot");
         break;
@@ -827,11 +830,15 @@ void ServerDataDeal::dealFaceNewData(QJsonObject jsonObj)
                 emit removeFaceGroup(mid);
                 sqlDatabase->sqlDelete(mid);
                 sqlDatabase->sqlDeleteAuth(mid);
-            } else {
-                datas.push_front(mid);
+            }
+            else {
+                if(!(1 == cmd && sqlDatabase->m_localFaceSet.contains(mid)))
+                {
+                    datas.push_front(mid);
+                }
             }
         }
-        if (status && datas.isEmpty())
+        if (status)
         {
             dataShare->m_sync = false;
         }

@@ -242,7 +242,7 @@ Item {
             pixelSize: 78
             family: "multi-language"
         }
-        color: "#2D72FF"
+        color: "#FFFFFE"
         anchors.horizontalCenter: resultTextBg.horizontalCenter
         anchors.verticalCenter: resultTextBg.verticalCenter
         style: Text.Raised
