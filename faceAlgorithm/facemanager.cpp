@@ -97,7 +97,7 @@ void FaceManager::autoIRExposure(uchar *bgrYData)
         }
     }
     ySum /= (60 * 100);
-    qt_debug() << "ySum:" << ySum;
+//    qt_debug() << "ySum:" << ySum;
     if (ySum > 160 || ySum < 140) {
         static int lightVal = 0x20;
         if (ySum > 160) {
@@ -109,7 +109,7 @@ void FaceManager::autoIRExposure(uchar *bgrYData)
         if (lightVal > 0 && lightVal < 255) {
             system("i2cset -y -f 0 0x3c 0xfe 0x01");
             system("i2cset -y -f 0 0x3c 0x13 0x" + QByteArray::number(lightVal, 16));
-            qt_debug() << lightVal << QByteArray::number(lightVal, 16);
+//            qt_debug() << lightVal << QByteArray::number(lightVal, 16);
         }
     }
 }
@@ -194,6 +194,20 @@ void FaceManager::run()
         DS_SetGetAppCall(m_ptrAppData);
 //        qt_debug() << "Get People Num " << m_ptrAppData->ptrFaceIDOutData->curFaceNum << m_ptrAppData->ptrFaceIDOutData->curStatus;
         if (m_ptrAppData->ptrFaceIDOutData->curFaceNum > 0) {
+            if(/*!m_interFace->m_success && width < 100 &&*/ expired() )
+            {
+//                    memcpy(m_interFace->m_irImage, m_irVideoFrame->VFrame.mpVirAddr[0], SOURCE_WIDTH * SOURCE_HEIGHT);
+//                    memcpy(m_interFace->m_irImage + SOURCE_WIDTH * SOURCE_HEIGHT, m_irVideoFrame->VFrame.mpVirAddr[1], SOURCE_WIDTH * SOURCE_HEIGHT / 2);
+//                    memcpy(m_interFace->m_bgrImage, m_ptrAppData->ptrFaceIDOutData->returnRegsucImg,
+//                           m_ptrAppData->ptrFaceIDOutData->returnImgW * m_ptrAppData->ptrFaceIDOutData->returnImgH * 3);
+//                    QString name = QString("%1").arg(QDateTime::currentDateTime().toTime_t());
+//                    saveImageIr(name);
+//                    saveImageBgr(name);
+//                    system("mv *.jpg /mnt/UDISK/");
+                emit showFaceResult();
+                countdown_ms(2000);
+//                    hardware->playSound("hello.wav");
+            }
             autoIRExposure(m_ptrAppData->ptrFaceIDInData->ptrIRSubStream);
             sort();
             m_ptrAppData->ptrFaceIDOutData->curFaceNum = 1;
@@ -215,20 +229,6 @@ void FaceManager::run()
 //                    saveBottom[i] = ptrFaceInfo.YMax;
 //                }
                 backLightCount = 0;
-                if(/*!m_interFace->m_success && width < 100 &&*/ expired() )
-                {
-//                    memcpy(m_interFace->m_irImage, m_irVideoFrame->VFrame.mpVirAddr[0], SOURCE_WIDTH * SOURCE_HEIGHT);
-//                    memcpy(m_interFace->m_irImage + SOURCE_WIDTH * SOURCE_HEIGHT, m_irVideoFrame->VFrame.mpVirAddr[1], SOURCE_WIDTH * SOURCE_HEIGHT / 2);
-//                    memcpy(m_interFace->m_bgrImage, m_ptrAppData->ptrFaceIDOutData->returnRegsucImg,
-//                           m_ptrAppData->ptrFaceIDOutData->returnImgW * m_ptrAppData->ptrFaceIDOutData->returnImgH * 3);
-//                    QString name = QString("%1").arg(QDateTime::currentDateTime().toTime_t());
-//                    saveImageIr(name);
-//                    saveImageBgr(name);
-//                    system("mv *.jpg /mnt/UDISK/");
-                    emit showFaceResult();
-                    countdown_ms(2000);
-//                    hardware->playSound("hello.wav");
-                }
                 hardware->ctlWhite(ON);
 //                emit showFaceFocuse(saveLeft[i] * 1.66, saveTop[i] * 1.6, saveRight[i] * 1.66, saveBottom[i] * 1.6, i, ptrFaceInfo.trackID);
 //                qt_debug() << qAbs(saveLeft[i] - ptrFaceInfo.XMin) << offset;
@@ -297,7 +297,7 @@ void FaceManager::run()
                 emit hideFaceFocuse();
             }
             backLightCount++;
-            if(backLightCount > 100)
+            if(backLightCount > 50)
             {
                 dataShare->m_offlineFlag = true;
                 backLightCount = 0;

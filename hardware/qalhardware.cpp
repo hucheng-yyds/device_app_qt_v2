@@ -239,11 +239,10 @@ void QalHardWare::init()
 
 void QalHardWare::playSound(const char *content)
 {
-    QMutexLocker locker(&m_mutex);
-//    IF_AUDIO_ClearBuf();
+//    QMutexLocker locker(&m_mutex);
+    m_mutex.lock();
     IF_PCMAUDIO_SendData(1, (char*)content, 0);
-
-    printf("%s\n", content);
+    m_mutex.unlock();
 }
 
 void QalHardWare::playSoundAac(int type, const QString &filename)
