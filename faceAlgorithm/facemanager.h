@@ -15,6 +15,7 @@ public:
     bool init();
     // 人脸检测和比对共享资源接口
     void setFaceInter(FaceInterface *inter);
+
 protected:
     virtual void run();
 
@@ -30,6 +31,7 @@ private:
     void saveImageIr(const QString &path);
     void saveImageBgr(const QString &path);
     void autoIRExposure(uchar *bgrYData);
+    void autoBGRExposure();
     AppCall* DS_CreateAppCall(const char* ptrRegFilePath, const char* ptrModelFileAbsDir, const char* ptrFaceImgFilePath);
     int DS_ReleaseAppCall(AppCall *ptrAppData);
     int DS_SetGetAppCall(AppCall *ptrAppData);
@@ -81,5 +83,7 @@ private:
     int backLightCount = 0;
     qint64 m_endTimerMs;
     qint64 m_checkTimerMs;
+    bool status = false;
+
 };
 #endif // FACEMANAGER_H

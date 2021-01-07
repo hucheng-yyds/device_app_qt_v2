@@ -61,31 +61,43 @@ void FaceManager::setFaceInter(FaceInterface *inter)
     m_interFace = inter;
 }
 
-void FaceManager::onBreathingLight()
+void FaceManager::autoBGRExposure()
 {
-//    hardware->ctlLed(OFF);
-//    hardware->ctlBLN(ON);
-    hardware->ctlWhite(OFF);
-
-}
-
-void FaceManager::saveImage(int x, int y, int w, int h)
-{   system("rm qml/image/face_small.png snap_face.jpg");
-    cv::Mat nv21(SOURCE_HEIGHT + SOURCE_HEIGHT / 2, SOURCE_WIDTH, CV_8UC1, m_interFace->m_irImage);
-    cv::Mat image;
-    cv::cvtColor(nv21, image, CV_YUV2BGR_NV21);
-    QVector<int> opts;
-    opts.push_back(cv::IMWRITE_JPEG_QUALITY);
-    opts.push_back(30);
-    opts.push_back(cv::IMWRITE_JPEG_OPTIMIZE);
-    opts.push_back(1);
-    cv::imwrite("snap_face.jpg", image, opts.toStdVector());
-    QPixmap img;
-    img.load("snap_face.jpg");
-    QPixmap img1 = img.copy(x, y, w, h);
-    img1.save("face_small.png", "PNG");
-    system("mv face_small.png qml/image");
-    emit showIr();
+    /*动态曝光测试接口*/
+    SIZE_S awSize = {VIDEO_WIDTH, VIDEO_HEIGHT};
+    RECT_S awRect;
+#if 0
+    static int awCount = 0;
+    const int maxCount = 30;
+    qt_debug() << "awCount:" << awCount;
+    int x = VIDEO_WIDTH/2/maxCount*awCount;
+    int y = VIDEO_HEIGHT/2/maxCount*awCount;
+    awRect = {x, y, VIDEO_WIDTH-(x*2), VIDEO_HEIGHT-(y*2)};
+    if (awCount == maxCount) {
+        awRect = {ptrFaceInfo.XMin, ptrFaceInfo.YMin, ptrFaceInfo.XMax - ptrFaceInfo.XMin, ptrFaceInfo.YMax - ptrFaceInfo.YMin};
+        m_faceInfo.XMax = ptrFaceInfo.XMax;
+        m_faceInfo.XMin = ptrFaceInfo.XMin;
+        m_faceInfo.YMax = ptrFaceInfo.YMax;
+        m_faceInfo.YMin = ptrFaceInfo.YMin;
+    }
+    if (face) {
+        if (awCount < maxCount) {
+            awCount ++;
+        }
+    } else {
+        if (awCount <= 0) {
+            identifyed = false;
+        } else {
+            awCount --;
+        }
+    }
+#endif
+    awRect.X = 333;
+    awRect.Y = 118;
+    awRect.Width = 293;
+    awRect.Height = 168;
+//    qt_debug() << awRect.X << awRect.Y << awRect.Width << awRect.Height;
+    AW_MPI_ISP_SetLocalExposureArea(0 ,awSize ,awRect);
 }
 
 void FaceManager::autoIRExposure(uchar *bgrYData)
@@ -114,6 +126,33 @@ void FaceManager::autoIRExposure(uchar *bgrYData)
     }
 }
 
+void FaceManager::onBreathingLight()
+{
+//    hardware->ctlLed(OFF);
+//    hardware->ctlBLN(ON);
+    hardware->ctlWhite(OFF);
+
+}
+
+void FaceManager::saveImage(int x, int y, int w, int h)
+{   system("rm qml/image/face_small.png snap_face.jpg");
+    cv::Mat nv21(SOURCE_HEIGHT + SOURCE_HEIGHT / 2, SOURCE_WIDTH, CV_8UC1, m_interFace->m_irImage);
+    cv::Mat image;
+    cv::cvtColor(nv21, image, CV_YUV2BGR_NV21);
+    QVector<int> opts;
+    opts.push_back(cv::IMWRITE_JPEG_QUALITY);
+    opts.push_back(30);
+    opts.push_back(cv::IMWRITE_JPEG_OPTIMIZE);
+    opts.push_back(1);
+    cv::imwrite("snap_face.jpg", image, opts.toStdVector());
+    QPixmap img;
+    img.load("snap_face.jpg");
+    QPixmap img1 = img.copy(x, y, w, h);
+    img1.save("face_small.png", "PNG");
+    system("mv face_small.png qml/image");
+    emit showIr();
+}
+
 void FaceManager::saveImageIr(const QString &path)
 {
     cv::Mat nv21(SOURCE_HEIGHT + SOURCE_HEIGHT / 2, SOURCE_WIDTH, CV_8UC1, m_interFace->m_irImage);
@@ -137,8 +176,6 @@ void FaceManager::saveImageBgr(const QString &path)
 
 void FaceManager::run()
 {
-    SIZE_S awSize = {0, 0};
-    RECT_S awRect = {0, 0, 0, 0};
     bool status = false;
     hardware->ctlIr(ON);
     while (1) {
@@ -191,10 +228,11 @@ void FaceManager::run()
         m_ptrAppData->ptrFaceIDInData->ptrBGRImage = nullptr;
         m_ptrAppData->ptrFaceIDInData->bgrImageWidth = 0;
         m_ptrAppData->ptrFaceIDInData->bgrImageHeight = 0;
+        autoBGRExposure();
         DS_SetGetAppCall(m_ptrAppData);
 //        qt_debug() << "Get People Num " << m_ptrAppData->ptrFaceIDOutData->curFaceNum << m_ptrAppData->ptrFaceIDOutData->curStatus;
         if (m_ptrAppData->ptrFaceIDOutData->curFaceNum > 0) {
-            if(/*!m_interFace->m_success && width < 100 &&*/ expired() )
+            if(/*!m_interFace->m_success && width < 100 &&*/ expired())
             {
 //                    memcpy(m_interFace->m_irImage, m_irVideoFrame->VFrame.mpVirAddr[0], SOURCE_WIDTH * SOURCE_HEIGHT);
 //                    memcpy(m_interFace->m_irImage + SOURCE_WIDTH * SOURCE_HEIGHT, m_irVideoFrame->VFrame.mpVirAddr[1], SOURCE_WIDTH * SOURCE_HEIGHT / 2);
@@ -230,11 +268,8 @@ void FaceManager::run()
 //                }
                 backLightCount = 0;
                 hardware->ctlWhite(ON);
-//                emit showFaceFocuse(saveLeft[i] * 1.66, saveTop[i] * 1.6, saveRight[i] * 1.66, saveBottom[i] * 1.6, i, ptrFaceInfo.trackID);
+                emit showFaceFocuse(saveLeft[i] * 1.66, saveTop[i] * 1.6, saveRight[i] * 1.66, saveBottom[i] * 1.6, i, ptrFaceInfo.trackID);
 //                qt_debug() << qAbs(saveLeft[i] - ptrFaceInfo.XMin) << offset;
-                /*动态曝光测试接口*/
-//                SIZE_S awSize = {ptrFaceInfo.XMax - ptrFaceInfo.XMin, ptrFaceInfo.YMax - ptrFaceInfo.YMin};
-//                RECT_S awRect = {ptrFaceInfo.XMin, ptrFaceInfo.YMin, awSize.Width, awSize.Height};
 
 //                int width = ptrFaceInfo.XMax - ptrFaceInfo.XMin;
 //                if(width < 80)
@@ -256,12 +291,6 @@ void FaceManager::run()
 //                    emit showFaceFocuse(saveLeft[i] * 1.66, saveTop[i] * 1.6, saveRight[i] * 1.66, saveBottom[i] * 1.6, i, ptrFaceInfo.trackID);
                     m_interFace->m_trackId = trackId;
                 }
-                awRect.X = 333;
-                awRect.Y = 118;
-                awRect.Width = 293;
-                awRect.Height = 168;
-                qt_debug() << awRect.X << awRect.Y << awRect.Width << awRect.Height;
-                AW_MPI_ISP_SetLocalExposureArea(0 ,awSize ,awRect);
                 if (m_interFace->m_iStop)
                 {
                     m_interFace->m_success = false;
