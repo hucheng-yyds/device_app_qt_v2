@@ -92,10 +92,10 @@ void FaceManager::autoBGRExposure()
         }
     }
 #endif
-    awRect.X = 333;
-    awRect.Y = 118;
-    awRect.Width = 293;
-    awRect.Height = 168;
+    awRect.X = 445;
+    awRect.Y = 180;
+    awRect.Width = 70;
+    awRect.Height = 90;
 //    qt_debug() << awRect.X << awRect.Y << awRect.Width << awRect.Height;
     AW_MPI_ISP_SetLocalExposureArea(0 ,awSize ,awRect);
 }
@@ -103,9 +103,9 @@ void FaceManager::autoBGRExposure()
 void FaceManager::autoIRExposure(uchar *bgrYData)
 {
     int ySum = 0;
-    for (int x = 0; x < 60; x ++) {
-        for (int y = 0; y < 100; y ++) {
-            ySum += bgrYData[640 * 140 + 300 + x + 640 * y];
+    for (int x = 0; x < 45; x ++) {
+        for (int y = 0; y < 55; y ++) {
+            ySum += bgrYData[640 * 70 + 320 + x + 640 * y];
         }
     }
     ySum /= (60 * 100);
@@ -656,7 +656,7 @@ AppCall *FaceManager::DS_CreateAppCall(const char *ptrRegFilePath, const char *p
 
     const char *ptrVersionID = DS_GetFaceIDVersion(ptrAppData->ptrFaceHandle);
     qDebug("GetCurrentVersionID %s\n", ptrVersionID);
-    DS_SetPrintLevel(ptrAppData->ptrFaceHandle, SET_LOG_DEBUG);
+//    DS_SetPrintLevel(ptrAppData->ptrFaceHandle, SET_LOG_DEBUG);
 
 //    struct sched_param detect_param, identify_param;
 
