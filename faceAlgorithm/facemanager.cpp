@@ -268,7 +268,7 @@ void FaceManager::run()
 //                }
                 backLightCount = 0;
                 hardware->ctlWhite(ON);
-                emit showFaceFocuse(saveLeft[i] * 1.66, saveTop[i] * 1.6, saveRight[i] * 1.66, saveBottom[i] * 1.6, i, ptrFaceInfo.trackID);
+//                emit showFaceFocuse(saveLeft[i] * 1.66, saveTop[i] * 1.6, saveRight[i] * 1.66, saveBottom[i] * 1.6, i, ptrFaceInfo.trackID);
 //                qt_debug() << qAbs(saveLeft[i] - ptrFaceInfo.XMin) << offset;
 
 //                int width = ptrFaceInfo.XMax - ptrFaceInfo.XMin;
@@ -293,6 +293,7 @@ void FaceManager::run()
 //                    emit showFaceFocuse(saveLeft[i] * 1.66, saveTop[i] * 1.6, saveRight[i] * 1.66, saveBottom[i] * 1.6, i, ptrFaceInfo.trackID);
                     m_interFace->m_trackId = trackId;
                 }
+                qt_debug() << "====================================" << ptrFaceInfo.faceMaskOrNot;
                 if (m_interFace->m_iStop)
                 {
                     m_interFace->m_success = false;
@@ -550,6 +551,7 @@ void FaceManager::removeFaceGroup(int id)
 
 void FaceManager::clearFaceGroup()
 {
+    dataShare->m_sync = true;
     foreach(int id, sqlDatabase->m_localFaceSet)
     {
         removeFaceGroup(id);
@@ -557,6 +559,7 @@ void FaceManager::clearFaceGroup()
     sqlDatabase->sqlDeleteAll();
     sqlDatabase->sqlDeleteAllIc();
     sqlDatabase->sqlDeleteAllAuth();
+    dataShare->m_sync = false;
 }
 
 
@@ -641,6 +644,7 @@ AppCall *FaceManager::DS_CreateAppCall(const char *ptrRegFilePath, const char *p
     ptrFaceIDParas->imgHeight[1] = SOURCE_HEIGHT;
     ptrFaceIDParas->irMode = IR_ENABLE;
     ptrFaceIDParas->reRegsucessMode = RETURN_ENABLE;
+    ptrFaceIDParas->reserve[0] = 2; // 1:使能口罩开关 2:不使能口罩开关
 
     memcpy(ptrFaceIDParas->ptrRegFilePath, ptrRegFilePath, strlen(ptrRegFilePath)+1);
     memcpy(ptrFaceIDParas->ptrModelFileAbsDir, ptrModelFileAbsDir, strlen(ptrModelFileAbsDir) + 1);
@@ -761,6 +765,7 @@ bool FaceManager::init()
     m_ptrAppData->ptrFaceIDInData->faceThresh[0] = -0.83;
     m_ptrAppData->ptrFaceIDInData->faceThresh[1] = -0.83;
     m_ptrAppData->ptrFaceIDInData->faceThresh[2] = -0.75;
+//    m_ptrAppData->ptrFaceIDInData->faceThresh[2] = -0.79; // 会降低识别率
     m_ptrAppData->ptrFaceIDInData->faceThresh[3] = -0.81;
     m_ptrAppData->ptrFaceIDInData->recFaceMode = REC_MAX_FACE;
     m_ptrAppData->ptrFaceIDInData->minRecFaceW = 0;

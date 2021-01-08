@@ -349,6 +349,8 @@ void UserIdRequest::onAlluserId(const QJsonArray &jsonArr)
     QJsonArray faceJson = jsonArr;
     QSet<int> localFaceSet = sqlDatabase->m_localFaceSet;
     int size = faceJson.count();
+    QSet<int> delSet;
+    delSet.clear();
     qDebug() << "OnAllUserId count:" << size << localFaceSet.size();
     m_updateFace.clear();
     if(size > 0)
@@ -364,8 +366,7 @@ void UserIdRequest::onAlluserId(const QJsonArray &jsonArr)
                 if(updateTime.compare(newTime) != 0)
                 {
                     qt_debug() << newTime << updateTime;
-                    emit removeFaceGroup(id);
-                    sqlDatabase->sqlDelete(id);
+                    delSet.insert(id);
                     m_updateFace.insert(id);
                 }
                 localFaceSet.remove(id);
@@ -375,10 +376,23 @@ void UserIdRequest::onAlluserId(const QJsonArray &jsonArr)
                 m_updateFace.insert(id);
             }
         }
+        if(delSet.size() > 0 || localFaceSet.size() > 0)
+        {
+            dataShare->m_sync = true;
+        }
+        foreach(int i, delSet)
+        {
+            emit removeFaceGroup(i);
+            sqlDatabase->sqlDelete(i);
+        }
         foreach(int i, localFaceSet)
         {
             emit removeFaceGroup(i);
             sqlDatabase->sqlDelete(i);
+        }
+        if(0 == m_updateFace.size())
+        {
+            dataShare->m_sync = false;
         }
     }
     else {
